@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
+import { getSupabaseClient, ensureAnonSession, isSupabaseConfigured } from '@/lib/supabase';
 import { generateUniqueRoomCode } from '@/lib/roomCode';
 
 function LogoMark({ size = 48 }: { size?: number }) {
@@ -82,6 +82,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
 
   async function handleCreateRoom() {
+    if (!isSupabaseConfigured()) {
+      toast.error('Supabase is not configured. Add your keys to .env.local and restart the dev server.');
+      return;
+    }
+
     setLoading(true);
     try {
       const userId = await ensureAnonSession();
@@ -105,98 +110,67 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ minHeight: '100svh', background: '#fff', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif' }}>
+    <div className="landing-page">
 
-      {/* ── Nav ──────────────────────────────────────────────────────────────── */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 40px', borderBottom: '1px solid #f2f2f7' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <nav className="landing-nav">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <LogoMark size={32} />
           <span style={{ fontSize: 16, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KantaQueue</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="landing-nav-actions">
           <button
             id="nav-join-btn"
+            className="landing-nav-join"
             onClick={() => router.push('/join')}
             style={{ background: 'none', border: 'none', fontSize: 14, fontWeight: 500, color: '#3a3a3c', cursor: 'pointer', padding: '8px 14px', borderRadius: 10, fontFamily: 'inherit', letterSpacing: '-0.1px' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#f2f2f7'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
           >
             Join a Room
           </button>
           <button
             id="nav-help-btn"
             onClick={() => router.push('/help')}
-            style={{ background: '#f2f2f7', border: 'none', borderRadius: 20, padding: '8px 16px', fontSize: 14, fontWeight: 500, color: '#1c1c1e', cursor: 'pointer', letterSpacing: '-0.1px', fontFamily: 'inherit' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e5ea'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#f2f2f7'; }}
+            style={{ background: '#f2f2f7', border: 'none', borderRadius: 20, padding: '8px 14px', fontSize: 14, fontWeight: 500, color: '#1c1c1e', cursor: 'pointer', letterSpacing: '-0.1px', fontFamily: 'inherit' }}
           >
             Help
           </button>
         </div>
       </nav>
 
-      {/* ── Hero — two columns ───────────────────────────────────────────────── */}
-      <main style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '64px 40px', gap: 80, maxWidth: 1100, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <main className="landing-main">
+        <div className="landing-hero">
+          <LogoMark size={56} />
 
-        {/* LEFT — headline + CTA */}
-        <div style={{ flex: '0 0 420px', display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <LogoMark size={64} />
-
-          <h1 style={{ fontSize: 52, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-1.5px', lineHeight: 1.1, margin: '28px 0 0' }}>
+          <h1 className="landing-headline">
             Karaoke,<br />minus the chaos.
           </h1>
 
-          <p style={{ fontSize: 18, color: '#8e8e93', margin: '18px 0 0', lineHeight: 1.6, letterSpacing: '-0.2px', fontWeight: 400 }}>
-            One screen, every guest's phone. No passing the phone around. Just sing.
+          <p className="landing-subhead">
+            One screen, every guest&apos;s phone. No passing the phone around. Just sing.
           </p>
 
-          {/* Stats row */}
-          <div style={{ display: 'flex', gap: 32, marginTop: 36 }}>
+          <div className="landing-stats">
             {[
-              { n: '&lt;15s', label: 'to queue a song' },
+              { n: '<15s', label: 'to queue a song' },
               { n: '0', label: 'app installs needed' },
               { n: '3', label: 'songs per guest cap' },
             ].map(({ n, label }) => (
               <div key={label}>
-                <p style={{ fontSize: 28, fontWeight: 700, color: '#1c1c1e', margin: 0, letterSpacing: '-0.8px' }} dangerouslySetInnerHTML={{ __html: n }} />
-                <p style={{ fontSize: 12, color: '#8e8e93', margin: '3px 0 0', letterSpacing: '-0.1px' }}>{label}</p>
+                <p className="landing-stat-value">{n}</p>
+                <p className="landing-stat-label">{label}</p>
               </div>
             ))}
           </div>
 
-          {/* CTAs */}
-          <div style={{ display: 'flex', gap: 12, marginTop: 40 }}>
+          <div className="landing-ctas">
             <button
               id="create-room-btn"
+              className="landing-cta-btn landing-cta-primary"
               onClick={handleCreateRoom}
               disabled={loading}
-              style={{
-                flex: 1,
-                padding: '16px 24px',
-                background: '#1c1c1e',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 14,
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                letterSpacing: '-0.3px',
-                opacity: loading ? 0.6 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                fontFamily: 'inherit',
-                transition: 'opacity 0.15s, transform 0.1s',
-              }}
-              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.opacity = '0.85'; }}
-              onMouseLeave={(e) => { if (!loading) e.currentTarget.style.opacity = '1'; }}
-              onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
-              onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
               {loading ? (
                 <>
-                  <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+                  <span className="spinner" style={{ width: 16, height: 16, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} />
                   Creating&hellip;
                 </>
               ) : 'Start a Room'}
@@ -204,50 +178,21 @@ export default function HomePage() {
 
             <button
               id="join-room-btn"
+              className="landing-cta-btn landing-cta-secondary"
               onClick={() => router.push('/join')}
-              style={{
-                flex: 1,
-                padding: '16px 24px',
-                background: '#f2f2f7',
-                color: '#1c1c1e',
-                border: 'none',
-                borderRadius: 14,
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: 'pointer',
-                letterSpacing: '-0.3px',
-                fontFamily: 'inherit',
-                transition: 'background 0.15s, transform 0.1s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e5ea'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#f2f2f7'; }}
-              onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
-              onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
               Join a Room
             </button>
           </div>
 
-          <p style={{ fontSize: 12, color: '#c7c7cc', marginTop: 16, letterSpacing: '-0.1px' }}>
+          <p className="landing-note">
             No account required &middot; Rooms expire after 6 hours
           </p>
         </div>
 
-        {/* RIGHT — feature grid */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="landing-features">
           {features.map(({ icon, title, desc }) => (
-            <div
-              key={title}
-              style={{
-                background: '#f9f9fb',
-                borderRadius: 20,
-                padding: '24px 22px',
-                border: '1px solid #f0f0f5',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-              }}
-            >
+            <div key={title} className="landing-feature-card">
               <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 {icon}
               </div>
@@ -260,19 +205,16 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* ── Footer ──────────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: '1px solid #f2f2f7', padding: '18px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <footer className="landing-footer">
         <span style={{ fontSize: 13, color: '#c7c7cc', letterSpacing: '-0.1px' }}>
           &copy; {new Date().getFullYear()} KantaQueue
         </span>
-        <div style={{ display: 'flex', gap: 24 }}>
+        <div className="landing-footer-links">
           {[{ label: 'Help', href: '/help' }, { label: 'Terms', href: '/terms' }, { label: 'Privacy', href: '/privacy' }].map(({ label, href }) => (
             <a
               key={label}
               href={href}
               style={{ fontSize: 13, color: '#8e8e93', textDecoration: 'none', letterSpacing: '-0.1px' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#1c1c1e'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#8e8e93'; }}
             >
               {label}
             </a>

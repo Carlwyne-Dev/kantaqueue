@@ -25,7 +25,8 @@ export default function RootLayout({
         <AnonSessionProvider>
           {children}
           <Toaster
-            position="top-right"
+            position="top-center"
+            containerStyle={{ top: 16 }}
             toastOptions={{
               style: {
                 fontFamily: 'var(--font-geist-sans)',

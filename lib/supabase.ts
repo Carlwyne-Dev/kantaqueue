@@ -6,13 +6,26 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  '';
+
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabaseUrl && supabaseKey);
+}
 
 // Singleton client for client-side usage
 let clientInstance: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient {
+  if (!isSupabaseConfigured()) {
+    throw new Error(
+      'Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to .env.local (see .env.local.example).'
+    );
+  }
+
   if (!clientInstance) {
     clientInstance = createClient(supabaseUrl, supabaseKey, {
       auth: {
@@ -34,6 +47,11 @@ export function getSupabaseClient(): SupabaseClient {
  * before any DB writes.
  */
 export async function ensureAnonSession(): Promise<string | null> {
+  if (!isSupabaseConfigured()) {
+    console.warn('[KantaQueue] Supabase env vars missing — skipping anonymous sign-in.');
+    return null;
+  }
+
   const supabase = getSupabaseClient();
 
   const {
@@ -69,6 +87,10 @@ export async function getCurrentUserId(): Promise<string | null> {
 // Server-side Supabase client (for API routes — uses service role if available,
 // otherwise falls back to anon key for read operations)
 export function getSupabaseServer(): SupabaseClient {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured.');
+  }
+
   return createClient(
     supabaseUrl,
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? supabaseKey,
