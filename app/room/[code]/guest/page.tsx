@@ -172,7 +172,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
           </div>
           <input
             id="song-search-input"
-            type="search"
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search a karaoke song…"

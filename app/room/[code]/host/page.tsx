@@ -30,6 +30,10 @@ interface YTPlayer {
   destroy(): void;
 }
 
+interface YTReadyEvent {
+  target: YTPlayer;
+}
+
 interface LockableScreenOrientation {
   lock?: (orientation: 'landscape') => Promise<void>;
   unlock?: () => void;
@@ -63,6 +67,7 @@ export default function HostPage({
   const [nowPlaying, setNowPlaying] = useState<(QueueItem & { song: Song }) | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [partyStarted, setPartyStarted] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [loadingRoom, setLoadingRoom] = useState(true);
   const [localNotif, setLocalNotif] = useState<string | null>(null);
@@ -73,6 +78,7 @@ export default function HostPage({
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const advancingRef = useRef(false); // prevent double-advance
   const notifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadedVideoIdRef = useRef<string | null>(null);
 
   const showLocalNotif = useCallback((msg: string) => {
     setLocalNotif(msg);
@@ -188,10 +194,28 @@ export default function HostPage({
         modestbranding: 1,
       },
       events: {
+        onReady: handlePlayerReady,
         onStateChange: handlePlayerStateChange,
         onError: handlePlayerError,
       },
     });
+  }
+
+  function loadAndPlay(videoId: string) {
+    const player = playerRef.current;
+    if (!player) return;
+
+    if (loadedVideoIdRef.current !== videoId) {
+      player.loadVideoById(videoId);
+      loadedVideoIdRef.current = videoId;
+    }
+
+    player.playVideo();
+  }
+
+  function handlePlayerReady(event: YTReadyEvent) {
+    playerRef.current = event.target;
+    setPlayerReady(true);
   }
 
   // ── Auto-play next song ──────────────────────────────────────────────────────
@@ -232,9 +256,10 @@ export default function HostPage({
           .update({ status: 'playing' })
           .eq('id', next.id);
 
-        playerRef.current?.loadVideoById(next.song.youtube_video_id);
+        loadAndPlay(next.song.youtube_video_id);
       } else {
         playerRef.current?.stopVideo();
+        loadedVideoIdRef.current = null;
       }
     } finally {
       advancingRef.current = false;
@@ -266,7 +291,7 @@ export default function HostPage({
 
   // Auto-play when idle and queue receives a song
   useEffect(() => {
-    if (partyStarted && !nowPlaying && queue.length > 0) {
+    if (partyStarted && playerReady && !nowPlaying && queue.length > 0) {
       const t = setTimeout(() => {
         if (!nowPlaying && queue.length > 0 && !advancingRef.current) {
           advanceQueue();
@@ -275,28 +300,18 @@ export default function HostPage({
       return () => clearTimeout(t);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partyStarted, nowPlaying, queue.length]);
+  }, [partyStarted, playerReady, nowPlaying, queue.length]);
+
+  useEffect(() => {
+    if (!partyStarted || !playerReady || !nowPlaying) return;
+    loadAndPlay(nowPlaying.song.youtube_video_id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partyStarted, playerReady, nowPlaying?.id]);
 
   // ── Start party (unlocks audio on mobile) ────────────────────────────────────
   async function handleStartParty() {
     setPartyStarted(true);
     await requestWakeLock();
-
-    setTimeout(() => {
-      if (nowPlaying) {
-        playerRef.current?.loadVideoById(nowPlaying.song.youtube_video_id);
-      } else if (queue[0]) {
-        // Auto-promote first queued item to playing
-        supabase
-          .from('queue_items')
-          .update({ status: 'playing' })
-          .eq('id', queue[0].id)
-          .then(() => {
-            playerRef.current?.loadVideoById(queue[0].song.youtube_video_id);
-          });
-      }
-    }, 1200);
-
     setSessionStarted(true);
   }
 
@@ -383,6 +398,7 @@ export default function HostPage({
 
   async function handleQuitRoom() {
     playerRef.current?.stopVideo();
+    loadedVideoIdRef.current = null;
     if (room) {
       await supabase.from('rooms').update({ status: 'ended' }).eq('id', room.id);
     }
