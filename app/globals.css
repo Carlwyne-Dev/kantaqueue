@@ -223,15 +223,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid #f2f2f7;
-  gap: 12px;
+  gap: 10px;
+  min-height: 58px;
 }
 
 .landing-nav-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -244,8 +245,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 32px 20px 40px;
-  gap: 32px;
+  padding: 24px 16px 32px;
+  gap: 24px;
   max-width: 1100px;
   margin: 0 auto;
   width: 100%;
@@ -260,32 +261,34 @@ body {
 }
 
 .landing-headline {
-  font-size: 36px;
+  font-size: 34px;
   font-weight: 700;
   color: #1c1c1e;
   letter-spacing: -1px;
   line-height: 1.08;
-  margin: 24px 0 0;
+  margin: 20px 0 0;
+  text-wrap: balance;
 }
 
 .landing-subhead {
-  font-size: 16px;
+  font-size: 15px;
   color: #8e8e93;
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   line-height: 1.55;
   letter-spacing: -0.2px;
   font-weight: 400;
+  max-width: 34rem;
 }
 
 .landing-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 28px;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  gap: 10px;
+  margin-top: 22px;
 }
 
 .landing-stat-value {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #1c1c1e;
   margin: 0;
@@ -293,7 +296,7 @@ body {
 }
 
 .landing-stat-label {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #8e8e93;
   margin: 3px 0 0;
   letter-spacing: -0.1px;
@@ -304,12 +307,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 28px;
+  margin-top: 24px;
 }
 
 .landing-cta-btn {
   width: 100%;
-  padding: 16px 24px;
+  min-height: 52px;
+  padding: 14px 20px;
   border: none;
   border-radius: 14px;
   font-size: 16px;
@@ -340,7 +344,7 @@ body {
 .landing-note {
   font-size: 12px;
   color: #c7c7cc;
-  margin-top: 14px;
+  margin: 12px 0 0;
   letter-spacing: -0.1px;
   text-align: center;
 }
@@ -354,21 +358,22 @@ body {
 
 .landing-feature-card {
   background: #f9f9fb;
-  border-radius: 18px;
-  padding: 20px 18px;
+  border-radius: 14px;
+  padding: 16px;
   border: 1px solid #f0f0f5;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 12px;
 }
 
 .landing-footer {
   border-top: 1px solid #f2f2f7;
-  padding: 18px 20px 24px;
+  padding: 16px 16px calc(18px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   text-align: center;
 }
 
@@ -496,11 +501,476 @@ body {
   }
 
   .landing-feature-card {
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 24px 22px;
+    flex-direction: column;
   }
 
   .landing-footer {
     padding: 18px 40px;
+  }
+}
+
+@media (max-width: 390px) {
+  .landing-nav {
+    padding-inline: 12px;
+  }
+
+  .landing-nav-actions button {
+    padding-inline: 11px !important;
+  }
+
+  .landing-main {
+    padding-inline: 14px;
+    padding-top: 20px;
+  }
+
+  .landing-headline {
+    font-size: 31px;
+  }
+
+  .landing-stats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .landing-stats > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #f9f9fb;
+    border: 1px solid #f2f2f7;
+  }
+
+  .landing-stat-label {
+    margin: 0;
+    text-align: right;
+    font-size: 11.5px;
+  }
+}
+
+/* Host room setup */
+.host-setup-page {
+  min-height: 100svh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+.host-setup-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f2f2f7;
+  gap: 12px;
+}
+
+.host-setup-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+  box-sizing: border-box;
+}
+
+.host-setup-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.host-setup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-bottom: 18px;
+  padding: 6px 12px;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.host-setup-title {
+  margin: 0;
+  color: #1c1c1e;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.host-setup-subtitle {
+  margin: 14px 0 0;
+  color: #8e8e93;
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: -0.2px;
+}
+
+.host-setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.host-setup-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 12px 14px;
+  border: 1px solid #f0f0f5;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.host-setup-start {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 24px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  background: #1c1c1e;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.host-setup-qr-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.host-setup-qr-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 18px;
+  border: 1px solid #f0f0f5;
+  border-radius: 20px;
+  background: #f9f9fb;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+}
+
+.host-setup-qr-box {
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+
+.host-setup-qr {
+  display: block;
+  width: min(180px, 58vw);
+  height: auto;
+}
+
+.host-setup-code {
+  margin: 0;
+  color: #1c1c1e;
+  font-size: 36px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+@media (min-width: 720px) {
+  .host-setup-nav {
+    padding: 16px 40px;
+  }
+
+  .host-setup-main {
+    flex-direction: row;
+    align-items: center;
+    gap: 56px;
+    padding: 48px 40px;
+  }
+
+  .host-setup-copy {
+    flex: 0 0 380px;
+  }
+
+  .host-setup-title {
+    font-size: 44px;
+    letter-spacing: -1.2px;
+  }
+
+  .host-setup-subtitle {
+    font-size: 16px;
+    margin-top: 16px;
+  }
+
+  .host-setup-steps {
+    gap: 16px;
+    margin-top: 36px;
+  }
+
+  .host-setup-hint,
+  .host-setup-start {
+    margin-top: 32px;
+  }
+
+  .host-setup-qr-wrap {
+    flex: 1;
+  }
+
+  .host-setup-qr-card {
+    width: auto;
+    min-width: 300px;
+    gap: 28px;
+    padding: 40px 48px;
+    border-radius: 28px;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+  }
+
+  .host-setup-qr-box {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .host-setup-qr {
+    width: 220px;
+  }
+
+  .host-setup-code {
+    font-size: 52px;
+  }
+}
+
+@media (max-width: 390px) {
+  .host-setup-nav {
+    padding-inline: 12px;
+  }
+
+  .host-setup-nav button {
+    padding-inline: 12px !important;
+  }
+
+  .host-setup-main {
+    padding-inline: 14px;
+    padding-top: 20px;
+    gap: 20px;
+  }
+
+  .host-setup-title {
+    font-size: 31px;
+  }
+
+  .host-setup-code {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 720px) {
+  .host-session-layout {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+  }
+
+  .host-session-layout > div:first-child {
+    min-height: 52svh;
+    flex: 0 0 auto !important;
+  }
+
+  .host-session-sidebar {
+    width: 100% !important;
+    min-height: 280px;
+    overflow: visible !important;
+  }
+}
+
+/* Join room */
+.join-page {
+  min-height: 100svh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+.join-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f2f2f7;
+}
+
+.join-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 26px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+  box-sizing: border-box;
+}
+
+.join-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.join-hero-logo {
+  display: none;
+}
+
+.join-title {
+  margin: 0;
+  color: #1c1c1e;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.join-subtitle {
+  margin: 12px 0 0;
+  color: #8e8e93;
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: -0.2px;
+}
+
+.join-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.join-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.join-code-boxes {
+  display: flex;
+  gap: 6px;
+  position: relative;
+  cursor: text;
+}
+
+.join-name-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 720px) {
+  .join-nav {
+    padding: 16px 40px;
+  }
+
+  .join-main {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 72px !important;
+    padding: 48px 40px !important;
+  }
+
+  .join-copy {
+    flex: 0 0 340px !important;
+  }
+
+  .join-hero-logo {
+    display: block !important;
+  }
+
+  .join-title {
+    margin-top: 24px !important;
+    font-size: 40px !important;
+    letter-spacing: -1px;
+    line-height: 1.15 !important;
+  }
+
+  .join-subtitle {
+    margin-top: 14px !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+  }
+
+  .join-benefits {
+    display: flex !important;
+    gap: 14px !important;
+    margin-top: 36px !important;
+  }
+
+  .join-form {
+    flex: 0 0 360px !important;
+    gap: 24px !important;
+  }
+
+  .join-code-boxes {
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .join-nav {
+    padding-inline: 12px;
+  }
+
+  .join-nav button {
+    padding-inline: 12px !important;
+  }
+
+  .join-main {
+    gap: 22px;
+    padding: 20px 14px 28px;
+  }
+
+  .join-title {
+    font-size: 31px;
+  }
+
+  .join-benefits {
+    display: none !important;
+  }
+
+  .join-name-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
   }
 }

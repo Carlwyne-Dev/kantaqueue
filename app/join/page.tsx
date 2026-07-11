@@ -113,10 +113,10 @@ export default function JoinPage({
   const codeChars = code.split('').concat(Array(5 - code.length).fill(''));
 
   return (
-    <div style={{ minHeight: '100svh', background: '#fff', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif' }}>
+    <div className="join-page" style={{ minHeight: '100svh', background: '#fff', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
 
       {/* Nav */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 40px', borderBottom: '1px solid #f2f2f7' }}>
+      <nav className="join-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 58, padding: '12px 16px', borderBottom: '1px solid #f2f2f7' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LogoMark size={28} />
           <span style={{ fontSize: 15, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KantaQueue</span>
@@ -135,19 +135,19 @@ export default function JoinPage({
       </nav>
 
       {/* Two-column layout */}
-      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 40px', gap: 80, maxWidth: 900, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <main className="join-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', gap: 26, width: '100%', maxWidth: 900, margin: '0 auto', padding: '24px 16px 32px', boxSizing: 'border-box' }}>
 
         {/* LEFT — context */}
-        <div style={{ flex: '0 0 340px', display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <LogoMark size={56} />
-          <h1 style={{ fontSize: 40, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-1px', lineHeight: 1.15, margin: '24px 0 0' }}>
+        <div className="join-copy" style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 0 }}>
+          <div className="join-hero-logo" style={{ display: 'none' }}><LogoMark size={56} /></div>
+          <h1 className="join-title" style={{ margin: 0, color: '#1c1c1e', fontSize: 34, fontWeight: 700, letterSpacing: '-1px', lineHeight: 1.08 }}>
             Join the<br />karaoke room.
           </h1>
-          <p style={{ fontSize: 16, color: '#8e8e93', margin: '14px 0 0', lineHeight: 1.6, letterSpacing: '-0.2px' }}>
+          <p className="join-subtitle" style={{ margin: '12px 0 0', color: '#8e8e93', fontSize: 15, lineHeight: 1.55, letterSpacing: '-0.2px' }}>
             Enter the 5-character code shown on the host screen, pick a name, and you&rsquo;re in.
           </p>
 
-          <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="join-benefits" style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 22 }}>
             {[
               'No app install needed',
               'Search and queue songs from your phone',
@@ -166,7 +166,7 @@ export default function JoinPage({
         </div>
 
         {/* RIGHT — form */}
-        <div style={{ flex: '0 0 360px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="join-form" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 22 }}>
 
           {/* Room code */}
           <div>
@@ -174,7 +174,8 @@ export default function JoinPage({
 
             {/* 5 character boxes — click anywhere to focus the real input */}
             <div
-              style={{ display: 'flex', gap: 8, position: 'relative', cursor: 'text' }}
+              className="join-code-boxes"
+              style={{ display: 'flex', flexDirection: 'row', gap: 6, position: 'relative', cursor: 'text', width: '100%' }}
               onClick={() => codeInputRef.current?.focus()}
             >
               {codeChars.map((char, i) => (
@@ -182,14 +183,14 @@ export default function JoinPage({
                   key={i}
                   style={{
                     flex: 1,
-                    height: 64,
-                    borderRadius: 14,
+                    height: 'clamp(52px, 14vw, 64px)',
+                    borderRadius: 12,
                     background: char ? '#1c1c1e' : '#f9f9fb',
                     border: `2px solid ${char ? '#1c1c1e' : '#f0f0f5'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 24,
+                    fontSize: 'clamp(20px, 6vw, 24px)',
                     fontWeight: 800,
                     color: char ? '#fff' : '#c7c7cc',
                     letterSpacing: 0,
@@ -221,7 +222,7 @@ export default function JoinPage({
 
           {/* Nickname */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
+            <div className="join-name-label">
               <p style={{ fontSize: 11, fontWeight: 700, color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>Your Name</p>
               <p style={{ fontSize: 12, color: '#c7c7cc', margin: 0, letterSpacing: '-0.1px' }}>auto-assigned, feel free to change</p>
             </div>
@@ -255,7 +256,7 @@ export default function JoinPage({
             id="join-btn"
             onClick={handleJoin}
             disabled={loading || generatingNick}
-            style={{ width: '100%', padding: '17px', background: '#1c1c1e', color: '#fff', border: 'none', borderRadius: 14, fontSize: 17, fontWeight: 600, cursor: (loading || generatingNick) ? 'not-allowed' : 'pointer', letterSpacing: '-0.3px', fontFamily: 'inherit', opacity: (loading || generatingNick) ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'opacity 0.15s' }}
+            style={{ width: '100%', minHeight: 52, padding: '14px 20px', background: '#1c1c1e', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 600, cursor: (loading || generatingNick) ? 'not-allowed' : 'pointer', letterSpacing: '-0.3px', fontFamily: 'inherit', opacity: (loading || generatingNick) ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'opacity 0.15s' }}
             onMouseEnter={(e) => { if (!loading && !generatingNick) e.currentTarget.style.opacity = '0.85'; }}
             onMouseLeave={(e) => { if (!loading && !generatingNick) e.currentTarget.style.opacity = '1'; }}
           >

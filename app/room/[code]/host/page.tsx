@@ -30,6 +30,11 @@ interface YTPlayer {
   destroy(): void;
 }
 
+interface LockableScreenOrientation {
+  lock?: (orientation: 'landscape') => Promise<void>;
+  unlock?: () => void;
+}
+
 // ── Helper ────────────────────────────────────────────────────────────────────
 function formatDuration(secs: number | null): string {
   if (!secs) return '';
@@ -329,6 +334,53 @@ export default function HostPage({
     }
   }
 
+  async function handleEnterPresentationMode() {
+    setIsFullscreen(true);
+
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      // Some mobile browsers only allow the in-app fullscreen layout.
+    }
+
+    try {
+      await (screen.orientation as LockableScreenOrientation | undefined)?.lock?.('landscape');
+    } catch {
+      // iOS Safari and some browsers do not allow programmatic rotation.
+    }
+  }
+
+  async function handleExitPresentationMode() {
+    setIsFullscreen(false);
+
+    try {
+      (screen.orientation as LockableScreenOrientation | undefined)?.unlock?.();
+    } catch {
+      // Not supported everywhere.
+    }
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // The browser may have already exited fullscreen.
+    }
+  }
+
+  useEffect(() => {
+    function syncFullscreenState() {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    }
+
+    document.addEventListener('fullscreenchange', syncFullscreenState);
+    return () => document.removeEventListener('fullscreenchange', syncFullscreenState);
+  }, []);
+
   async function handleQuitRoom() {
     playerRef.current?.stopVideo();
     if (room) {
@@ -353,10 +405,10 @@ export default function HostPage({
   // ── Render: Room Setup (before party starts) ─────────────────────────────────
   if (!partyStarted) {
     return (
-      <div style={{ minHeight: '100svh', background: '#fff', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif' }}>
+      <div className="host-setup-page">
 
         {/* Nav */}
-        <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 40px', borderBottom: '1px solid #f2f2f7' }}>
+        <nav className="host-setup-nav">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(160deg,#1a1a1a 0%,#2d2d2d 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
@@ -382,25 +434,25 @@ export default function HostPage({
         </nav>
 
         {/* Two-column layout */}
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '48px 40px', gap: 72, maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+        <main className="host-setup-main">
 
           {/* LEFT — info + CTA */}
-          <div style={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column', gap: 0 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, padding: '6px 14px', fontSize: 13, fontWeight: 500, color: '#15803d', width: 'fit-content', marginBottom: 24 }}>
+          <div className="host-setup-copy">
+            <span className="host-setup-badge">
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
               Room Active
             </span>
 
-            <h1 style={{ fontSize: 44, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-1.2px', lineHeight: 1.1, margin: 0 }}>
+            <h1 className="host-setup-title">
               Room ready.<br />Share &amp; start.
             </h1>
 
-            <p style={{ fontSize: 16, color: '#8e8e93', margin: '16px 0 0', lineHeight: 1.6, letterSpacing: '-0.2px' }}>
+            <p className="host-setup-subtitle">
               Share the QR code or room code with your guests. They join from their own phone — no app install needed.
             </p>
 
             {/* Steps */}
-            <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="host-setup-steps">
               {[
                 { n: '1', label: 'Guests scan the QR code or type the room code' },
                 { n: '2', label: 'They search and queue songs from their phone' },
@@ -416,7 +468,7 @@ export default function HostPage({
             </div>
 
             {/* Battery hint — PRD §11a */}
-            <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: 10, background: '#fafafa', border: '1px solid #f0f0f5', borderRadius: 12, padding: '12px 16px' }}>
+            <div className="host-setup-hint">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <rect x="2" y="7" width="16" height="10" rx="2" stroke="#8e8e93" strokeWidth="1.6" />
                 <path d="M18 10.5v3" stroke="#8e8e93" strokeWidth="2" strokeLinecap="round" />
@@ -432,7 +484,7 @@ export default function HostPage({
             <button
               id="start-party-btn"
               onClick={handleStartParty}
-              style={{ marginTop: 32, width: '100%', padding: '17px', background: '#1c1c1e', color: '#fff', border: 'none', borderRadius: 14, fontSize: 17, fontWeight: 600, cursor: 'pointer', letterSpacing: '-0.3px', fontFamily: 'inherit', transition: 'opacity 0.15s, transform 0.1s' }}
+              className="host-setup-start"
               onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
               onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
               onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
@@ -443,17 +495,17 @@ export default function HostPage({
           </div>
 
           {/* RIGHT — QR code card */}
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <div style={{ background: '#f9f9fb', border: '1px solid #f0f0f5', borderRadius: 28, padding: '40px 48px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, boxShadow: '0 4px 40px rgba(0,0,0,0.06)' }}>
+          <div className="host-setup-qr-wrap">
+            <div className="host-setup-qr-card">
 
               {/* QR */}
-              <div style={{ background: '#fff', borderRadius: 20, padding: 20, boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+              <div className="host-setup-qr-box">
                 {joinUrl && (
                   <QRCodeSVG
                     value={joinUrl}
-                    size={220}
+                    size={180}
                     id="room-qr-code"
-                    style={{ display: 'block' }}
+                    className="host-setup-qr"
                   />
                 )}
               </div>
@@ -463,7 +515,7 @@ export default function HostPage({
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>Room Code</p>
                 <p
                   id="room-code-display"
-                  style={{ fontSize: 52, fontWeight: 800, color: '#1c1c1e', letterSpacing: '0.12em', margin: 0, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}
+                  className="host-setup-code"
                 >
                   {code}
                 </p>
@@ -494,7 +546,7 @@ export default function HostPage({
     >
 
       {/* ── Main layout: padded, rounded cards ─────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', gap: 12, padding: isFullscreen ? 0 : 12, overflow: 'hidden', position: 'relative' }}>
+      <div className="host-session-layout" style={{ flex: 1, display: 'flex', gap: 12, padding: isFullscreen ? 0 : 12, overflow: 'hidden', position: 'relative' }}>
 
         {/* ── Video player card ─────────────────────────────────────────────── */}
         <div
@@ -562,7 +614,7 @@ export default function HostPage({
               {/* Exit fullscreen */}
               <button
                 id="host-exit-fs-btn"
-                onClick={() => setIsFullscreen(false)}
+                onClick={handleExitPresentationMode}
                 title="Exit fullscreen"
                 style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; }}
@@ -585,7 +637,7 @@ export default function HostPage({
 
         {/* ── Sidebar panel ─────────────────────────────────────────────────── */}
         {!isFullscreen && (
-          <aside style={{ width: 280, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+          <aside className="host-session-sidebar" style={{ width: 280, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
 
             {/* Now Playing card */}
             <div style={{ background: '#fff', borderRadius: 18, padding: '16px 18px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', flexShrink: 0 }}>
@@ -680,7 +732,7 @@ export default function HostPage({
                 {[
                   { id: 'host-skip-btn', label: 'Skip', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 4l10 8-10 8V4z" fill="#1c1c1e"/><rect x="19" y="4" width="2" height="16" rx="1" fill="#1c1c1e"/></svg>, onClick: handleSkip, disabled: !nowPlaying, danger: false },
                   { id: 'host-pause-btn', label: room.status === 'paused' ? 'Resume' : 'Pause', icon: room.status === 'paused' ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="#1c1c1e"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="6" y="4" width="4" height="16" rx="1" fill="#1c1c1e"/><rect x="14" y="4" width="4" height="16" rx="1" fill="#1c1c1e"/></svg>, onClick: handlePauseRoom, disabled: false, danger: false },
-                  { id: 'host-fullscreen-btn', label: 'Full', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="#1c1c1e" strokeWidth="2" strokeLinecap="round"/></svg>, onClick: () => setIsFullscreen(true), disabled: false, danger: false },
+                  { id: 'host-fullscreen-btn', label: 'Full', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="#1c1c1e" strokeWidth="2" strokeLinecap="round"/></svg>, onClick: handleEnterPresentationMode, disabled: false, danger: false },
                   { id: 'host-quit-btn', label: 'Quit', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="#ff3b30" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="16 17 21 12 16 7" stroke="#ff3b30" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="21" y1="12" x2="9" y2="12" stroke="#ff3b30" strokeWidth="2" strokeLinecap="round"/></svg>, onClick: () => setShowQuitModal(true), disabled: false, danger: true },
                 ].map(({ id, label, icon, onClick, disabled, danger }) => (
                   <button
@@ -740,5 +792,3 @@ export default function HostPage({
     </div>
   );
 }
-
-
