@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KantaQueue
 
-## Getting Started
+A web app for group YouTube karaoke — no app install, no passing one phone around.
 
-First, run the development server:
+**KantaQueue** ("kanta" + queue) is a shared queue layer on top of YouTube. One device is the **host screen** (TV or laptop). Everyone else joins from their phone via QR code, searches songs, and adds to a live queue. The host screen plays through the list automatically.
+
+## The problem it solves
+
+Group karaoke over YouTube usually breaks down because there's no shared, visible queue:
+
+- One phone gets passed around while people search
+- Nobody knows who's next — constant "sino sunod?"
+- Songs get skipped or forgotten
+- The vibe stalls between every song
+
+KantaQueue fixes that. Guests add songs from their own phones in seconds. Everyone sees what's playing and what's up next. The host only needs to skip, pause, or reorder — playback stays on YouTube.
+
+## How it works
+
+| Role | What they do |
+|---|---|
+| **Host** | Creates a room, shows the QR on the big screen, controls playback |
+| **Guest** | Scans QR or enters a room code, picks a nickname, searches and queues songs |
+
+Not a music player. Not a YouTube replacement. Just coordination — search, queue, and track songs while YouTube handles playback.
+
+## Get it running
 
 ```bash
+git clone https://github.com/Carlwyne-Dev/kantaqueue.git
+cd kantaqueue
+npm install
+cp .env.local.example .env.local   # add your Supabase + YouTube API keys
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js · Supabase (realtime + anonymous auth) · YouTube Data API · YouTube IFrame playback
