@@ -1,5 +1,5 @@
 -- ============================================================
--- KantaQueue — Full Supabase schema + RLS policies
+-- KanTara — Full Supabase schema + RLS policies
 -- PRD §7 — Run this in the Supabase SQL editor
 -- ============================================================
 

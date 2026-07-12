@@ -1,5 +1,5 @@
 // ============================================================
-// KantaQueue — Supabase client + anonymous session helper
+// KanTara — Supabase client + anonymous session helper
 // PRD §7: auth model — every client calls signInAnonymously() on first load
 // PRD §14a: lib/supabase.ts
 // ============================================================
@@ -48,7 +48,7 @@ export function getSupabaseClient(): SupabaseClient {
  */
 export async function ensureAnonSession(): Promise<string | null> {
   if (!isSupabaseConfigured()) {
-    console.warn('[KantaQueue] Supabase env vars missing — skipping anonymous sign-in.');
+    console.warn('[KanTara] Supabase env vars missing — skipping anonymous sign-in.');
     return null;
   }
 
@@ -66,7 +66,7 @@ export async function ensureAnonSession(): Promise<string | null> {
   const { data, error } = await supabase.auth.signInAnonymously();
 
   if (error) {
-    console.error('[KantaQueue] Failed to sign in anonymously:', error.message);
+    console.error('[KanTara] Failed to sign in anonymously:', error.message);
     return null;
   }
 

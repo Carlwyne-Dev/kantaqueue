@@ -1,8 +1,8 @@
-# KantaQueue
+# KanTara
 
 A web app for group YouTube karaoke — no app install, no passing one phone around.
 
-**KantaQueue** ("kanta" + queue) is a shared queue layer on top of YouTube. One device is the **host screen** (TV or laptop). Everyone else joins from their phone via QR code, searches songs, and adds to a live queue. The host screen plays through the list automatically.
+**KanTara** ("kanta" + queue) is a shared queue layer on top of YouTube. One device is the **host screen** (TV or laptop). Everyone else joins from their phone via QR code, searches songs, and adds to a live queue. The host screen plays through the list automatically.
 
 ## The problem it solves
 
@@ -13,7 +13,7 @@ Group karaoke over YouTube usually breaks down because there's no shared, visibl
 - Songs get skipped or forgotten
 - The vibe stalls between every song
 
-KantaQueue fixes that. Guests add songs from their own phones in seconds. Everyone sees what's playing and what's up next. The host only needs to skip, pause, or reorder — playback stays on YouTube.
+KanTara fixes that. Guests add songs from their own phones in seconds. Everyone sees what's playing and what's up next. The host only needs to skip, pause, or reorder — playback stays on YouTube.
 
 ## How it works
 
@@ -27,8 +27,8 @@ Not a music player. Not a YouTube replacement. Just coordination — search, que
 ## Get it running
 
 ```bash
-git clone https://github.com/Carlwyne-Dev/kantaqueue.git
-cd kantaqueue
+git clone https://github.com/Carlwyne-Dev/kantara.git
+cd kantara
 npm install
 cp .env.local.example .env.local   # add your Supabase + YouTube API keys
 npm run dev

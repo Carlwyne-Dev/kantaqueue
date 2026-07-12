@@ -16,7 +16,7 @@ export default function AnonSessionProvider({
 }) {
   useEffect(() => {
     ensureAnonSession().catch((err) =>
-      console.error('[KantaQueue] Anon session error:', err)
+      console.error('[KanTara] Anon session error:', err)
     );
   }, []);
 

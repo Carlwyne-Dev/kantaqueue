@@ -115,7 +115,7 @@ export default function HomePage() {
       <nav className="landing-nav">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <LogoMark size={32} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KantaQueue</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KanTara</span>
         </div>
         <div className="landing-nav-actions">
           <button
@@ -207,7 +207,7 @@ export default function HomePage() {
 
       <footer className="landing-footer">
         <span style={{ fontSize: 13, color: '#c7c7cc', letterSpacing: '-0.1px' }}>
-          &copy; {new Date().getFullYear()} KantaQueue
+          &copy; {new Date().getFullYear()} KanTara
         </span>
         <div className="landing-footer-links">
           {[{ label: 'Help', href: '/help' }, { label: 'Terms', href: '/terms' }, { label: 'Privacy', href: '/privacy' }].map(({ label, href }) => (

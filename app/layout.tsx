@@ -10,10 +10,10 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'KantaQueue — Karaoke Queue App',
+  title: 'KanTara — Karaoke Queue App',
   description:
     'Fix the "passing the phone around" problem at karaoke sessions. Guests scan a QR code, search songs from their own phone, and the host screen handles playback automatically.',
-  keywords: ['karaoke', 'queue', 'youtube', 'kanta', 'kantaqueue'],
+  keywords: ['karaoke', 'queue', 'youtube', 'kanta', 'kantara'],
 };
 
 export default function RootLayout({

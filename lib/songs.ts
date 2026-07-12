@@ -1,5 +1,5 @@
 // ============================================================
-// KantaQueue — Cache-first song search
+// KanTara — Cache-first song search
 // PRD §8: Search Architecture
 // PRD §9a: normalized_title dedup before insert
 // ============================================================

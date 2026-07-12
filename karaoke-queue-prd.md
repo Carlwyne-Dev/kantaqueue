@@ -1,4 +1,4 @@
-# Product Requirements Document: KantaQueue
+# Product Requirements Document: KanTara
 
 **Status:** Draft v1
 **Owner:** Build (AppBuildersPH)
@@ -7,13 +7,13 @@
 
 ## 0. Naming
 
-**KantaQueue** — reads literally as "kanta" (sing) + "queue," and doubles as "Kantako" ("my song") when said aloud. Playful, Filipino-flavored, and describes exactly what the app does without being generic.
+**KanTara** — reads literally as "kanta" (sing) + "queue," and doubles as "Kantako" ("my song") when said aloud. Playful, Filipino-flavored, and describes exactly what the app does without being generic.
 
 ---
 
 ## 1. Overview
 
-KantaQueue is a web app that fixes the "passing the phone around" problem at YouTube karaoke sessions. One device (TV/laptop) is the Host Screen. Guests scan a QR code to join a room from their own phones — no app install — and search, queue, and track songs while the host device handles playback automatically.
+KanTara is a web app that fixes the "passing the phone around" problem at YouTube karaoke sessions. One device (TV/laptop) is the Host Screen. Guests scan a QR code to join a room from their own phones — no app install — and search, queue, and track songs while the host device handles playback automatically.
 
 Not a YouTube replacement. A queue and coordination layer on top of it.
 

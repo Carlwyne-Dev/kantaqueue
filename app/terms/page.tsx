@@ -5,15 +5,15 @@ import { DocLayout } from '@/app/components/DocLayout';
 const sections = [
   {
     heading: 'Use of the Service',
-    body: 'KantaQueue is a free tool for coordinating karaoke queues at private gatherings. You may use it for personal, non-commercial purposes. You agree not to misuse the service or use it in any way that violates applicable laws.',
+    body: 'KanTara is a free tool for coordinating karaoke queues at private gatherings. You may use it for personal, non-commercial purposes. You agree not to misuse the service or use it in any way that violates applicable laws.',
   },
   {
     heading: 'No Account Required',
-    body: 'KantaQueue uses anonymous browser sessions — no email address or password is collected or required. Sessions are temporary and scoped to your browser tab.',
+    body: 'KanTara uses anonymous browser sessions — no email address or password is collected or required. Sessions are temporary and scoped to your browser tab.',
   },
   {
     heading: 'YouTube Content',
-    body: 'All song search results and video playback are powered by the YouTube Data API and YouTube IFrame Player. Your use of YouTube content is subject to the YouTube Terms of Service (youtube.com/t/terms). KantaQueue does not host, store, or redistribute any audio or video content.',
+    body: 'All song search results and video playback are powered by the YouTube Data API and YouTube IFrame Player. Your use of YouTube content is subject to the YouTube Terms of Service (youtube.com/t/terms). KanTara does not host, store, or redistribute any audio or video content.',
   },
   {
     heading: 'Service Availability',
@@ -21,11 +21,11 @@ const sections = [
   },
   {
     heading: 'Disclaimer of Warranties',
-    body: 'KantaQueue is provided "as is" and "as available," without any warranty of any kind — express, implied, or statutory. We do not warrant that the service will be error-free, uninterrupted, or free of harmful components.',
+    body: 'KanTara is provided "as is" and "as available," without any warranty of any kind — express, implied, or statutory. We do not warrant that the service will be error-free, uninterrupted, or free of harmful components.',
   },
   {
     heading: 'Limitation of Liability',
-    body: 'To the fullest extent permitted by law, KantaQueue and its creators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of — or inability to use — the service.',
+    body: 'To the fullest extent permitted by law, KanTara and its creators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of — or inability to use — the service.',
   },
   {
     heading: 'Changes to These Terms',

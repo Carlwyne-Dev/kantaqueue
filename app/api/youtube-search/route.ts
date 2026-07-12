@@ -1,5 +1,5 @@
 // ============================================================
-// KantaQueue — YouTube Data API v3 server-side proxy
+// KanTara — YouTube Data API v3 server-side proxy
 // PRD §10: "server-side YouTube API proxy (keeps key private)"
 // PRD §8: karaoke keyword append + post-filter, debounce note
 // PRD §9a: search.list costs 100 units; guard quota carefully

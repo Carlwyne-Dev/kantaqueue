@@ -1,5 +1,5 @@
 // ============================================================
-// KantaQueue — Supabase schema types (mirrors Section 7 of PRD)
+// KanTara — Supabase schema types (mirrors Section 7 of PRD)
 // ============================================================
 
 export type RoomStatus = 'active' | 'paused' | 'ended';

@@ -1,5 +1,5 @@
 // ============================================================
-// KantaQueue — Room code generator
+// KanTara — Room code generator
 // PRD §9a: 5-character codes from uppercase alphanumeric,
 // ambiguous characters removed (no 0/O, no 1/I/L).
 // On collision with an active room, regenerate and retry.
@@ -37,5 +37,5 @@ export async function generateUniqueRoomCode(
     const exists = await checkExists(code);
     if (!exists) return code;
   }
-  throw new Error('[KantaQueue] Failed to generate a unique room code after max attempts');
+  throw new Error('[KanTara] Failed to generate a unique room code after max attempts');
 }

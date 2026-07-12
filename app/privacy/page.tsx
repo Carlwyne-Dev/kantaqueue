@@ -5,7 +5,7 @@ import { DocLayout } from '@/app/components/DocLayout';
 const sections = [
   {
     heading: 'What we collect',
-    body: 'KantaQueue does not collect personal information. When you use the app, an anonymous session identifier is generated in your browser automatically. We store: room codes, the display nicknames you choose or are assigned, and the songs added to queues. None of this is linked to your real identity.',
+    body: 'KanTara does not collect personal information. When you use the app, an anonymous session identifier is generated in your browser automatically. We store: room codes, the display nicknames you choose or are assigned, and the songs added to queues. None of this is linked to your real identity.',
   },
   {
     heading: 'Display names',
@@ -29,7 +29,7 @@ const sections = [
   },
   {
     heading: 'Children\'s privacy',
-    body: 'KantaQueue is not directed at children under 13. We do not knowingly collect any information from children under 13.',
+    body: 'KanTara is not directed at children under 13. We do not knowingly collect any information from children under 13.',
   },
   {
     heading: 'Changes to this policy',

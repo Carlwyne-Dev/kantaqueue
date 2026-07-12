@@ -25,7 +25,7 @@ export function DocLayout({ title, children }: { title: string; children: React.
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 40px', borderBottom: '1px solid #f2f2f7', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LogoMark size={28} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KantaQueue</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KanTara</span>
         </div>
         <button
           onClick={() => router.push('/')}
@@ -65,7 +65,7 @@ export function DocLayout({ title, children }: { title: string; children: React.
 
       {/* Footer */}
       <footer style={{ borderTop: '1px solid #f2f2f7', padding: '18px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 13, color: '#c7c7cc' }}>&copy; {new Date().getFullYear()} KantaQueue</span>
+        <span style={{ fontSize: 13, color: '#c7c7cc' }}>&copy; {new Date().getFullYear()} KanTara</span>
         <div style={{ display: 'flex', gap: 24 }}>
           {[{ label: 'Help', href: '/help' }, { label: 'Terms', href: '/terms' }, { label: 'Privacy', href: '/privacy' }].map(({ label, href }) => (
             <a key={label} href={href} style={{ fontSize: 13, color: '#8e8e93', textDecoration: 'none' }}

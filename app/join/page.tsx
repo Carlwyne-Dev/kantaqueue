@@ -119,7 +119,7 @@ export default function JoinPage({
       <nav className="join-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 58, padding: '12px 16px', borderBottom: '1px solid #f2f2f7' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LogoMark size={28} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KantaQueue</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KanTara</span>
         </div>
         <button
           onClick={() => router.push('/')}

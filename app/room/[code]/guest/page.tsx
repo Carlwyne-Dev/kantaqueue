@@ -133,7 +133,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
         {/* Top row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: '#1c1c1e', margin: 0, letterSpacing: '-0.3px' }}>KantaQueue</p>
+            <p style={{ fontSize: 16, fontWeight: 700, color: '#1c1c1e', margin: 0, letterSpacing: '-0.3px' }}>KanTara</p>
             <p style={{ fontSize: 12, color: '#8e8e93', margin: '2px 0 0', letterSpacing: '-0.1px' }}>
               Room <span style={{ fontWeight: 700, letterSpacing: '0.06em', color: '#1c1c1e' }}>{code}</span>
               {nickname ? <span> · {nickname}</span> : ''}

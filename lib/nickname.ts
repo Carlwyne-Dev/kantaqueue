@@ -1,5 +1,5 @@
 // ============================================================
-// KantaQueue — Guest nickname pool
+// KanTara — Guest nickname pool
 // PRD §5.2 / §9a: Auto-assigned random fun nickname (e.g. "Sunny Mango").
 // Check for uniqueness within the room before assigning — no two guests
 // in the same room should share a name.
