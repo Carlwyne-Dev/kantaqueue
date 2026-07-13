@@ -27,6 +27,10 @@ create policy "only host can update their room"
   on rooms for update
   using (auth.uid() = host_id);
 
+create policy "anyone can delete ended rooms"
+  on rooms for delete
+  using (status = 'ended');
+
 
 -- ---------- SONGS (global cache, shared across all rooms) ----------
 create table songs (

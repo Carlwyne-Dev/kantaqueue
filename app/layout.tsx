@@ -1,11 +1,16 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { Plus_Jakarta_Sans, Manrope } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import AnonSessionProvider from './providers';
 import './globals.css';
 
-const geist = Geist({
-  variable: '--font-geist-sans',
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: '--font-plus-jakarta',
+  subsets: ['latin'],
+});
+
+const manrope = Manrope({
+  variable: '--font-manrope',
   subsets: ['latin'],
 });
 
@@ -20,8 +25,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`}>
-      <body className="min-h-full bg-white text-[#1C1C1E] antialiased">
+    <html lang="en" className={`${plusJakarta.variable} ${manrope.variable} h-full`}>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet" />
+      </head>
+      <body className="min-h-full bg-background text-on-background font-body-lg antialiased">
         <AnonSessionProvider>
           {children}
           <Toaster
@@ -29,7 +37,7 @@ export default function RootLayout({
             containerStyle={{ top: 16 }}
             toastOptions={{
               style: {
-                fontFamily: 'var(--font-geist-sans)',
+                fontFamily: 'var(--font-manrope)',
                 borderRadius: '12px',
                 fontSize: '14px',
               },

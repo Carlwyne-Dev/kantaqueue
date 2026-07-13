@@ -1,0 +1,439 @@
+<!DOCTYPE html><html class="light" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script id="tailwind-config">try{
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#fbf9f5",
+                        "primary-fixed": "#d7e8c9",
+                        "on-primary-fixed": "#121f0c",
+                        "on-background": "#1b1c1a",
+                        "tertiary-fixed-dim": "#e2bccc",
+                        "background": "#fbf9f5",
+                        "tertiary-fixed": "#ffd8e8",
+                        "surface-container-high": "#eae8e4",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "surface-variant": "#e4e2de",
+                        "outline-variant": "#c5c8be",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#5f5e5e",
+                        "tertiary-container": "#cca8b7",
+                        "secondary-container": "#e2dfde",
+                        "inverse-primary": "#bbccae",
+                        "on-primary-fixed-variant": "#3d4b34",
+                        "error": "#ba1a1a",
+                        "tertiary": "#745663",
+                        "surface-container-low": "#f5f3ef",
+                        "outline": "#757870",
+                        "surface-tint": "#54634a",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface-container": "#f0eeea",
+                        "on-surface-variant": "#444840",
+                        "on-tertiary-fixed": "#2b1520",
+                        "on-primary": "#ffffff",
+                        "primary": "#54634a",
+                        "on-secondary-fixed": "#1b1b1c",
+                        "primary-container": "#a7b79a",
+                        "on-tertiary-container": "#573c49",
+                        "on-secondary-container": "#636262",
+                        "on-primary-container": "#3a4832",
+                        "on-secondary-fixed-variant": "#474746",
+                        "surface-container-highest": "#e4e2de",
+                        "secondary-fixed": "#e5e2e1",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1b1c1a",
+                        "primary-fixed-dim": "#bbccae",
+                        "on-tertiary-fixed-variant": "#5a3f4b",
+                        "surface-bright": "#fbf9f5",
+                        "surface-dim": "#dcdad6",
+                        "inverse-on-surface": "#f2f0ed",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "16px",
+                        "3xl": "32px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "margin-desktop": "64px",
+                        "stack-sm": "16px",
+                        "stack-lg": "64px",
+                        "stack-md": "32px",
+                        "gutter": "24px",
+                        "margin-mobile": "20px",
+                        "container-max": "1200px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "label-sm": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Plus Jakarta Sans"],
+                        "label-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1.1", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "display-lg-mobile": ["36px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    }catch(_e){}</script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script></head><body class="overflow-x-hidden selection:bg-primary-container/30">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/20">
+    <div class="flex items-center justify-between px-margin-desktop py-5 max-w-[1200px] mx-auto">
+        <div class="text-[26px] font-extrabold text-on-background tracking-tighter font-headline-sm">
+            Kantara
+        </div>
+        <div class="hidden md:flex items-center gap-10">
+            <a class="text-on-background font-bold text-label-md border-b-2 border-primary pb-1" href="#">Explore</a>
+            <a class="text-secondary hover:text-on-background transition-colors text-label-md" href="#">Rooms</a>
+            <a class="text-secondary hover:text-on-background transition-colors text-label-md" href="#">Premium</a>
+        </div>
+        <div class="flex items-center gap-stack-md">
+            <div class="hidden lg:block relative group">
+                <input class="bg-surface-container-low rounded-full border-none px-6 py-2.5 text-body-md w-56 focus:ring-1 focus:ring-primary/20 placeholder:text-secondary/50 transition-all duration-300" placeholder="Find a song..." type="text">
+                <span class="material-symbols-outlined absolute right-5 top-2.5 text-secondary text-[22px] group-hover:text-primary transition-colors">search</span>
+            </div>
+            <button class="bg-primary text-on-primary px-7 py-2.5 rounded-full font-bold text-label-md active:scale-95 transition-transform shadow-sm">
+                Sign In
+            </button>
+        </div>
+    </div>
+</nav>
+
+<main class="pt-24">
+    <!-- Hero Section -->
+    <section class="relative px-margin-desktop py-stack-lg max-w-[1200px] mx-auto lg:min-h-[750px] flex flex-col lg:flex-row items-center justify-between overflow-visible ambient-gradient">
+        <div class="w-full lg:w-1/2 z-10 space-y-stack-md">
+            <h1 class="font-display-lg text-display-lg-mobile lg:text-display-lg leading-[1.1] text-on-surface">
+                Karaoke, <br><span class="text-primary italic font-light">minus the chaos.</span>
+            </h1>
+            <p class="font-body-lg text-secondary max-w-md leading-relaxed mt-6">
+                Create a room, let everyone join with a QR code, build the queue together, and keep the music flowing without passing one phone around.
+            </p>
+            <div class="pt-8 flex flex-wrap gap-stack-md">
+                <button class="bg-[#A7B79A] text-on-primary-container px-10 py-4.5 rounded-full font-bold text-headline-sm hover:brightness-95 active:scale-95 transition-all shadow-lg shadow-[#A7B79A]/20">
+                    Start a Room
+                </button>
+                <button class="bg-white border border-outline-variant/50 px-12 py-5 rounded-full font-bold text-headline-md text-on-surface hover:bg-surface-container-low transition-all shadow-sm">
+                    Join Room
+                </button>
+            </div>
+        </div>
+
+        <!-- Hero Visuals -->
+        <div class="w-full lg:w-1/2 relative mt-20 lg:mt-0 h-[500px]">
+            <!-- Large Album Art -->
+            <div class="absolute top-0 right-0 w-[340px] h-[340px] rounded-3xl overflow-hidden shadow-2xl rotate-3 z-0 ring-8 ring-white/50">
+                <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmZn3Dv7yv_q7o0l1UVAc8q6-vEfAAtsGFl0-fKc92srFKCRnwK3tfJOGbznuc2Ynobx8zcgIIA8BsbYw5bu0gLBSOM3-iKqQsiyikLZlHQ7BKQqy4xYl5sNMaThAsItMOYSOGtVcI9fRl2fgwYBQYehFlO8A2WITNTQmpP_hGIHaaADI982pNqZGuhJg61cpbFZ0zRQSj9n3M6Cu-o3ZY1ZZtXkDTFT-YOaO9cNnWhCmiug7gEC5S" alt="Album Art">
+            </div>
+            
+            <!-- Queue Card 1 -->
+            <div class="glass-panel absolute top-12 left-0 p-4 rounded-3xl w-[300px] -rotate-2 z-20 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-surface-container overflow-hidden shrink-0 shadow-inner">
+                    <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBphWv8C1bLfrbl7NWwnjQZUMLj6dO3OPpsEckTB4VzUSPtsinAhreOamtIG3NPsNVUGSP7UHCGoU2j2SbwLUTHXHtylvi3WaPpgEAt3IDLBgdyFwmCBBTqE7gSKeG2_AGmoRtYXMLpj1wq51vl_QvD_1g1MwQb-5ZpWYBRMl4Yx92c_qBW8IrcLRKBNN1-Rw5KUicLbUtEsMwcmh1PfORJeycaM_HmPlXJZzxZbL6TsUuRqfg8iRNd" alt="Song">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-on-surface text-label-md truncate">Moonlight Serenade</p>
+                    <p class="text-secondary text-label-sm">Aria V.</p>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-[18px]" data-original-icon="play_arrow">play_arrow</span>
+                </div>
+            </div>
+
+            <!-- QR Join Mockup -->
+            <div class="glass-panel absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-3xl w-[200px] shadow-2xl z-30 ring-1 ring-white">
+                <div class="bg-white p-4 rounded-2xl aspect-square flex items-center justify-center shadow-inner overflow-hidden">
+                    <div class="w-full h-full bg-surface-container-low flex items-center justify-center rounded-xl border border-outline-variant/20">
+                        <span class="material-symbols-outlined text-secondary text-5xl opacity-40">qr_code_2</span>
+                    </div>
+                </div>
+                <p class="text-center mt-4 font-bold text-secondary text-[10px] tracking-widest uppercase">SCAN TO JOIN</p>
+            </div>
+
+            <!-- Queue Card 2 -->
+            <div class="glass-panel absolute bottom-12 right-6 p-4 rounded-3xl w-[260px] rotate-1 z-10 flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-surface-container overflow-hidden shrink-0">
+                    <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAemNOWiBy3U03PF9-oTW3EpQVCNOYnjNMO5gSnx8jUDSpdDhrCT6f2IMtNL8ytaT7PMu2xoD6Am4tNE4nS1boWKYrD7ne3ziqq9tnnFR00K_mLy2QiogyAW2ZxR08UpK_NpL_5EoHltZUdgM7mnIKeIKvZz3ZWNDphh-5AvLfv13L7EHeeoTTQjlv4WbSeuexVBJ9oiH_9FbSbRLYipIP4_qDjOFdllbGYNygMqiTvW5xr_htUnnja" alt="Song">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-on-surface text-label-sm truncate">Velvet Dreams</p>
+                </div>
+                <span class="material-symbols-outlined text-secondary/30 text-[20px]">more_horiz</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collaborative Queue Section -->
+    <section class="bg-[#F2F1EC] py-24 px-margin-desktop">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="grid lg:grid-cols-2 gap-stack-lg items-center">
+                <div class="space-y-stack-md order-2 lg:order-1 lg:pr-12">
+                    <div class="inline-flex items-center px-4 py-1.5 bg-white text-primary rounded-full font-bold text-label-sm shadow-sm mb-6">
+                        Seamless Collaboration
+                    </div>
+                    <h2 class="font-headline-md text-on-surface">The first democratic queue.</h2>
+                    <p class="font-body-lg text-secondary leading-relaxed max-w-lg mt-4">
+                        No more gatekeeping the aux cord. Anyone in the room can search, suggest, and vote on songs. The system automatically balances the queue so everyone gets their turn in the spotlight.
+                    </p>
+                    <ul class="space-y-8 pt-10">
+                        <li class="flex items-start gap-6">
+                            <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                <span class="material-symbols-outlined text-primary text-[24px]">how_to_vote</span>
+                            </div>
+                            <div>
+                                <h4 class="font-headline-sm text-on-surface text-[18px]">Upvote Favorites</h4>
+                                <p class="font-body-md text-secondary mt-2">The hottest tracks move up the list automatically based on crowd excitement.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-6">
+                            <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                <span class="material-symbols-outlined text-primary text-[24px]">group</span>
+                            </div>
+                            <div>
+                                <h4 class="font-headline-sm text-on-surface text-[18px]">Smart Fair-Play</h4>
+                                <p class="font-body-md text-secondary mt-2">Automatically interleaves songs from different guests so no one person hogs the mic.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <div class="bg-white rounded-3xl p-10 shadow-xl shadow-black/5 border border-white/50">
+                        <div class="flex items-center justify-between mb-10">
+                            <h3 class="font-bold text-on-surface text-2xl font-headline-sm">Live Queue</h3>
+                            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full">
+                                <span class="text-label-sm text-secondary">14 Songs</span>
+                                <span class="w-1 h-1 rounded-full bg-secondary/30"></span>
+                                <span class="text-label-sm text-secondary">58 min</span>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <!-- Song Card Item -->
+                            <div class="flex items-center gap-5 p-5 rounded-3xl hover:bg-surface-container-low transition-all group cursor-pointer">
+                                <div class="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center overflow-hidden shadow-inner">
+                                    <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYsPkPAH6Rq790Dkb24pvAr7D9PjfYaH2k6hRtARebeMxEHIeoxMxjirQS73jfF6wAaJzhRrPP16wh6neiL27SWJccq2Fg_P7NbtGpNgonSCXaSzCsOLQl6A2ihzQcDKDQPLj0GaQaPeHmO-QHy5OwS3Bdtk1N6DvWFvxUOBfFTRUC0_1hACJ-_nJMzcafGR4tmIZ1sXCsbRSuOOl-fLhijab_TvJj02tKAxMwwSSqc1mnY0Z3N-ys" alt="Song">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h5 class="font-bold text-body-lg text-on-surface truncate">Electric Love</h5>
+                                    <p class="text-secondary text-label-sm mt-1">Børns • Added by Sarah</p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <button class="w-11 h-11 rounded-full flex items-center justify-center text-secondary hover:text-primary hover:bg-primary/5 transition-all">
+                                        <span class="material-symbols-outlined text-[22px]">thumb_up</span>
+                                    </button>
+                                    <span class="font-bold text-on-surface text-body-md">12</span>
+                                </div>
+                            </div>
+                            <!-- Song Card Item 2 -->
+                            <div class="flex items-center gap-5 p-5 rounded-3xl bg-[#A7B79A]/5 border border-[#A7B79A]/10">
+                                <div class="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center overflow-hidden shadow-inner">
+                                    <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbJUK-kEaQv-4N_XqO_fdca7KTtXxkpeZOKGrPccbtJ9YjQpkAxbBbnnJHyEkJmrcfCOP8glo9HdIjJCz3uYhDZ79b5pUqeuym0aDpwlUzDRYkmFnPkZnKU6-LpsHIic5xgbLmCHJDPANZpcGI6UwGkswGNimdGC60apsiIGfON5IS2N__djSoiywSVLHW7lRdh-r1u62624NAsDWO_fKrkAZZwrg5aFrj5mnMlQYrdFzYz2g4Zgjy" alt="Song">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h5 class="font-bold text-body-lg text-on-surface truncate">Wildflowers</h5>
+                                    <p class="text-secondary text-label-sm mt-1">Tom Petty • Added by Marc</p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <button class="w-11 h-11 rounded-full flex items-center justify-center text-primary bg-[#A7B79A]/20">
+                                        <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">thumb_up</span>
+                                    </button>
+                                    <span class="font-bold text-primary text-body-md">24</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QR Join Section -->
+    <section class="py-stack-lg px-margin-desktop max-w-[1200px] mx-auto text-center">
+        <div class="max-w-2xl mx-auto mb-20 mt-10">
+            <h2 class="font-headline-md text-on-surface mb-6">No apps. No passwords. <br>Just scan and sing.</h2>
+            <p class="font-body-lg text-secondary leading-relaxed">
+                Simply project your room's unique QR code on the TV or print it for the table. Guests scan with their phone's camera and they're instantly part of the session.
+            </p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-10">
+            <div class="p-12 rounded-3xl bg-white border border-outline-variant/10 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                <div class="w-16 h-16 rounded-3xl bg-surface-container-low flex items-center justify-center mx-auto mb-8 group-hover:bg-primary-container/20 transition-colors">
+                    <span class="material-symbols-outlined text-secondary group-hover:text-primary text-4xl transition-colors">qr_code_scanner</span>
+                </div>
+                <h3 class="font-bold text-on-surface text-xl mb-4 font-headline-sm">1. Scan</h3>
+                <p class="font-body-md text-secondary leading-relaxed">Use any smartphone camera. No app download required to join.</p>
+            </div>
+            <div class="p-12 rounded-3xl bg-white border border-outline-variant/10 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                <div class="w-16 h-16 rounded-3xl bg-surface-container-low flex items-center justify-center mx-auto mb-8 group-hover:bg-primary-container/20 transition-colors">
+                    <span class="material-symbols-outlined text-secondary group-hover:text-primary text-4xl transition-colors">search</span>
+                </div>
+                <h3 class="font-bold text-on-surface text-xl mb-4 font-headline-sm">2. Search</h3>
+                <p class="font-body-md text-secondary leading-relaxed">Browse millions of tracks with high-quality instrumentals.</p>
+            </div>
+            <div class="p-12 rounded-3xl bg-white border border-outline-variant/10 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                <div class="w-16 h-16 rounded-3xl bg-surface-container-low flex items-center justify-center mx-auto mb-8 group-hover:bg-primary-container/20 transition-colors">
+                    <span class="material-symbols-outlined text-secondary group-hover:text-primary text-4xl transition-colors">playlist_add_check</span>
+                </div>
+                <h3 class="font-bold text-on-surface text-xl mb-4 font-headline-sm">3. Join</h3>
+                <p class="font-body-md text-secondary leading-relaxed">Add to queue and watch your pick climb the ranks.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Premium Sound Section -->
+    <section class="bg-inverse-surface py-28 px-margin-desktop text-white overflow-hidden">
+        <div class="max-w-[1200px] mx-auto">
+            <div class="mb-20">
+                <h2 class="font-headline-md text-surface-bright">Studio sound for your living room.</h2>
+                <p class="text-secondary-fixed font-body-lg mt-6 max-w-2xl opacity-70 leading-relaxed">
+                    Kantara Premium brings lossless audio and synchronized high-definition lyrics to your karaoke nights. Experience music the way it was meant to be heard.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto">
+                <!-- Bento Box 1: Studio Quality -->
+                <div class="md:col-span-8 bg-white/5 rounded-3xl p-12 flex flex-col justify-between relative overflow-hidden group min-h-[400px] border border-white/5">
+                    <div class="z-10">
+                        <h3 class="font-bold text-3xl font-headline-sm text-white">Lossless Master Audio</h3>
+                        <p class="text-secondary-fixed/70 max-w-sm mt-6 text-body-lg leading-relaxed">Crystal clear instrumentals that make your voice stand out without the distortion of standard karaoke files.</p>
+                    </div>
+                    <div class="mt-12 z-10 flex items-end gap-3 h-16">
+                        <div class="w-2 bg-primary-container h-6 animate-pulse"></div>
+                        <div class="w-2 bg-primary-container h-14 animate-pulse delay-75"></div>
+                        <div class="w-2 bg-primary-container h-10 animate-pulse delay-150"></div>
+                        <div class="w-2 bg-primary-container h-16 animate-pulse delay-200"></div>
+                        <div class="w-2 bg-primary-container h-8 animate-pulse delay-300"></div>
+                        <div class="w-2 bg-primary-container h-12 animate-pulse delay-400"></div>
+                    </div>
+                    <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-primary-container/10 rounded-full blur-[120px] group-hover:scale-110 transition-transform duration-1000"></div>
+                </div>
+                <!-- Bento Box 2: HD Lyrics -->
+                <div class="md:col-span-4 bg-primary-container/10 border border-white/10 rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+                    <span class="material-symbols-outlined text-primary-container text-7xl mb-8 opacity-90" style="font-variation-settings: 'wght' 100;">title</span>
+                    <h3 class="font-bold text-2xl font-headline-sm text-white">Dynamic Lyrics</h3>
+                    <p class="text-secondary-fixed/60 text-body-md mt-4 leading-relaxed">Perfectly timed, large-format lyrics optimized for any screen size.</p>
+                </div>
+                <!-- Bento Box 3: Device Sync -->
+                <div class="md:col-span-5 bg-white/5 rounded-3xl p-12 flex flex-col justify-between min-h-[280px] border border-white/5">
+                    <div>
+                        <h3 class="font-bold text-2xl font-headline-sm text-white mb-4">Cross-Platform Sync</h3>
+                        <p class="text-secondary-fixed/60 text-body-md leading-relaxed">Connect your iPad, Laptop, or Smart TV as the main display effortlessly.</p>
+                    </div>
+                    <div class="flex gap-8 mt-10">
+                        <span class="material-symbols-outlined text-white/30 text-[32px] hover:text-white/60 transition-colors">tv</span>
+                        <span class="material-symbols-outlined text-white/30 text-[32px] hover:text-white/60 transition-colors">laptop</span>
+                        <span class="material-symbols-outlined text-white/30 text-[32px] hover:text-white/60 transition-colors">tablet_mac</span>
+                    </div>
+                </div>
+                <!-- Bento Box 4: Premium Badge -->
+                <div class="md:col-span-7 bg-[#A7B79A] rounded-3xl p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 shadow-2xl shadow-[#A7B79A]/20">
+                    <div class="text-on-primary-container">
+                        <h3 class="font-bold text-3xl font-headline-sm">Go Premium.</h3>
+                        <p class="font-body-lg mt-2 opacity-90">Unlock unlimited rooms and hi-fi audio today.</p>
+                    </div>
+                    <button class="bg-on-primary-container text-white px-12 py-5 rounded-full font-bold hover:bg-black/80 transition-colors whitespace-nowrap active:scale-95 text-headline-sm shadow-lg">
+                        Try Free
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="bg-surface-container-lowest py-20 border-t border-outline-variant/10">
+    <div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-[1200px] mx-auto gap-12">
+        <div class="flex flex-col items-center md:items-start">
+            <div class="text-[18px] font-extrabold text-on-background tracking-tighter mb-3 font-headline-sm">KANTARA</div>
+            <p class="text-secondary text-label-sm">© 2024 Kantara Karaoke. All rights reserved.</p>
+        </div>
+        <div class="flex gap-12">
+            <a class="text-secondary hover:text-on-background transition-colors text-label-md font-medium" href="#">Terms</a>
+            <a class="text-secondary hover:text-on-background transition-colors text-label-md font-medium" href="#">Privacy</a>
+            <a class="text-secondary hover:text-on-background transition-colors text-label-md font-medium" href="#">Support</a>
+        </div>
+        <div class="flex gap-6">
+            <a class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-secondary hover:text-primary hover:bg-primary-container/20 transition-all" href="#">
+                <span class="material-symbols-outlined text-[20px]">share</span>
+            </a>
+            <a class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-secondary hover:text-primary hover:bg-primary-container/20 transition-all" href="#">
+                <span class="material-symbols-outlined text-[20px]">language</span>
+            </a>
+        </div>
+    </div>
+</footer>
+
+<!-- Mobile Nav -->
+<div class="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] z-50">
+    <div class="glass-panel rounded-full px-8 py-5 flex justify-around items-center border border-white/60 shadow-2xl">
+        <a class="flex flex-col items-center text-primary" href="#">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+        </a>
+        <a class="flex flex-col items-center text-secondary/70" href="#">
+            <span class="material-symbols-outlined">queue_music</span>
+        </a>
+        <div class="bg-primary text-on-primary p-4 rounded-full -mt-16 shadow-xl active:scale-90 transition-transform">
+            <span class="material-symbols-outlined text-3xl">add</span>
+        </div>
+        <a class="flex flex-col items-center text-secondary/70" href="#">
+            <span class="material-symbols-outlined">search</span>
+        </a>
+        <a class="flex flex-col items-center text-secondary/70" href="#">
+            <span class="material-symbols-outlined">person</span>
+        </a>
+    </div>
+</div>
+
+<script>
+    // Premium feel micro-interactions for glass panels
+    document.querySelectorAll('.glass-panel').forEach(panel => {
+        panel.addEventListener('mousemove', (e) => {
+            const rect = panel.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const xc = rect.width / 2;
+            const yc = rect.height / 2;
+            const dx = x - xc;
+            const dy = y - yc;
+            
+            panel.style.transform = `perspective(1000px) rotateY(${dx / 50}deg) rotateX(${-dy / 50}deg) translateY(-5px)`;
+        });
+
+        panel.addEventListener('mouseleave', () => {
+            panel.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0px)';
+        });
+    });
+
+    // Elegant search bar focus
+    const searchInput = document.querySelector('input[type="text"]');
+    if (searchInput) {
+        searchInput.addEventListener('focus', () => {
+            searchInput.classList.add('w-80');
+            searchInput.classList.remove('w-56');
+            searchInput.parentElement.classList.add('scale-105');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.classList.remove('w-80');
+            searchInput.classList.add('w-56');
+            searchInput.parentElement.classList.remove('scale-105');
+        });
+    }
+</script>
+
+</body></html>

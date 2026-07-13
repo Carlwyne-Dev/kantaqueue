@@ -38,15 +38,15 @@ export default function TermsPage() {
 
   return (
     <DocLayout title="Terms of Use">
-      <p style={{ fontSize: 14, color: '#8e8e93', margin: '0 0 40px', letterSpacing: '-0.1px' }}>
+      <p className="text-sm text-secondary font-medium uppercase tracking-widest -mt-6 mb-12">
         Last updated: {updated}
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div className="flex flex-col gap-10">
         {sections.map((s, i) => (
-          <div key={s.heading} style={{ paddingBottom: 28, marginBottom: 28, borderBottom: i < sections.length - 1 ? '1px solid #f2f2f7' : 'none' }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, color: '#1c1c1e', margin: '0 0 10px', letterSpacing: '-0.3px' }}>{s.heading}</h2>
-            <p style={{ fontSize: 15, color: '#3a3a3c', margin: 0, lineHeight: 1.7, letterSpacing: '-0.1px' }}>{s.body}</p>
+          <div key={s.heading} className={`pb-10 ${i < sections.length - 1 ? 'border-b border-outline-variant/30' : ''}`}>
+            <h2 className="text-2xl font-bold text-on-background font-headline mb-4">{s.heading}</h2>
+            <p className="text-lg text-on-surface leading-relaxed">{s.body}</p>
           </div>
         ))}
       </div>

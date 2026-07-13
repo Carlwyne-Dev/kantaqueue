@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Join Karaoke Room - Kantara</title>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans & Manrope -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#fbf9f5",
+            "primary-fixed": "#d7e8c9",
+            "on-primary-fixed": "#121f0c",
+            "on-background": "#1b1c1a",
+            "background": "#fbf9f5",
+            "surface-container-high": "#eae8e4",
+            "inverse-surface": "#30312e",
+            "surface-variant": "#e4e2de",
+            "outline-variant": "#c5c8be",
+            "secondary": "#5f5e5e",
+            "primary": "#54634a",
+            "brand": {
+              DEFAULT: '#a7b79a', // Sage Green
+              dark: '#54634a',
+              warm: '#f9f8f5',
+              charcoal: '#1e1e1e'
+            }
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Manrope", "sans-serif"],
+          },
+          borderRadius: {
+            'custom': '32px',
+          }
+        },
+      },
+    }
+  </script>
+<style data-purpose="custom-layout-styles">
+    body {
+      background-color: #fbf9f5;
+      background-image: radial-gradient(circle at 10% 20%, rgba(215, 232, 201, 0.15) 0%, rgba(251, 249, 245, 0) 40%),
+                        radial-gradient(circle at 90% 80%, rgba(167, 183, 154, 0.1) 0%, rgba(251, 249, 245, 0) 50%);
+      font-family: 'Manrope', sans-serif;
+    }
+    .ios-input-shadow {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+    .card-depth {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .headline-tight {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: -0.02em;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col text-brand-charcoal">
+<!-- BEGIN: MainHeader -->
+<header class="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center" data-purpose="header">
+<div class="flex items-center gap-3">
+<img alt="Kantara Logo" class="w-10 h-10 rounded-xl object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida/AP1WRLuMaB_UuCJ48tBLgVU8K0P4mnz4fnlPck8wtDug3qWbvdfamFpxM6TGNMLfeP8vmZmkfVxlZgFdmU1RMLvKnnUvoE0nFYJSGRdw9AX-gt0xcmVDwLnCDu1GBCUhXphb-E6E3_KNV8xMOjdP4leZjKoclDCzpQoJib4YkX_VMRKp1Xiyxxc0AzAWtQTd42wWtAuHnnG3wD6GqKIwkQ70E5y9tnwJ7-CjDgTrNdIrkwEgVecbyui6h_KPxg"/>
+<span class="text-xl font-extrabold tracking-tight headline-tight">Kantara</span>
+</div>
+<a class="px-6 py-2.5 rounded-full border border-outline-variant bg-white/50 text-sm font-semibold hover:bg-white hover:shadow-sm transition-all flex items-center gap-2" href="#">
+<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="m15 18-6-6 6-6"></path></svg>
+      Home
+    </a>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: MainContent -->
+<main class="flex-grow flex items-center justify-center px-6 py-12">
+<div class="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+<!-- BEGIN: LeftColumn (Hero Info) -->
+<div class="space-y-10" data-purpose="hero-section">
+<div class="bg-brand inline-flex p-4 rounded-[20px] shadow-lg shadow-brand/10">
+<svg class="text-white w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div class="space-y-4">
+<h1 class="text-5xl lg:text-6xl font-extrabold leading-[1.05] headline-tight text-brand-charcoal">Join the<br/>karaoke room.</h1>
+<p class="text-lg text-secondary max-w-md font-medium">Enter the 5-character code shown on the host screen, pick a name, and you're in.</p>
+</div>
+<!-- Features Checklist -->
+<ul class="space-y-5" data-purpose="checklist">
+<li class="flex items-center gap-4">
+<span class="flex-shrink-0 w-7 h-7 rounded-full bg-brand/15 flex items-center justify-center text-brand">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<span class="font-semibold text-brand-charcoal/80">No app install needed</span>
+</li>
+<li class="flex items-center gap-4">
+<span class="flex-shrink-0 w-7 h-7 rounded-full bg-brand/15 flex items-center justify-center text-brand">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<span class="font-semibold text-brand-charcoal/80">Search and queue songs from your phone</span>
+</li>
+<li class="flex items-center gap-4">
+<span class="flex-shrink-0 w-7 h-7 rounded-full bg-brand/15 flex items-center justify-center text-brand">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<span class="font-semibold text-brand-charcoal/80">See the live queue in real time</span>
+</li>
+</ul>
+</div>
+<!-- END: LeftColumn -->
+<!-- BEGIN: RightColumn (Form) -->
+<div class="bg-[#F2F1EC] p-8 lg:p-12 rounded-custom card-depth border border-white/40" data-purpose="registration-form">
+<form class="space-y-10">
+<!-- Room Code Input Group -->
+<div class="space-y-4">
+<label class="block text-xs font-bold tracking-[0.15em] text-brand-charcoal/40 uppercase font-headline">Room Code</label>
+<div class="grid grid-cols-5 gap-3" data-purpose="otp-style-inputs">
+<input class="w-full aspect-square text-center text-2xl font-bold border border-outline-variant/30 bg-white/80 rounded-2xl ios-input-shadow focus:ring-2 focus:ring-brand focus:border-brand focus:bg-white transition-all outline-none" maxlength="1" placeholder="•" type="text"/>
+<input class="w-full aspect-square text-center text-2xl font-bold border border-outline-variant/30 bg-white/80 rounded-2xl ios-input-shadow focus:ring-2 focus:ring-brand focus:border-brand focus:bg-white transition-all outline-none" maxlength="1" type="text"/>
+<input class="w-full aspect-square text-center text-2xl font-bold border border-outline-variant/30 bg-white/80 rounded-2xl ios-input-shadow focus:ring-2 focus:ring-brand focus:border-brand focus:bg-white transition-all outline-none" maxlength="1" type="text"/>
+<input class="w-full aspect-square text-center text-2xl font-bold border border-outline-variant/30 bg-white/80 rounded-2xl ios-input-shadow focus:ring-2 focus:ring-brand focus:border-brand focus:bg-white transition-all outline-none" maxlength="1" type="text"/>
+<input class="w-full aspect-square text-center text-2xl font-bold border border-outline-variant/30 bg-white/80 rounded-2xl ios-input-shadow focus:ring-2 focus:ring-brand focus:border-brand focus:bg-white transition-all outline-none" maxlength="1" type="text"/>
+</div>
+</div>
+<!-- Name Input Group -->
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<label class="block text-xs font-bold tracking-[0.15em] text-brand-charcoal/40 uppercase font-headline">Your Name</label>
+<span class="text-[10px] text-secondary/60 font-semibold">auto-assigned, feel free to change</span>
+</div>
+<div class="relative">
+<input class="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl text-lg font-bold ios-input-shadow focus:ring-2 focus:ring-brand focus:border-brand focus:bg-white transition-all outline-none text-brand-charcoal" type="text" value="Spicy Wizard"/>
+</div>
+<p class="text-xs text-secondary/70 italic font-medium">You'll appear in the queue with this name.</p>
+</div>
+<!-- CTA Button -->
+<button class="w-full py-5 bg-brand hover:bg-brand-dark text-white rounded-[20px] text-lg font-bold shadow-xl shadow-brand/20 transition-all transform active:scale-[0.98] headline-tight" type="submit">
+            Join Room
+          </button>
+</form>
+</div>
+<!-- END: RightColumn -->
+</div>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: Footer -->
+<footer class="py-10 text-center text-secondary/50 text-sm font-medium">
+    © 2023 Kantara Karaoke. Sing your heart out.
+  </footer>
+<!-- END: Footer -->
+<!-- BEGIN: Scripts -->
+<script data-purpose="form-interaction">
+    const inputs = document.querySelectorAll('[data-purpose="otp-style-inputs"] input');
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        if (e.target.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+          inputs[index - 1].focus();
+        }
+      });
+    });
+  </script>
+<!-- END: Scripts -->
+</body></html>

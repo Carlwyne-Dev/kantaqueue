@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Host Screen - Waiting for the next song</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans & Manrope -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "charcoal": "#1E1E1E",
+            "surface": "#fbf9f5",
+            "primary-fixed": "#d7e8c9",
+            "on-primary-fixed": "#121f0c",
+            "on-background": "#1b1c1a",
+            "background": "#fbf9f5",
+            "surface-container-high": "#eae8e4",
+            "surface-container-low": "#f5f3ef",
+            "surface-container": "#f0eeea",
+            "surface-warm": "#F2F1EC",
+            "outline": "#757870",
+            "outline-variant": "#c5c8be",
+            "primary": "#54634a", /* Sage Green */
+            "on-primary": "#ffffff",
+            "primary-container": "#a7b79a",
+            "on-primary-container": "#3a4832",
+            "secondary": "#5f5e5e",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px",
+            "eight": "8px"
+          },
+          "fontFamily": {
+            "headline": ["Plus Jakarta Sans", "sans-serif"],
+            "body": ["Manrope", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style data-purpose="custom-styles">
+    body {
+      font-family: 'Manrope', sans-serif;
+    }
+    h1, h2, .font-headline {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    /* Subtle pulsing for the music icon */
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(0.97); }
+    }
+    .animate-pulse-soft {
+      animation: pulse-soft 4s ease-in-out infinite;
+    }
+    /* Tactile button effect */
+    .btn-tactile {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-tactile:active {
+      transform: scale(0.96);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background h-screen overflow-hidden p-4">
+<!-- BEGIN: MainLayout -->
+<div class="flex h-full w-full gap-4">
+<!-- BEGIN: VideoArea (Host Stage) -->
+<main class="flex-1 bg-charcoal rounded-xl relative flex flex-col items-center justify-center text-white overflow-hidden shadow-2xl border border-white/5">
+<!-- Ambient Background Glow -->
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(167,183,154,0.08),transparent_70%)] pointer-events-none"></div>
+<div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none"></div>
+<!-- Central Content Container -->
+<div class="text-center z-10" data-purpose="idle-state-display">
+<!-- Floating Music Icon -->
+<div class="mb-10 flex justify-center">
+<div class="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center animate-pulse-soft border border-white/10 backdrop-blur-sm shadow-inner">
+<svg class="text-primary-container" fill="none" height="40" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" width="40" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 18V5l12-2v13"></path>
+<circle cx="6" cy="18" r="3"></circle>
+<circle cx="18" cy="16" r="3"></circle>
+</svg>
+</div>
+</div>
+<h1 class="text-4xl font-extrabold mb-3 tracking-tight font-headline">Waiting for the next song</h1>
+<p class="text-white/40 text-lg font-medium mb-14">Ask guests to add songs from their phone</p>
+<!-- Room Code Display -->
+<div class="bg-white/5 backdrop-blur-md p-10 rounded-[2.5rem] border border-white/10 shadow-2xl" data-purpose="room-code-display">
+<span class="block text-white/30 text-xs tracking-[0.3em] uppercase font-bold mb-4">Room Code</span>
+<span class="text-7xl font-black text-primary-container tracking-tighter font-headline">VV255</span>
+</div>
+</div>
+</main>
+<!-- END: VideoArea -->
+<!-- BEGIN: SidebarPanel -->
+<aside class="w-80 flex flex-col gap-4 h-full">
+<!-- BEGIN: Now Playing Card -->
+<section class="bg-surface-warm p-6 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col" data-purpose="now-playing-section">
+<h2 class="text-[11px] font-extrabold text-secondary/60 uppercase tracking-widest mb-5">Now Playing</h2>
+<div class="flex items-center gap-4 py-1">
+<div class="w-14 h-14 bg-surface-container-high rounded-lg flex items-center justify-center border border-outline-variant/20 shadow-inner">
+<svg class="text-outline/40" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<rect height="18" rx="2" ry="2" width="18" x="3" y="3"></rect>
+<circle cx="9" cy="9" r="2"></circle>
+<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+</svg>
+</div>
+<div>
+<p class="text-base font-semibold text-secondary/50 italic font-body">Nothing playing yet</p>
+</div>
+</div>
+</section>
+<!-- END: Now Playing Card -->
+<!-- BEGIN: Up Next Card -->
+<section class="bg-surface-warm p-6 rounded-xl border border-outline-variant/30 shadow-sm flex-1 flex flex-col" data-purpose="up-next-section">
+<h2 class="text-[11px] font-extrabold text-secondary/60 uppercase tracking-widest mb-5">Up Next</h2>
+<div class="flex-1 flex flex-col items-center justify-center gap-4">
+<div class="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center opacity-40 border border-outline-variant/20">
+<svg class="text-outline" fill="none" height="32" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" width="32" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2v20"></path>
+<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+</div>
+<p class="text-sm font-semibold text-outline/60 font-body">Queue is currently empty</p>
+</div>
+</section>
+<!-- END: Up Next Card -->
+<!-- BEGIN: ControlPanel -->
+<section class="bg-surface-warm p-5 rounded-xl border border-outline-variant/30 shadow-sm" data-purpose="control-panel">
+<!-- QR & Join Info -->
+<div class="flex items-center gap-4 bg-white/60 p-4 rounded-lg mb-5 border border-outline-variant/20 shadow-sm">
+<div class="w-16 h-16 bg-white border border-outline-variant/30 p-1 flex items-center justify-center rounded-lg shadow-inner">
+<!-- Simulated QR Code -->
+<div class="grid grid-cols-4 grid-rows-4 gap-0.5 w-full h-full opacity-90">
+<div class="bg-charcoal"></div><div class="bg-charcoal"></div><div class="bg-transparent"></div><div class="bg-charcoal"></div>
+<div class="bg-charcoal"></div><div class="bg-transparent"></div><div class="bg-charcoal"></div><div class="bg-charcoal"></div>
+<div class="bg-transparent"></div><div class="bg-charcoal"></div><div class="bg-charcoal"></div><div class="bg-transparent"></div>
+<div class="bg-charcoal"></div><div class="bg-transparent"></div><div class="bg-charcoal"></div><div class="bg-charcoal"></div>
+</div>
+</div>
+<div>
+<p class="text-[10px] text-secondary/60 font-bold uppercase tracking-widest mb-0.5">Scan to join</p>
+<p class="text-2xl font-black text-charcoal font-headline tracking-tighter">VV255</p>
+</div>
+</div>
+<!-- Player Controls -->
+<div class="grid grid-cols-4 gap-3">
+<!-- Skip Button -->
+<button class="btn-tactile flex flex-col items-center justify-center aspect-square rounded-lg bg-white border border-outline-variant/30 text-secondary hover:bg-surface-container-low">
+<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<polygon points="5 4 15 12 5 20 5 4"></polygon>
+<line x1="19" x2="19" y1="5" y2="19"></line>
+</svg>
+<span class="text-[9px] mt-1.5 font-bold uppercase tracking-tighter">Skip</span>
+</button>
+<!-- Play/Pause Button (Primary Sage) -->
+<button class="btn-tactile flex flex-col items-center justify-center aspect-square rounded-lg bg-primary text-white shadow-lg shadow-primary/20 hover:opacity-95">
+<svg fill="currentColor" height="24" stroke="none" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<rect height="16" rx="1.5" width="5" x="5" y="4"></rect>
+<rect height="16" rx="1.5" width="5" x="14" y="4"></rect>
+</svg>
+<span class="text-[9px] mt-1.5 font-bold uppercase tracking-tighter">Pause</span>
+</button>
+<!-- Fullscreen Button -->
+<button class="btn-tactile flex flex-col items-center justify-center aspect-square rounded-lg bg-white border border-outline-variant/30 text-secondary hover:bg-surface-container-low">
+<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M15 3h6v6"></path>
+<path d="M9 21H3v-6"></path>
+<path d="M21 3l-7 7"></path>
+<path d="M3 21l7-7"></path>
+</svg>
+<span class="text-[9px] mt-1.5 font-bold uppercase tracking-tighter">Full</span>
+</button>
+<!-- Quit Button -->
+<button class="btn-tactile flex flex-col items-center justify-center aspect-square rounded-lg bg-error-container/50 border border-error/20 text-error hover:bg-error-container">
+<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+<polyline points="16 17 21 12 16 7"></polyline>
+<line x1="21" x2="9" y1="12" y2="12"></line>
+</svg>
+<span class="text-[9px] mt-1.5 font-bold uppercase tracking-tighter">Quit</span>
+</button>
+</div>
+</section>
+<!-- END: ControlPanel -->
+</aside>
+<!-- END: SidebarPanel -->
+</div>
+<!-- END: MainLayout -->
+</body></html>

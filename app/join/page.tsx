@@ -6,19 +6,6 @@ import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
 import { generateUniqueNickname } from '@/lib/nickname';
 
-function LogoMark({ size = 28 }: { size?: number }) {
-  return (
-    <div style={{ width: size, height: size, borderRadius: size * 0.24, background: 'linear-gradient(160deg,#1a1a1a 0%,#2d2d2d 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <svg width={size * 0.46} height={size * 0.46} viewBox="0 0 24 24" fill="none">
-        <rect x="9" y="2" width="6" height="11" rx="3" fill="white" />
-        <path d="M5 10a7 7 0 0 0 14 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-        <line x1="12" y1="17" x2="12" y2="21" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-        <line x1="8" y1="21" x2="16" y2="21" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    </div>
-  );
-}
-
 export default function JoinPage({
   searchParams,
 }: {
@@ -62,7 +49,8 @@ export default function JoinPage({
     assignNickname();
   }, [initialCode]);
 
-  async function handleJoin() {
+  async function handleJoin(e?: React.FormEvent) {
+    if (e) e.preventDefault();
     const trimCode = code.trim().toUpperCase();
     const trimName = nickname.trim();
     if (trimCode.length !== 5) { toast.error('Room codes are 5 characters long.'); return; }
@@ -109,166 +97,140 @@ export default function JoinPage({
     }
   }
 
-  // Individual character boxes for code input
   const codeChars = code.split('').concat(Array(5 - code.length).fill(''));
 
   return (
-    <div className="join-page" style={{ minHeight: '100svh', background: '#fff', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif', overflowX: 'hidden' }}>
-
-      {/* Nav */}
-      <nav className="join-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 58, padding: '12px 16px', borderBottom: '1px solid #f2f2f7' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <LogoMark size={28} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KanTara</span>
+    <div className="min-h-screen flex flex-col text-on-background bg-surface bg-[radial-gradient(circle_at_10%_20%,rgba(215,232,201,0.15)_0%,rgba(251,249,245,0)_40%),radial-gradient(circle_at_90%_80%,rgba(167,183,154,0.1)_0%,rgba(251,249,245,0)_50%)]">
+      {/* Header */}
+      <header className="w-full max-w-[1200px] mx-auto px-6 py-8 flex justify-between items-center z-10">
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/logo.png" alt="KanTara Logo" className="w-7 h-7 rounded-md" />
+          <span className="text-xl font-extrabold tracking-tight font-headline-sm text-on-background">KanTara</span>
         </div>
-        <button
+        <button 
           onClick={() => router.push('/')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f2f2f7', border: 'none', borderRadius: 20, padding: '8px 16px', fontSize: 14, fontWeight: 500, color: '#1c1c1e', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.1px' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e5ea'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#f2f2f7'; }}
+          className="px-6 py-2.5 rounded-full border border-outline-variant bg-white/50 text-[14px] font-semibold hover:bg-white hover:shadow-sm transition-all flex items-center gap-2 text-on-background"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="#1c1c1e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Home
         </button>
-      </nav>
+      </header>
 
-      {/* Two-column layout */}
-      <main className="join-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', gap: 26, width: '100%', maxWidth: 900, margin: '0 auto', padding: '24px 16px 32px', boxSizing: 'border-box' }}>
-
-        {/* LEFT — context */}
-        <div className="join-copy" style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 0 }}>
-          <div className="join-hero-logo" style={{ display: 'none' }}><LogoMark size={56} /></div>
-          <h1 className="join-title" style={{ margin: 0, color: '#1c1c1e', fontSize: 34, fontWeight: 700, letterSpacing: '-1px', lineHeight: 1.08 }}>
-            Join the<br />karaoke room.
-          </h1>
-          <p className="join-subtitle" style={{ margin: '12px 0 0', color: '#8e8e93', fontSize: 15, lineHeight: 1.55, letterSpacing: '-0.2px' }}>
-            Enter the 5-character code shown on the host screen, pick a name, and you&rsquo;re in.
-          </p>
-
-          <div className="join-benefits" style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 22 }}>
-            {[
-              'No app install needed',
-              'Search and queue songs from your phone',
-              'See the live queue in real time',
-            ].map((t) => (
-              <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#f2f2f7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                    <polyline points="20 6 9 17 4 12" stroke="#1c1c1e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <p style={{ fontSize: 14, color: '#3a3a3c', margin: 0, letterSpacing: '-0.1px' }}>{t}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* RIGHT — form */}
-        <div className="join-form" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 22 }}>
-
-          {/* Room code */}
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Room Code</p>
-
-            {/* 5 character boxes — click anywhere to focus the real input */}
-            <div
-              className="join-code-boxes"
-              style={{ display: 'flex', flexDirection: 'row', gap: 6, position: 'relative', cursor: 'text', width: '100%' }}
-              onClick={() => codeInputRef.current?.focus()}
-            >
-              {codeChars.map((char, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 'clamp(52px, 14vw, 64px)',
-                    borderRadius: 12,
-                    background: char ? '#1c1c1e' : '#f9f9fb',
-                    border: `2px solid ${char ? '#1c1c1e' : '#f0f0f5'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 'clamp(20px, 6vw, 24px)',
-                    fontWeight: 800,
-                    color: char ? '#fff' : '#c7c7cc',
-                    letterSpacing: 0,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {char || (i === code.length ? '·' : '')}
-                </div>
+      {/* Main Content */}
+      <main className="flex-grow flex items-center justify-center px-6 py-12 z-10">
+        <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+          
+          {/* Left Column (Hero Info) */}
+          <div className="space-y-10">
+            <div className="bg-[#A7B79A] inline-flex p-4 rounded-[20px] shadow-lg shadow-[#A7B79A]/20">
+              <span className="material-symbols-outlined text-white text-[32px]">group_add</span>
+            </div>
+            <div className="space-y-4">
+              <h1 className="text-5xl lg:text-6xl font-extrabold leading-[1.05] font-display-lg text-on-background tracking-tight">
+                Join the<br/>karaoke room.
+              </h1>
+              <p className="text-lg text-secondary max-w-md font-medium">
+                Enter the 5-character code shown on the host screen, pick a name, and you&apos;re in.
+              </p>
+            </div>
+            
+            {/* Features Checklist */}
+            <ul className="space-y-5">
+              {[
+                'No app install needed',
+                'Search and queue songs from your phone',
+                'See the live queue in real time'
+              ].map((text, i) => (
+                <li key={i} className="flex items-center gap-4">
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#A7B79A]/15 flex items-center justify-center text-[#A7B79A]">
+                    <span className="material-symbols-outlined text-[16px] font-bold">check</span>
+                  </span>
+                  <span className="font-semibold text-on-background/80 text-[16px]">{text}</span>
+                </li>
               ))}
-              {/* Hidden real input layered over boxes */}
-              <input
-                ref={codeInputRef}
-                id="room-code"
-                type="text"
-                maxLength={5}
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
-                autoComplete="off"
-                autoFocus={!initialCode}
-                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'text', zIndex: 2 }}
-                aria-label="Room code"
-              />
-            </div>
+            </ul>
           </div>
 
-          {/* Divider */}
-          <div style={{ height: 1, background: '#f2f2f7' }} />
-
-          {/* Nickname */}
-          <div>
-            <div className="join-name-label">
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#8e8e93', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>Your Name</p>
-              <p style={{ fontSize: 12, color: '#c7c7cc', margin: 0, letterSpacing: '-0.1px' }}>auto-assigned, feel free to change</p>
-            </div>
-
-            {generatingNick ? (
-              <div style={{ height: 52, borderRadius: 14, background: '#f9f9fb', border: '2px solid #f0f0f5', display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px' }}>
-                <div style={{ width: 16, height: 16, border: '2px solid #e5e5ea', borderTopColor: '#8e8e93', borderRadius: '50%', animation: 'spin 0.7s linear infinite', flexShrink: 0 }} />
-                <span style={{ fontSize: 14, color: '#8e8e93' }}>Picking a name…</span>
+          {/* Right Column (Form) */}
+          <div className="bg-[#F2F1EC] p-8 lg:p-12 rounded-[32px] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)]">
+            <form className="space-y-10" onSubmit={handleJoin}>
+              
+              {/* Room Code Input Group */}
+              <div className="space-y-4">
+                <label className="block text-[12px] font-bold tracking-[0.15em] text-secondary/60 uppercase font-headline-sm">Room Code</label>
+                <div 
+                  className="grid grid-cols-5 gap-3 relative cursor-text"
+                  onClick={() => codeInputRef.current?.focus()}
+                >
+                  {codeChars.map((char, index) => (
+                    <div 
+                      key={index}
+                      className={`w-full aspect-square flex items-center justify-center text-2xl font-bold border rounded-2xl transition-all shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] ${char ? 'border-[#A7B79A] bg-white text-on-background ring-2 ring-[#A7B79A]/20' : 'border-outline-variant/30 bg-white/80 text-secondary/30'}`}
+                    >
+                      {char || '•'}
+                    </div>
+                  ))}
+                  <input
+                    ref={codeInputRef}
+                    id="room-code"
+                    type="text"
+                    maxLength={5}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                    className="absolute inset-0 opacity-0 cursor-text z-10 w-full h-full"
+                    autoComplete="off"
+                    autoFocus={!initialCode}
+                  />
+                </div>
               </div>
-            ) : (
-              <input
-                id="nickname"
-                type="text"
-                maxLength={32}
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
-                placeholder="Sunny Mango"
-                style={{ width: '100%', height: 52, borderRadius: 14, background: '#f9f9fb', border: '2px solid #f0f0f5', padding: '0 16px', fontSize: 16, fontWeight: 500, color: '#1c1c1e', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', letterSpacing: '-0.2px', transition: 'border-color 0.15s' }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = '#1c1c1e'; e.currentTarget.style.background = '#fff'; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = '#f0f0f5'; e.currentTarget.style.background = '#f9f9fb'; }}
-              />
-            )}
-            <p style={{ fontSize: 12, color: '#c7c7cc', margin: '8px 0 0', letterSpacing: '-0.1px' }}>
-              You&rsquo;ll appear in the queue with this name.
-            </p>
-          </div>
 
-          {/* Join button */}
-          <button
-            id="join-btn"
-            onClick={handleJoin}
-            disabled={loading || generatingNick}
-            style={{ width: '100%', minHeight: 52, padding: '14px 20px', background: '#1c1c1e', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 600, cursor: (loading || generatingNick) ? 'not-allowed' : 'pointer', letterSpacing: '-0.3px', fontFamily: 'inherit', opacity: (loading || generatingNick) ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'opacity 0.15s' }}
-            onMouseEnter={(e) => { if (!loading && !generatingNick) e.currentTarget.style.opacity = '0.85'; }}
-            onMouseLeave={(e) => { if (!loading && !generatingNick) e.currentTarget.style.opacity = '1'; }}
-          >
-            {loading ? (
-              <>
-                <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-                Joining&hellip;
-              </>
-            ) : 'Join Room'}
-          </button>
+              {/* Name Input Group */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <label className="block text-[12px] font-bold tracking-[0.15em] text-secondary/60 uppercase font-headline-sm">Your Name</label>
+                  <span className="text-[10px] text-secondary/60 font-semibold">auto-assigned, feel free to change</span>
+                </div>
+                <div className="relative">
+                  {generatingNick ? (
+                    <div className="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl flex items-center gap-3">
+                       <span className="w-4 h-4 border-2 border-[#A7B79A] border-t-transparent rounded-full animate-spin"></span>
+                       <span className="text-secondary/60 text-lg font-bold">Picking a name...</span>
+                    </div>
+                  ) : (
+                    <input 
+                      type="text" 
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      className="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl text-lg font-bold shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-[#A7B79A] focus:border-[#A7B79A] focus:bg-white transition-all outline-none text-on-background"
+                    />
+                  )}
+                </div>
+                <p className="text-[12px] text-secondary/70 italic font-medium">You&apos;ll appear in the queue with this name.</p>
+              </div>
+
+              {/* CTA Button */}
+              <button 
+                type="submit"
+                disabled={loading || generatingNick}
+                className="w-full py-5 bg-[#54634a] hover:bg-[#3d4b34] text-white rounded-[20px] text-[18px] font-bold shadow-xl shadow-[#54634a]/20 transition-all transform active:scale-[0.98] font-display-lg tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Joining...
+                  </>
+                ) : 'Join Room'}
+              </button>
+            </form>
+          </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="py-10 text-center text-secondary/50 text-[14px] font-medium z-10">
+        © {new Date().getFullYear()} Kantara Karaoke. Sing your heart out.
+      </footer>
     </div>
   );
 }

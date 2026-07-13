@@ -1,78 +1,69 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-
-function LogoMark({ size = 28 }: { size?: number }) {
-  return (
-    <div style={{ width: size, height: size, borderRadius: size * 0.24, background: 'linear-gradient(160deg,#1a1a1a 0%,#2d2d2d 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <svg width={size * 0.46} height={size * 0.46} viewBox="0 0 24 24" fill="none">
-        <rect x="9" y="2" width="6" height="11" rx="3" fill="white" />
-        <path d="M5 10a7 7 0 0 0 14 0" stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-        <line x1="12" y1="17" x2="12" y2="21" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-        <line x1="8" y1="21" x2="16" y2="21" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    </div>
-  );
-}
+import Link from 'next/link';
 
 export function DocLayout({ title, children }: { title: string; children: React.ReactNode }) {
   const router = useRouter();
 
   return (
-    <div style={{ minHeight: '100svh', background: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div className="min-h-screen bg-background font-body flex flex-col text-on-background">
 
-      {/* Nav */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 40px', borderBottom: '1px solid #f2f2f7', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <LogoMark size={28} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.3px' }}>KanTara</span>
+      {/* Top blur edge — separate from nav, blurs content on scroll */}
+      <div
+        className="fixed top-0 left-0 right-0 h-20 z-40 pointer-events-none"
+        style={{
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
+        }}
+      />
+      {/* Nav — transparent, sits on top of the blur edge */}
+      <nav className="fixed top-0 w-full z-50">
+        <div className="flex items-center px-[64px] py-3.5 max-md:px-[20px]">
+          {/* Logo — left */}
+          <div className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/logo.png" alt="KanTara Logo" className="w-8 h-8 rounded-lg" />
+            <Link href="/" className="text-[20px] font-extrabold tracking-tighter font-headline-sm hover:opacity-80 transition-opacity">KanTara</Link>
+          </div>
+          
+          {/* Back Button — right */}
+          <div className="flex-1 flex justify-end">
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center gap-1.5 text-secondary hover:bg-surface-container-low px-3 py-1.5 rounded-lg transition-colors text-[13px] font-semibold cursor-pointer border-none bg-transparent"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-secondary">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Home
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => router.push('/')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: '#f2f2f7',
-            border: 'none',
-            borderRadius: 20,
-            padding: '8px 16px',
-            fontSize: 14,
-            fontWeight: 500,
-            color: '#1c1c1e',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            letterSpacing: '-0.1px',
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e5ea'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#f2f2f7'; }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="#1c1c1e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Home
-        </button>
       </nav>
 
-      {/* Content */}
-      <main style={{ flex: 1, maxWidth: 680, width: '100%', margin: '0 auto', padding: '56px 40px 80px', boxSizing: 'border-box' }}>
-        <h1 style={{ fontSize: 36, fontWeight: 700, color: '#1c1c1e', letterSpacing: '-0.8px', margin: '0 0 40px' }}>
+      {/* Spacer to push content down below fixed nav */}
+      <div className="h-20" />
+
+      <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-16 md:py-24">
+        <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tighter mb-12 text-on-background">
           {title}
         </h1>
-        {children}
+        <div className="flex flex-col gap-10">
+          {children}
+        </div>
       </main>
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid #f2f2f7', padding: '18px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 13, color: '#c7c7cc' }}>&copy; {new Date().getFullYear()} KanTara</span>
-        <div style={{ display: 'flex', gap: 24 }}>
+      <footer className="border-t border-outline-variant/30 py-8 px-6 md:px-16 flex flex-col md:flex-row items-center justify-between gap-6 bg-surface-container-lowest">
+        <span className="text-sm font-semibold text-secondary/70 tracking-wide uppercase">&copy; {new Date().getFullYear()} KanTara</span>
+        <div className="flex gap-8">
           {[{ label: 'Help', href: '/help' }, { label: 'Terms', href: '/terms' }, { label: 'Privacy', href: '/privacy' }].map(({ label, href }) => (
-            <a key={label} href={href} style={{ fontSize: 13, color: '#8e8e93', textDecoration: 'none' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#1c1c1e'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#8e8e93'; }}>
+            <Link key={label} href={href} className="text-sm font-bold text-secondary/80 hover:text-primary transition-colors">
               {label}
-            </a>
+            </Link>
           ))}
         </div>
       </footer>

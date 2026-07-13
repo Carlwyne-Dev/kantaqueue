@@ -46,7 +46,8 @@ export async function searchSongsCache(query: string): Promise<Song[]> {
     .from('songs')
     .select('*')
     .ilike('normalized_title', `%${normalized}%`)
-    .gte('times_played', 0) // Filter out broken songs (times_played = -1)
+    .neq('times_played', -1)   // Exclude permanently blocked songs
+    .gte('times_played', 0)    // Belt-and-suspenders: also exclude any other negative values
     .order('times_played', { ascending: false })
     .limit(20);
 
@@ -203,4 +204,41 @@ export async function markSongPlayed(songId: string): Promise<void> {
   // If rpc not available, fall back to a read-then-write:
   // const { data } = await supabase.from('songs').select('times_played').eq('id', songId).single();
   // await supabase.from('songs').update({ times_played: (data?.times_played ?? 0) + 1, last_played_at: new Date().toISOString() }).eq('id', songId);
+}
+
+// ---- Mark a song as permanently unavailable ----
+
+/**
+ * Blocks a video from ever appearing in search results again.
+ * Sets times_played = -1, which is filtered out by searchSongsCache (.gte('times_played', 0)).
+ * If the youtube_video_id is not yet in the DB, it pre-inserts it as blocked
+ * so fresh YouTube API results are also filtered out on next search.
+ */
+export async function markSongUnavailable(youtubeVideoId: string, songId?: string): Promise<void> {
+  const supabase = getSupabaseClient();
+
+  if (songId) {
+    // Fast path: we know the song's DB id
+    await supabase.from('songs').update({ times_played: -1 }).eq('id', songId);
+    return;
+  }
+
+  // Check if the video is already in the DB by youtube_video_id
+  const { data: existing } = await supabase
+    .from('songs')
+    .select('id')
+    .eq('youtube_video_id', youtubeVideoId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from('songs').update({ times_played: -1 }).eq('id', existing.id);
+  } else {
+    // Pre-insert as blocked so it's permanently filtered from future searches
+    await supabase.from('songs').insert({
+      title: `[BLOCKED] ${youtubeVideoId}`,
+      normalized_title: `blocked ${youtubeVideoId}`,
+      youtube_video_id: youtubeVideoId,
+      times_played: -1,
+    });
+  }
 }

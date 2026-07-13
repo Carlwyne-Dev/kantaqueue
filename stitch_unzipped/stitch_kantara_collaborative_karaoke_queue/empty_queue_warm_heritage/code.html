@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KantaQueue - Guest Queue</title>
+<!-- Google Fonts: Plus Jakarta Sans & Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface": "#fbf9f5",
+            "primary-fixed": "#d7e8c9",
+            "on-primary-fixed": "#121f0c",
+            "on-background": "#1b1c1a",
+            "tertiary-fixed-dim": "#e2bccc",
+            "background": "#fbf9f5",
+            "tertiary-fixed": "#ffd8e8",
+            "surface-container-high": "#eae8e4",
+            "on-error": "#ffffff",
+            "inverse-surface": "#30312e",
+            "surface-variant": "#e4e2de",
+            "outline-variant": "#c5c8be",
+            "on-secondary": "#ffffff",
+            "secondary": "#5f5e5e",
+            "tertiary-container": "#cca8b7",
+            "secondary-container": "#e2dfde",
+            "inverse-primary": "#bbccae",
+            "on-primary-fixed-variant": "#3d4b34",
+            "error": "#ba1a1a",
+            "tertiary": "#745663",
+            "surface-container-low": "#f5f3ef",
+            "outline": "#757870",
+            "surface-tint": "#54634a",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed-dim": "#c8c6c5",
+            "surface-container": "#f0eeea",
+            "on-surface-variant": "#444840",
+            "on-tertiary-fixed": "#2b1520",
+            "on-primary": "#ffffff",
+            "primary": "#54634a",
+            "on-secondary-fixed": "#1b1b1c",
+            "primary-container": "#a7b79a",
+            "on-tertiary-container": "#573c49",
+            "on-secondary-container": "#636262",
+            "on-primary-container": "#3a4832",
+            "on-secondary-fixed-variant": "#474746",
+            "surface-container-highest": "#e4e2de",
+            "secondary-fixed": "#e5e2e1",
+            "on-error-container": "#93000a",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#1b1c1a",
+            "primary-fixed-dim": "#bbccae",
+            "on-tertiary-fixed-variant": "#5a3f4b",
+            "surface-bright": "#fbf9f5",
+            "surface-dim": "#dcdad6",
+            "inverse-on-surface": "#f2f0ed",
+            "error-container": "#ffdad6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "3xl": "1.5rem",
+            "32px": "32px",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Plus Jakarta Sans", "sans-serif"],
+            "body": ["Manrope", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style data-purpose="custom-styling">
+    body {
+      background-color: #fbf9f5;
+      font-family: 'Manrope', sans-serif;
+      color: #1b1c1a;
+    }
+    .headline-font {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .custom-shadow {
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+    .ambient-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140%;
+      height: 140%;
+      background: radial-gradient(circle, rgba(167, 183, 154, 0.2) 0%, rgba(251, 249, 245, 0) 70%);
+      filter: blur(40px);
+      z-index: -1;
+    }
+    .btn-tactile {
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 0 0 #3d4b34;
+      transition: all 0.1s ease;
+    }
+    .btn-tactile:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 0 #3d4b34;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+<!-- BEGIN: Navigation Header -->
+<nav class="sticky top-0 z-50 bg-surface/80 backdrop-blur-md px-6 py-4 border-b border-surface-dim/30">
+<div class="max-w-4xl mx-auto flex items-center justify-between">
+<div data-purpose="brand-info">
+<h1 class="text-xl font-extrabold tracking-tight text-on-surface headline-font">KantaQueue</h1>
+<p class="text-xs font-medium text-outline">Room <span class="text-on-surface font-bold">867CE</span> • Feisty Bebang</p>
+</div>
+<div class="flex items-center gap-3">
+<!-- Live Status Indicator -->
+<div class="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full border border-primary/20">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="text-[10px] font-bold uppercase tracking-widest headline-font">Live</span>
+</div>
+<!-- Quit Button -->
+<button class="flex items-center gap-2 text-error hover:bg-error-container/50 px-3 py-1.5 rounded-lg transition-colors text-sm font-semibold">
+<svg fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+<polyline points="16 17 21 12 16 7"></polyline>
+<line x1="21" x2="9" y1="12" y2="12"></line>
+</svg>
+          Quit
+        </button>
+</div>
+</div>
+</nav>
+<!-- END: Navigation Header -->
+<main class="max-w-4xl mx-auto px-6 py-8 space-y-8">
+<!-- BEGIN: Search Section -->
+<section class="relative" data-purpose="search-bar">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<svg class="w-5 h-5 text-outline" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-lowest border-none rounded-2xl custom-shadow focus:ring-2 focus:ring-primary focus:ring-opacity-50 text-lg placeholder:text-outline/60 transition-all text-on-surface" placeholder="Search a karaoke song..." type="text"/>
+</section>
+<!-- END: Search Section -->
+<!-- BEGIN: Now Playing Section -->
+<section data-purpose="now-playing">
+<div class="glass-card rounded-2xl p-6 flex items-center gap-6 custom-shadow overflow-hidden relative">
+<!-- Ambient Blur Background -->
+<div class="absolute inset-0 z-0 pointer-events-none opacity-40">
+<img alt="Ambient Blur" class="w-full h-full object-cover scale-150 blur-3xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLGVVVgMpUJJmi3j7jxaNKwmWLRM9WM4l3brgaXGbWdczQYvNmKVd6hUNPrgVwOXUBMoUOUHljpEWmHu0McfMTmAH7OoBLbeP9NT-fychMoqcDE-TAQnsW9O1NZuIwajII6H1NW_lbrVOjXQQMTDh_qjr79E2wVe9xljr_KeIU_fShIg8mIqIVbmbW3NBhUsfNnqB-VUUKRas2juazBDttBKTwqIh3ICT0hvu51V5CfEvlpRPLM0WMarm0fhBK3XvtKQ"/>
+</div>
+<div class="relative z-10 flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden shadow-xl border-2 border-white/40">
+<img alt="Album Art" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLGVVVgMpUJJmi3j7jxaNKwmWLRM9WM4l3brgaXGbWdczQYvNmKVd6hUNPrgVwOXUBMoUOUHljpEWmHu0McfMTmAH7OoBLbeP9NT-fychMoqcDE-TAQnsW9O1NZuIwajII6H1NW_lbrVOjXQQMTDh_qjr79E2wVe9xljr_KeIU_fShIg8mIqIVbmbW3NBhUsfNnqB-VUUKRas2juazBDttBKTwqIh3ICT0hvu51V5CfEvlpRPLM0WMarm0fhBK3XvtKQ"/>
+</div>
+<div class="relative z-10 flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="text-[10px] font-bold tracking-[0.2em] text-primary uppercase headline-font">Now Playing</span>
+<div class="h-px flex-grow bg-primary/20"></div>
+</div>
+<h2 class="text-xl font-bold text-on-surface leading-tight headline-font">Kabisado - IV OF SPADES | Karaoke Version</h2>
+<p class="text-sm font-medium text-outline mt-1">Feisty Bebang</p>
+</div>
+<!-- Animated visualizer bars -->
+<div class="relative z-10 flex items-end gap-1 h-8 px-4">
+<div class="w-1 bg-primary h-3 animate-pulse"></div>
+<div class="w-1 bg-primary h-6 animate-pulse" style="animation-delay: 0.1s"></div>
+<div class="w-1 bg-primary h-4 animate-pulse" style="animation-delay: 0.2s"></div>
+</div>
+</div>
+</section>
+<!-- END: Now Playing Section -->
+<!-- BEGIN: Tabs Navigation -->
+<div class="bg-surface-container-low p-1.5 rounded-2xl flex gap-2" data-purpose="tab-navigation">
+<button class="flex-1 py-3 text-sm font-bold text-outline hover:text-on-surface transition-colors headline-font">
+        Queue
+      </button>
+<button class="flex-1 py-3 text-sm font-bold bg-surface-container-lowest text-on-surface rounded-xl shadow-sm border border-surface-dim/20 headline-font">
+        My Songs
+      </button>
+</div>
+<!-- END: Tabs Navigation -->
+<!-- BEGIN: Empty State Content -->
+<!-- Applying 32px rounded corners as requested -->
+<section class="bg-surface-container-lowest rounded-32px border border-surface-dim/30 py-24 flex flex-col items-center justify-center text-center custom-shadow" data-purpose="empty-state">
+<div class="mb-8 p-8 bg-surface-container-low rounded-full text-primary-container relative group">
+<!-- Inner glow for depth -->
+<div class="absolute inset-0 bg-primary/5 rounded-full blur-xl group-hover:bg-primary/10 transition-colors"></div>
+<!-- Large Minimal Mic Icon -->
+<svg class="relative z-10 drop-shadow-sm text-outline/40" fill="none" height="56" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" viewbox="0 0 24 24" width="56" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+<path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+<line x1="12" x2="12" y1="19" y2="22"></line>
+</svg>
+</div>
+<h3 class="text-2xl font-bold text-on-surface mb-2 headline-font">No songs queued</h3>
+<p class="text-outline max-w-xs font-medium">
+        Search for your favorite tracks above to start building your session playlist.
+      </p>
+<div class="mt-10">
+<!-- Polish button for tactile premium feel -->
+<button class="btn-tactile bg-primary text-on-primary px-10 py-4 rounded-xl font-bold text-sm tracking-wide headline-font uppercase">
+          Browse Library
+        </button>
+</div>
+</section>
+<!-- END: Empty State Content -->
+</main>
+<!-- BEGIN: Bottom Footer Message -->
+<footer class="mt-12 py-8 text-center">
+<p class="text-xs font-bold text-outline/50 uppercase tracking-widest headline-font">Powered by KantaQueue • Premium Karaoke Experience</p>
+</footer>
+<!-- END: Bottom Footer Message -->
+</body></html>

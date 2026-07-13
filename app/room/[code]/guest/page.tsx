@@ -22,8 +22,6 @@ function estimateWaitTime(queue: (QueueItem & { song: Song })[], myItem: QueueIt
   return `~${Math.ceil(totalSecs / 60)} min`;
 }
 
-const ff = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif';
-
 export default function GuestPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
   const router = useRouter();
@@ -51,13 +49,27 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       setUserId(uid);
       const saved = sessionStorage.getItem(`kq_nickname_${code}`);
       if (saved) setNickname(saved);
-      const { data: room, error } = await supabase.from('rooms').select('id, status').eq('code', code).eq('status', 'active').maybeSingle();
+      const { data: room, error } = await supabase.from('rooms').select('id, status').eq('code', code).in('status', ['active', 'paused']).maybeSingle();
       if (error || !room) { toast.error('Room not found or has ended.'); router.push('/'); return; }
       setRoomId(room.id);
       setLoadingRoom(false);
     }
     init();
-  }, [code]);
+  }, [code, router]);
+
+  // Listen for room ended status
+  useEffect(() => {
+    if (!roomId) return;
+    const channel = supabase.channel(`guest-room-status-${roomId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, (payload) => {
+        if (payload.new.status === 'ended') {
+          toast.error('The host has ended the room.', { duration: 5000 });
+          router.push('/');
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [roomId, router, supabase]);
 
   // ── Queue ─────────────────────────────────────────────────────────────────────
   const fetchQueue = useCallback(async () => {
@@ -66,7 +78,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     const items = (data ?? []) as (QueueItem & { song: Song })[];
     setNowPlaying(items.find((i) => i.status === 'playing') ?? null);
     setQueue(items.filter((i) => i.status === 'queued'));
-  }, [roomId]);
+  }, [roomId, supabase]);
 
   useEffect(() => { fetchQueue(); }, [fetchQueue]);
 
@@ -74,7 +86,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     if (!roomId) return;
     const channel = supabase.channel(`guest-room-${roomId}`).on('postgres_changes', { event: '*', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, () => fetchQueue()).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [roomId, fetchQueue]);
+  }, [roomId, fetchQueue, supabase]);
 
   // ── Search ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -118,284 +130,331 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
 
   if (loadingRoom) {
     return (
-      <div style={{ minHeight: '100svh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', fontFamily: ff }}>
-        <div style={{ width: 28, height: 28, border: '3px solid #f2f2f7', borderTopColor: '#1c1c1e', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="w-8 h-8 rounded-full border-4 border-surface-container-high border-t-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100svh', background: '#f2f2f7', display: 'flex', flexDirection: 'column', fontFamily: ff }}>
-
-      {/* ── Sticky header ────────────────────────────────────────────────────── */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(242,242,247,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(0,0,0,0.06)', padding: '12px 16px 10px' }}>
-
-        {/* Top row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: '#1c1c1e', margin: 0, letterSpacing: '-0.3px' }}>KanTara</p>
-            <p style={{ fontSize: 12, color: '#8e8e93', margin: '2px 0 0', letterSpacing: '-0.1px' }}>
-              Room <span style={{ fontWeight: 700, letterSpacing: '0.06em', color: '#1c1c1e' }}>{code}</span>
-              {nickname ? <span> · {nickname}</span> : ''}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#dcfce7', borderRadius: 20, padding: '5px 10px' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#15803d', letterSpacing: '-0.1px' }}>Live</span>
+    <div className="min-h-screen antialiased bg-surface text-on-surface font-body flex flex-col">
+      {/* ── Navigation Header (matches landing page style) ── */}
+      <div className="sticky top-0 z-50">
+        {/* Blur layer — fades out at bottom like landing page */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
+          }}
+        />
+        {/* Transparent nav on top */}
+        <nav className="relative z-10">
+          <div className="flex items-center px-[64px] py-3.5 max-md:px-[20px]">
+            {/* Logo */}
+            <div className="flex items-center gap-2 flex-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/logo.png" alt="KanTara Logo" className="w-7 h-7 rounded-md" />
+              <span className="text-[20px] font-extrabold text-on-background tracking-tighter font-headline-sm">KanTara</span>
             </div>
-            <button
-              onClick={() => setShowQuitModal(true)}
-              style={{ background: '#fff2f2', border: 'none', borderRadius: 20, padding: '5px 10px', fontSize: 12, fontWeight: 600, color: '#ff3b30', cursor: 'pointer', fontFamily: ff, display: 'flex', alignItems: 'center', gap: 4, transition: 'background 0.15s' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#ffe5e5'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#fff2f2'; }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Quit
-            </button>
+            {/* Room info — center */}
+            <div className="flex-1 text-center hidden md:block">
+              <p className="text-[13px] font-semibold text-secondary">
+                Room <span className="text-on-background font-bold tracking-[0.08em]">{code}</span>
+                {nickname && <span className="text-secondary"> · {nickname}</span>}
+              </p>
+            </div>
+            {/* Right actions */}
+            <div className="flex-1 flex items-center justify-end gap-3">
+              {/* Live badge */}
+              <div className="flex items-center gap-1.5 border border-on-background/20 rounded-full px-3 py-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-on-background">Live</span>
+              </div>
+              {/* Quit Button */}
+              <button
+                onClick={() => setShowQuitModal(true)}
+                className="flex items-center gap-1.5 text-[#ba1a1a] hover:bg-[#ffdad6]/50 px-3 py-1.5 rounded-lg transition-colors text-[13px] font-semibold cursor-pointer border-none bg-transparent"
+              >
+                <svg fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="16">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" x2="9" y1="12" y2="12"></line>
+                </svg>
+                Quit
+              </button>
+            </div>
           </div>
-        </div>
+        </nav>
+      </div>
 
-        {/* Search */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+      {/* ── Main ── */}
+      <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col gap-8 pb-32">
+        {/* ── Search Section ── */}
+        <section className="relative">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
             {searching ? (
-              <div style={{ width: 14, height: 14, border: '2px solid #e5e5ea', borderTopColor: '#8e8e93', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+              <div className="w-5 h-5 rounded-full border-2 border-outline-variant border-t-primary animate-spin" />
             ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="#8e8e93" strokeWidth="2" />
-                <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="#8e8e93" strokeWidth="2" strokeLinecap="round" />
+              <svg className="w-5 h-5 text-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
               </svg>
             )}
           </div>
           <input
-            id="song-search-input"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search a karaoke song…"
-            autoComplete="off"
-            style={{ width: '100%', height: 40, borderRadius: 12, background: '#fff', border: '1.5px solid #e5e5ea', paddingLeft: 36, paddingRight: searchQuery ? 36 : 12, fontSize: 15, color: '#1c1c1e', fontFamily: ff, boxSizing: 'border-box', outline: 'none', letterSpacing: '-0.2px' }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = '#1c1c1e'; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = '#e5e5ea'; }}
+            className="w-full pl-12 pr-12 py-4 bg-surface-container-lowest border-none rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] focus:ring-2 focus:ring-primary/50 text-lg placeholder:text-outline/60 transition-all text-on-surface outline-none"
+            placeholder="Search a karaoke song..."
           />
           {searchQuery && (
             <button
               onClick={() => { setSearchQuery(''); setSearchResults([]); setSearchDone(false); }}
-              style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: '#e5e5ea', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              className="absolute inset-y-0 right-4 flex items-center text-outline hover:text-on-surface transition-colors cursor-pointer"
             >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="#8e8e93" strokeWidth="2.5" strokeLinecap="round" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
           )}
-        </div>
-      </header>
+        </section>
 
-      {/* ── Body ─────────────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 32px' }}>
-
-        {/* ── Search results ──────────────────────────────────────────────────── */}
-        {showSearch && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* ── Search Results ── */}
+        {showSearch ? (
+          <section className="bg-surface-container-lowest rounded-[32px] border border-surface-dim/30 p-4 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
             {searchResults.length === 0 ? (
-              <div style={{ background: '#fff', borderRadius: 18, padding: '40px 24px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: '#f2f2f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <circle cx="11" cy="11" r="7" stroke="#c7c7cc" strokeWidth="1.8" />
-                    <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="#c7c7cc" strokeWidth="1.8" strokeLinecap="round" />
+              <div className="py-20 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-surface-container-low rounded-full flex items-center justify-center mb-4 text-outline/40">
+                  <svg fill="none" height="32" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="32">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
                   </svg>
                 </div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: '#1c1c1e', margin: 0 }}>No results found</p>
-                <p style={{ fontSize: 13, color: '#8e8e93', margin: '6px 0 0' }}>Try a different song title or artist</p>
+                <h3 className="text-xl font-bold text-on-surface mb-2 font-headline">No results found</h3>
+                <p className="text-outline font-medium text-sm">Try a different song title or artist</p>
               </div>
             ) : (
-              searchResults.map((result) => (
-                <div key={result.youtube_video_id} style={{ background: '#fff', borderRadius: 18, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                  {result.thumbnail_url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={result.thumbnail_url} alt={result.title} style={{ width: 64, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
-                  )}
-                  <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#1c1c1e', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.1px' }}>{result.title}</p>
-                    <p style={{ fontSize: 12, color: '#8e8e93', margin: '3px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {result.artist ?? 'Unknown'}{result.duration_seconds ? ` · ${formatDuration(result.duration_seconds)}` : ''}
-                    </p>
-                    {result.from_cache && result.times_played > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 500, color: '#8e8e93', background: '#f2f2f7', borderRadius: 6, padding: '2px 6px', marginTop: 4, display: 'inline-block' }}>
-                        Played {result.times_played}×
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    id={`add-song-${result.youtube_video_id}`}
-                    onClick={() => handleAdd(result)}
-                    disabled={adding === result.youtube_video_id}
-                    style={{ background: '#1c1c1e', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: adding === result.youtube_video_id ? 'not-allowed' : 'pointer', flexShrink: 0, fontFamily: ff, display: 'flex', alignItems: 'center', gap: 6, opacity: adding === result.youtube_video_id ? 0.5 : 1 }}
-                  >
-                    {adding === result.youtube_video_id ? (
-                      <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+              <div className="flex flex-col gap-2">
+                {searchResults.map((result) => (
+                  <div key={result.youtube_video_id} className="flex items-center gap-4 p-3 hover:bg-surface-container-low/50 rounded-2xl transition-colors">
+                    {result.thumbnail_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={result.thumbnail_url} alt={result.title} className="w-16 h-12 rounded-xl object-cover flex-shrink-0 shadow-sm" />
                     ) : (
-                      <>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                          <line x1="12" y1="5" x2="12" y2="19" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                          <line x1="5" y1="12" x2="19" y2="12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                        </svg>
-                        Add
-                      </>
+                      <div className="w-16 h-12 bg-surface-container rounded-xl flex-shrink-0" />
                     )}
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* ── Queue / My Songs ────────────────────────────────────────────────── */}
-        {!showSearch && !searching && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
-            {/* Now Playing */}
-            {nowPlaying && (
-              <div style={{ background: '#fff', borderRadius: 18, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                {nowPlaying.song.thumbnail_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={nowPlaying.song.thumbnail_url} alt={nowPlaying.song.title} style={{ width: 52, height: 39, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-                )}
-                <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 3px' }}>Now Playing</p>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1c1c1e', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nowPlaying.song.title}</p>
-                  <p style={{ fontSize: 12, color: '#8e8e93', margin: '2px 0 0' }}>{nowPlaying.singer_name}</p>
-                </div>
+                    <div className="flex-1 overflow-hidden">
+                      <h4 className="text-sm font-bold text-on-surface truncate">{result.title}</h4>
+                      <p className="text-xs text-outline font-medium mt-0.5 truncate">
+                        {result.artist ?? 'Unknown'}{result.duration_seconds ? ` • ${formatDuration(result.duration_seconds)}` : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleAdd(result)}
+                      disabled={adding === result.youtube_video_id}
+                      className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide font-headline uppercase hover:bg-primary/90 active:scale-95 transition-all shadow-sm border-none cursor-pointer flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {adding === result.youtube_video_id ? '...' : 'Add'}
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
+          </section>
+        ) : (
+          <>
+            {/* ── Now Playing Section ── */}
+            <section>
+              <div className="bg-white/40 backdrop-blur-[12px] border border-white/50 rounded-[24px] p-6 flex items-center gap-6 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] overflow-hidden relative">
+                {/* Ambient Blur Background */}
+                {nowPlaying?.song.thumbnail_url && (
+                  <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img alt="Ambient Blur" className="w-full h-full object-cover scale-150 blur-3xl" src={nowPlaying.song.thumbnail_url} />
+                  </div>
+                )}
+                
+                {nowPlaying ? (
+                  <>
+                    <div className="relative z-10 flex-shrink-0 w-24 h-24 rounded-[16px] overflow-hidden shadow-xl border-2 border-white/40">
+                      {nowPlaying.song.thumbnail_url && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img alt="Album Art" className="w-full h-full object-cover" src={nowPlaying.song.thumbnail_url} />
+                      )}
+                    </div>
+                    <div className="relative z-10 flex-grow">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase font-headline">Now Playing</span>
+                        <div className="h-px flex-grow bg-primary/20"></div>
+                      </div>
+                      <h2 className="text-xl font-bold text-on-surface leading-tight font-headline">{nowPlaying.song.title}</h2>
+                      <p className="text-sm font-medium text-outline mt-1.5 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        {nowPlaying.singer_name}
+                      </p>
+                    </div>
+                    {/* Animated visualizer bars */}
+                    <div className="relative z-10 flex items-end gap-1 h-8 px-2 hidden sm:flex">
+                      <div className="w-1.5 bg-primary h-3 animate-pulse rounded-t-sm"></div>
+                      <div className="w-1.5 bg-primary h-6 animate-pulse rounded-t-sm" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-1.5 bg-primary h-4 animate-pulse rounded-t-sm" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-1.5 bg-primary h-7 animate-pulse rounded-t-sm" style={{ animationDelay: '0.3s' }}></div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="relative z-10 w-full flex items-center gap-4 text-outline py-2">
+                    <div className="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-on-surface font-headline">Nothing playing</p>
+                      <p className="text-sm">Queue a song to get the party started</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
 
-            {/* Segmented tabs */}
-            <div style={{ background: '#e5e5ea', borderRadius: 12, padding: 3, display: 'flex', gap: 2 }}>
-              {(['queue', 'my'] as const).map((t) => (
-                <button
-                  key={t}
-                  id={t === 'queue' ? 'tab-all-queue' : 'tab-my-songs'}
-                  onClick={() => setTab(t)}
-                  style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', background: tab === t ? '#fff' : 'transparent', fontSize: 13, fontWeight: 600, color: tab === t ? '#1c1c1e' : '#8e8e93', cursor: 'pointer', fontFamily: ff, boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s', letterSpacing: '-0.1px' }}
-                >
-                  {t === 'queue' ? 'Queue' : `My Songs${myItems.length > 0 ? ` (${myItems.length})` : ''}`}
-                </button>
-              ))}
+            {/* ── Tabs Navigation ── */}
+            <div className="bg-surface-container-low p-1.5 rounded-2xl flex gap-2">
+              <button
+                onClick={() => setTab('queue')}
+                className={`flex-1 py-3 text-sm font-bold transition-colors font-headline rounded-xl cursor-pointer ${tab === 'queue' ? 'bg-surface-container-lowest text-on-surface shadow-sm border border-surface-dim/20' : 'text-outline hover:text-on-surface bg-transparent border border-transparent'}`}
+              >
+                Up Next {queue.length > 0 && `(${queue.length})`}
+              </button>
+              <button
+                onClick={() => setTab('my')}
+                className={`flex-1 py-3 text-sm font-bold transition-colors font-headline rounded-xl cursor-pointer ${tab === 'my' ? 'bg-surface-container-lowest text-on-surface shadow-sm border border-surface-dim/20' : 'text-outline hover:text-on-surface bg-transparent border border-transparent'}`}
+              >
+                My Songs {myItems.length > 0 && `(${myItems.length})`}
+              </button>
             </div>
 
-            {/* Queue list */}
-            {tab === 'queue' && (
-              queue.length === 0 && !nowPlaying ? (
-                <div style={{ background: '#fff', borderRadius: 18, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 14, background: '#f2f2f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 18V5l12-2v13" stroke="#c7c7cc" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx="6" cy="18" r="3" stroke="#c7c7cc" strokeWidth="1.8" />
-                      <circle cx="18" cy="16" r="3" stroke="#c7c7cc" strokeWidth="1.8" />
-                    </svg>
-                  </div>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#1c1c1e', margin: 0 }}>Queue is empty</p>
-                  <p style={{ fontSize: 13, color: '#8e8e93', margin: '6px 0 0' }}>Search above to add the first song!</p>
-                </div>
-              ) : (
-                <div style={{ background: '#fff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                  {queue.map((item, idx) => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: idx < queue.length - 1 ? '1px solid #f9f9fb' : 'none' }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#c7c7cc', width: 18, textAlign: 'center', flexShrink: 0 }}>{idx + 1}</span>
-                      {item.song.thumbnail_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.song.thumbnail_url} alt={item.song.title} style={{ width: 48, height: 36, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-                      )}
-                      <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#1c1c1e', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.song.title}</p>
-                        <p style={{ fontSize: 12, color: '#8e8e93', margin: '2px 0 0' }}>{item.singer_name}{item.song.duration_seconds ? ` · ${formatDuration(item.song.duration_seconds)}` : ''}</p>
-                      </div>
-                      {item.requested_by === userId && (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: '#1c1c1e', background: '#f2f2f7', borderRadius: 8, padding: '4px 8px', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                          {estimateWaitTime(queue, item)}
-                        </span>
-                      )}
+            {/* ── List Content ── */}
+            <section className="bg-surface-container-lowest rounded-[32px] border border-surface-dim/30 p-2 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
+              {tab === 'queue' ? (
+                queue.length === 0 ? (
+                  <div className="py-20 flex flex-col items-center justify-center text-center">
+                    <div className="mb-6 p-6 bg-surface-container-low rounded-full text-primary-container relative group">
+                      <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl transition-colors"></div>
+                      <svg className="relative z-10 text-outline/40" fill="none" height="48" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="48">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                        <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+                        <line x1="12" x2="12" y1="19" y2="22"></line>
+                      </svg>
                     </div>
-                  ))}
-                </div>
-              )
-            )}
-
-            {/* My songs */}
-            {tab === 'my' && (
-              myItems.length === 0 ? (
-                <div style={{ background: '#fff', borderRadius: 18, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 14, background: '#f2f2f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <rect x="9" y="2" width="6" height="11" rx="3" stroke="#c7c7cc" strokeWidth="1.8" />
-                      <path d="M5 10a7 7 0 0 0 14 0" stroke="#c7c7cc" strokeWidth="1.8" strokeLinecap="round" />
-                      <line x1="12" y1="17" x2="12" y2="21" stroke="#c7c7cc" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
+                    <h3 className="text-2xl font-bold text-on-surface mb-2 font-headline">Queue is empty</h3>
+                    <p className="text-outline max-w-xs font-medium text-sm">Search above to add the first song!</p>
                   </div>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#1c1c1e', margin: 0 }}>No songs queued</p>
-                  <p style={{ fontSize: 13, color: '#8e8e93', margin: '6px 0 0' }}>Search above to add your first song!</p>
-                </div>
-              ) : (
-                <div style={{ background: '#fff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-                  {myItems.map((item, idx) => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: idx < myItems.length - 1 ? '1px solid #f9f9fb' : 'none' }}>
-                      {item.song.thumbnail_url && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.song.thumbnail_url} alt={item.song.title} style={{ width: 48, height: 36, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-                      )}
-                      <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#1c1c1e', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.song.title}</p>
-                        <p style={{ fontSize: 12, color: '#8e8e93', margin: '2px 0 0' }}>{estimateWaitTime(queue, item)}</p>
+                ) : (
+                  <div className="flex flex-col">
+                    {queue.map((item, idx) => (
+                      <div key={item.id} className="flex items-center gap-4 p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors">
+                        <span className="w-6 text-center text-xs font-extrabold text-outline/40">{idx + 1}</span>
+                        {item.song.thumbnail_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
+                        ) : (
+                          <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
+                        )}
+                        <div className="flex-1 overflow-hidden">
+                          <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
+                          <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
+                            <span className="text-primary font-bold">{item.singer_name}</span>
+                            {item.song.duration_seconds && ` • ${formatDuration(item.song.duration_seconds)}`}
+                          </p>
+                        </div>
+                        {item.requested_by === userId && (
+                          <div className="px-3 py-1 bg-surface-container-high rounded-lg flex-shrink-0">
+                            <span className="text-[11px] font-bold text-on-surface whitespace-nowrap">{estimateWaitTime(queue, item)}</span>
+                          </div>
+                        )}
                       </div>
-                      <button
-                        id={`remove-my-${item.id}`}
-                        onClick={() => handleRemoveOwn(item.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: 8, display: 'flex', alignItems: 'center', flexShrink: 0 }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fff0f0'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <path d="M18 6L6 18M6 6l12 12" stroke="#c7c7cc" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
-                      </button>
+                    ))}
+                  </div>
+                )
+              ) : (
+                /* My Songs Tab */
+                myItems.length === 0 ? (
+                  <div className="py-20 flex flex-col items-center justify-center text-center">
+                    <div className="mb-6 p-6 bg-surface-container-low rounded-full text-primary-container relative group">
+                      <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl transition-colors"></div>
+                      <svg className="relative z-10 text-outline/40" fill="none" height="48" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="48">
+                        <rect x="9" y="2" width="6" height="11" rx="3" />
+                        <path d="M5 10a7 7 0 0 0 14 0" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                      </svg>
                     </div>
-                  ))}
-                </div>
-              )
-            )}
-          </div>
+                    <h3 className="text-2xl font-bold text-on-surface mb-2 font-headline">No songs queued</h3>
+                    <p className="text-outline max-w-xs font-medium text-sm">You haven't added any songs yet.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    {myItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-4 p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors">
+                        {item.song.thumbnail_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
+                        ) : (
+                          <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
+                        )}
+                        <div className="flex-1 overflow-hidden">
+                          <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
+                          <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
+                            <span className="font-semibold text-primary/80">Wait time: {estimateWaitTime(queue, item)}</span>
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveOwn(item.id)}
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-error hover:bg-[#ffdad6]/50 transition-colors border-none bg-transparent cursor-pointer flex-shrink-0"
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </section>
+          </>
         )}
-      </div>
+      </main>
 
-      {/* ── Quit Modal ─────────────────────────────────────────────────────── */}
+      {/* ── Footer ── */}
+      <footer className="mt-auto py-8 text-center bg-surface-dim/10">
+        <p className="text-[10px] font-bold text-outline/50 uppercase tracking-[0.2em] font-headline">Powered by KanTara • Premium Karaoke Experience</p>
+      </footer>
+
+      {/* ── Quit Modal ── */}
       {showQuitModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.2s ease-out' }}>
-          <div style={{ width: '100%', maxWidth: 320, background: '#fff', borderRadius: 24, padding: '24px 24px 20px', textAlign: 'center', boxShadow: '0 12px 40px rgba(0,0,0,0.2)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fff2f2', color: '#ff3b30', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
+          <div className="w-full max-w-sm bg-white rounded-[28px] p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.25)] animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="w-14 h-14 rounded-full bg-[#ffdad6]/50 flex items-center justify-center mx-auto mb-5 text-[#ba1a1a]">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#1c1c1e', margin: '0 0 8px', letterSpacing: '-0.3px' }}>Leave the room?</p>
-            <p style={{ fontSize: 14, color: '#8e8e93', margin: '0 0 24px', lineHeight: 1.4, letterSpacing: '-0.1px' }}>Your queued songs will remain, but you won't be able to manage them unless you rejoin.</p>
-            
-            <div style={{ display: 'flex', gap: 10 }}>
+            <h3 className="text-xl font-bold text-[#1b1c1a] mb-2 font-headline">Leave the room?</h3>
+            <p className="text-[14px] text-[#5f5e5e] mb-8 leading-relaxed font-body">Your queued songs will remain, but you won't be able to manage them unless you rejoin.</p>
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowQuitModal(false)}
-                style={{ flex: 1, padding: '12px 0', background: '#f2f2f7', color: '#1c1c1e', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: ff, transition: 'background 0.15s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e5ea'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#f2f2f7'; }}
+                className="flex-1 py-3.5 bg-[#f5f3ef] text-[#1b1c1a] rounded-[16px] text-[15px] font-semibold border-none cursor-pointer hover:bg-[#e4e2de] transition-colors font-headline"
               >
                 Cancel
               </button>
               <button
                 onClick={() => router.push('/')}
-                style={{ flex: 1, padding: '12px 0', background: '#ff3b30', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: ff, transition: 'opacity 0.15s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                className="flex-1 py-3.5 bg-[#ba1a1a] text-white rounded-[16px] text-[15px] font-semibold border-none cursor-pointer hover:opacity-85 transition-opacity font-headline"
               >
                 Leave
               </button>

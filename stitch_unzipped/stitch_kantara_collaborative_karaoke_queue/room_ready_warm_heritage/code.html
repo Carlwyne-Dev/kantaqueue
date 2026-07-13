@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KantaQueue - Room Ready</title>
+<!-- Google Fonts: Plus Jakarta Sans & Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface": "#fbf9f5",
+            "primary-fixed": "#d7e8c9",
+            "on-primary-fixed": "#121f0c",
+            "on-background": "#1b1c1a",
+            "tertiary-fixed-dim": "#e2bccc",
+            "background": "#fbf9f5",
+            "tertiary-fixed": "#ffd8e8",
+            "surface-container-high": "#eae8e4",
+            "on-error": "#ffffff",
+            "inverse-surface": "#30312e",
+            "surface-variant": "#e4e2de",
+            "outline-variant": "#c5c8be",
+            "on-secondary": "#ffffff",
+            "secondary": "#5f5e5e",
+            "tertiary-container": "#cca8b7",
+            "secondary-container": "#e2dfde",
+            "inverse-primary": "#bbccae",
+            "on-primary-fixed-variant": "#3d4b34",
+            "error": "#ba1a1a",
+            "tertiary": "#745663",
+            "surface-container-low": "#f5f3ef",
+            "outline": "#757870",
+            "surface-tint": "#54634a",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed-dim": "#c8c6c5",
+            "surface-container": "#f0eeea",
+            "on-surface-variant": "#444840",
+            "on-tertiary-fixed": "#2b1520",
+            "on-primary": "#ffffff",
+            "primary": "#54634a",
+            "on-secondary-fixed": "#1b1b1c",
+            "primary-container": "#a7b79a",
+            "on-tertiary-container": "#573c49",
+            "on-secondary-container": "#636262",
+            "on-primary-container": "#3a4832",
+            "on-secondary-fixed-variant": "#474746",
+            "surface-container-highest": "#e4e2de",
+            "secondary-fixed": "#e5e2e1",
+            "on-error-container": "#93000a",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#1b1c1a",
+            "primary-fixed-dim": "#bbccae",
+            "on-tertiary-fixed-variant": "#5a3f4b",
+            "surface-bright": "#fbf9f5",
+            "surface-dim": "#dcdad6",
+            "inverse-on-surface": "#f2f0ed",
+            "error-container": "#ffdad6",
+            "custom-warm-bg": "#F9F8F5",
+            "custom-card-bg": "#F2F1EC"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px",
+            "v-large": "32px",
+          },
+          "fontFamily": {
+            "headline": ["Plus Jakarta Sans", "sans-serif"],
+            "body": ["Manrope", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style data-purpose="custom-styles">
+    body {
+      background-color: #F9F8F5;
+      font-family: 'Manrope', sans-serif;
+    }
+    .ambient-gradient {
+      background: radial-gradient(circle at top right, rgba(167, 183, 154, 0.1), transparent 50%),
+                  radial-gradient(circle at bottom left, rgba(215, 232, 201, 0.1), transparent 50%);
+    }
+    .glass-card {
+      background-color: #F2F1EC;
+      border: 1px solid rgba(117, 120, 112, 0.12);
+      box-shadow: 0 20px 40px -10px rgba(84, 99, 74, 0.08);
+    }
+    .qr-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col text-on-surface ambient-gradient">
+<!-- BEGIN: Header -->
+<header class="w-full px-6 py-8 flex justify-between items-center max-w-7xl mx-auto" data-purpose="main-header">
+<div class="flex items-center gap-3">
+<div class="bg-primary p-2.5 rounded-xl shadow-sm">
+<svg fill="none" height="20" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+<path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+<line x1="12" x2="12" y1="19" y2="22"></line>
+</svg>
+</div>
+<span class="font-headline font-extrabold text-2xl tracking-tight text-on-surface">KantaQueue</span>
+</div>
+<div class="flex items-center gap-6">
+<a class="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" href="#">Help</a>
+<button class="bg-surface-container-high px-6 py-2.5 rounded-full text-sm font-bold text-on-surface hover:bg-surface-dim transition-colors">Exit Room</button>
+</div>
+</header>
+<!-- END: Header -->
+<!-- BEGIN: Main Content -->
+<main class="flex-grow flex items-center justify-center px-4 py-12" data-purpose="room-ready-section">
+<div class="max-w-5xl w-full grid md:grid-cols-2 gap-16 items-center">
+<!-- Left Side: Copy and Status -->
+<div class="space-y-10" data-purpose="content-info">
+<div class="inline-flex items-center gap-2 bg-primary-container/20 text-on-primary-container px-4 py-2 rounded-full border border-primary-container/30">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="text-[10px] font-bold uppercase tracking-[0.15em] font-body">Room Active</span>
+</div>
+<div class="space-y-6">
+<h1 class="text-6xl md:text-7xl font-headline font-extrabold leading-[1.05] tracking-tight text-on-surface">
+          The stage <br/>is set.
+        </h1>
+<p class="text-lg text-on-surface-variant font-body font-medium max-w-sm leading-relaxed">
+          Scan the code to join the queue and start picking your favorite tracks.
+        </p>
+</div>
+<div class="flex flex-col gap-5">
+<button class="bg-primary text-on-primary px-10 py-5 rounded-2xl text-xl font-headline font-bold shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 transition-all w-fit">
+          Start Party
+        </button>
+<div class="flex items-center gap-2 text-sm text-outline font-medium font-body">
+<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+<span>Room expires in 6 hours • No account required</span>
+</div>
+</div>
+</div>
+<!-- Right Side: QR Card -->
+<div class="relative" data-purpose="qr-card-container">
+<!-- Decorative background accent -->
+<div class="absolute -top-16 -right-16 w-80 h-80 bg-primary-container/10 rounded-full blur-[100px] -z-10"></div>
+<div class="glass-card rounded-v-large p-12 flex flex-col items-center text-center">
+<div class="qr-container mb-10">
+<img alt="Room QR Code" class="w-52 h-52 md:w-64 md:h-64 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHfgk2Z_ABYXk0qORju4cgDfzIIPhcpgslYl7M1O_sUAT8mz45rsWx7aEPtnj2S8gxBqr4578T4J7U6mlc-8qGBu-grcZIFS_rzqPSjR9-oFKlb9m9LFGcRMdp6pd2xCpM47A6rc83Zr7TNpz8rSX7c8070SA-q_oZHKkBSoUYaNNJj0LzgRcfPKXjSqo1i1Wfa-ln41ngvXLlnOg6W-LSYv5FLbPY4mkI2zp4295cVq5f0ceBQEX2"/>
+</div>
+<div class="space-y-3">
+<span class="text-[11px] font-bold text-outline uppercase tracking-[0.25em] font-body">Room Code</span>
+<div class="text-6xl font-headline font-extrabold tracking-tighter text-on-surface">VV255</div>
+</div>
+<div class="mt-12 pt-10 border-t border-outline/10 w-full flex justify-center gap-12">
+<div class="text-center group">
+<div class="text-3xl font-headline font-bold text-on-surface">0</div>
+<div class="text-[11px] uppercase font-bold text-outline tracking-wider font-body mt-1">Guests</div>
+</div>
+<div class="text-center group">
+<div class="text-3xl font-headline font-bold text-on-surface">0</div>
+<div class="text-[11px] uppercase font-bold text-outline tracking-wider font-body mt-1">Songs</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- END: Main Content -->
+<!-- BEGIN: Footer -->
+<footer class="w-full py-10 text-center" data-purpose="simple-footer">
+<p class="text-[11px] font-bold text-outline uppercase tracking-[0.2em] font-body opacity-80">Powered by KantaQueue Engine</p>
+</footer>
+<!-- END: Footer -->
+</body></html>

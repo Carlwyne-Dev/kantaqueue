@@ -6,6 +6,7 @@
 // ============================================================
 
 import { type NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 // Keywords that identify a karaoke/videoke track (PRD §8)
 const KARAOKE_KEYWORDS = ['karaoke', 'videoke', 'instrumental', 'minus one'];
@@ -52,6 +53,27 @@ function isKaraokeVideo(title: string, description: string): boolean {
   return KARAOKE_KEYWORDS.some((kw) => haystack.includes(kw));
 }
 
+/**
+ * Fetches all blocked video IDs (times_played = -1) from the songs table.
+ * Used to strip unavailable/broken videos from fresh YouTube results server-side.
+ */
+async function getBlockedVideoIds(): Promise<Set<string>> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return new Set();
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data } = await supabase
+      .from('songs')
+      .select('youtube_video_id')
+      .lt('times_played', 0); // times_played = -1 means blocked
+    return new Set((data ?? []).map((r: { youtube_video_id: string }) => r.youtube_video_id));
+  } catch {
+    return new Set(); // non-critical — degrade gracefully
+  }
+}
+
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('q');
 
@@ -68,16 +90,23 @@ export async function GET(request: NextRequest) {
   const searchQuery = `${query.trim()} karaoke`;
 
   try {
-    // Step 1: search.list — costs 100 units per call
-    const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search');
-    searchUrl.searchParams.set('part', 'snippet');
-    searchUrl.searchParams.set('q', searchQuery);
-    searchUrl.searchParams.set('type', 'video');
-    searchUrl.searchParams.set('videoCategoryId', '10'); // Music
-    searchUrl.searchParams.set('maxResults', '15');
-    searchUrl.searchParams.set('key', apiKey);
+    // Load blocked IDs in parallel with the YouTube search call
+    const [blockedIds, searchRes] = await Promise.all([
+      getBlockedVideoIds(),
+      fetch(
+        (() => {
+          const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search');
+          searchUrl.searchParams.set('part', 'snippet');
+          searchUrl.searchParams.set('q', searchQuery);
+          searchUrl.searchParams.set('type', 'video');
+          searchUrl.searchParams.set('videoCategoryId', '10'); // Music
+          searchUrl.searchParams.set('maxResults', '15');
+          searchUrl.searchParams.set('key', apiKey);
+          return searchUrl.toString();
+        })()
+      ),
+    ]);
 
-    const searchRes = await fetch(searchUrl.toString());
     if (!searchRes.ok) {
       const err = await searchRes.json();
       console.error('[youtube-search] search.list failed:', err);
@@ -88,8 +117,10 @@ export async function GET(request: NextRequest) {
     const items: YouTubeSearchItem[] = searchData.items ?? [];
 
     // Step 2: Post-filter — only keep karaoke-signal videos (PRD §8)
+    //         AND strip any blocked/unavailable video IDs
     const karaokeItems = items.filter((item) =>
-      isKaraokeVideo(item.snippet.title, item.snippet.description)
+      isKaraokeVideo(item.snippet.title, item.snippet.description) &&
+      !blockedIds.has(item.id.videoId)
     );
 
     if (karaokeItems.length === 0) {
