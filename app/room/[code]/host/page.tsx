@@ -78,6 +78,7 @@ export default function HostPage({
   // ── Animation state ────────────────────────────────────────────────────────
   const [newQueueIds, setNewQueueIds] = useState<Set<string>>(new Set());
   const [exitingQueueItem, setExitingQueueItem] = useState<(QueueItem & { song: Song }) | null>(null);
+  const [isPromoting, setIsPromoting] = useState(false);
 
   const playerRef = useRef<YTPlayer | null>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -92,7 +93,7 @@ export default function HostPage({
   const showLocalNotif = useCallback((msg: string) => {
     setLocalNotif(msg);
     if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
-    notifTimeoutRef.current = setTimeout(() => setLocalNotif(null), 2000);
+    notifTimeoutRef.current = setTimeout(() => setLocalNotif(null), 3500);
   }, []);
 
   // ── Extract dominant color from thumbnail ─────────────────────────────────────
@@ -205,7 +206,7 @@ export default function HostPage({
       }
     }
 
-    // Detect first queue item being promoted to now-playing → slide up and out
+    // Detect first queue item being promoted to now-playing → cascade slide up
     const prevFirst = prevQueue[0];
     if (
       prevFirst &&
@@ -213,7 +214,9 @@ export default function HostPage({
       playing?.id !== prevNowPlayingId
     ) {
       setExitingQueueItem(prevFirst);
-      setTimeout(() => setExitingQueueItem(null), 380);
+      setIsPromoting(true);
+      setTimeout(() => setExitingQueueItem(null), 420);
+      setTimeout(() => setIsPromoting(false), 420);
     }
 
     prevQueueRef.current = queued;
@@ -698,7 +701,7 @@ export default function HostPage({
 
           {/* Fullscreen notification */}
           {isFullscreen && localNotif && (
-            <div className="absolute top-28 right-7 z-20 bg-black/50 backdrop-blur-xl rounded-full px-5 py-3 border border-white/10 text-white text-[13px] font-semibold animate-[slideInRightThenOut_2s_ease-in-out_forwards]">
+            <div className="absolute top-28 right-7 z-20 bg-black/50 backdrop-blur-xl rounded-full px-5 py-3 border border-white/10 text-white text-[13px] font-semibold animate-[slideInRightThenOut_3.5s_ease-in-out_forwards]">
               {localNotif}
             </div>
           )}
@@ -734,13 +737,13 @@ export default function HostPage({
             </section>
 
             {/* Up Next / Queue */}
-            <section className="bg-[#F9F8F5] rounded-[20px] border border-outline-variant/30 shadow-sm flex-1 flex flex-col overflow-hidden">
+            <section className="bg-[#F9F8F5] rounded-[20px] border border-outline-variant/30 shadow-sm flex-1 flex flex-col" style={{ overflow: 'clip' }}>
               <div className="px-5 pt-5 pb-3 border-b border-outline-variant/20 flex-shrink-0">
                 <h2 className="text-[11px] font-extrabold text-secondary/60 uppercase tracking-widest">
                   Up Next {queue.length > 0 && `· ${queue.length}`}
                 </h2>
               </div>
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto" style={{ overflowX: 'clip' }}>
                 {queue.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full gap-3 px-5 py-10 text-center">
                     <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center opacity-40 border border-outline-variant/20">
@@ -749,26 +752,11 @@ export default function HostPage({
                     <p className="text-[13px] font-semibold text-secondary/60">Queue is currently empty</p>
                   </div>
                 ) : (
-                  <ul className="m-0 p-0 list-none overflow-hidden">
-                    {/* Ghost item exiting upward when promoted to now-playing */}
-                    {exitingQueueItem && (
-                      <li key={`exit-${exitingQueueItem.id}`} className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 queue-item-exit">
-                        <span className="text-[12px] font-bold text-secondary/40 w-5 text-center flex-shrink-0">1</span>
-                        {exitingQueueItem.song.thumbnail_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={exitingQueueItem.song.thumbnail_url} alt={exitingQueueItem.song.title}
-                            className="w-10 h-8 rounded-lg object-cover flex-shrink-0" />
-                        )}
-                        <div className="flex-1 overflow-hidden">
-                          <p className="text-[12px] font-semibold text-on-background truncate">{exitingQueueItem.song.title}</p>
-                          <p className="text-[11px] text-secondary truncate mt-0.5">{exitingQueueItem.singer_name}</p>
-                        </div>
-                      </li>
-                    )}
+                  <ul className="m-0 p-0 list-none" style={{ overflowX: 'clip' }}>
                     {queue.map((item, idx) => (
                       <li
                         key={item.id}
-                        className={`flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 last:border-0 ${newQueueIds.has(item.id) ? 'queue-item-enter' : ''}`}
+                        className={`flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 last:border-0 ${newQueueIds.has(item.id) ? 'queue-item-enter' : isPromoting ? 'queue-item-shift-up' : ''}`}
                       >
                         <span className="text-[12px] font-bold text-secondary/40 w-5 text-center flex-shrink-0">{idx + 1}</span>
                         {item.song.thumbnail_url && (
