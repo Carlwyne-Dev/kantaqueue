@@ -131,6 +131,37 @@
   }
 }
 
+/* ── Custom Scrollbar ─────────────────────────────────────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-fixed-dim) var(--color-surface-container-low);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-surface-container-low);
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-fixed-dim);
+  border-radius: 10px;
+  border: 2px solid var(--color-surface-container-low);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--color-surface-container-low);
+}
+
 /* ── Queue Animations ─────────────────────────────────────────────────────── */
 
 @keyframes queue-slide-in-right {
@@ -142,6 +173,13 @@
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+@keyframes slideInRightThenOut {
+  0% { transform: translateX(120%); opacity: 0; }
+  15% { transform: translateX(0); opacity: 1; }
+  85% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
 }
 
 @keyframes queue-slide-up-out {

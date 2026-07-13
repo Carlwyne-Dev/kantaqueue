@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
 import { searchSongs, upsertSong } from '@/lib/songs';
+import { QRCodeSVG } from 'qrcode.react';
 import type { QueueItem, Song, YouTubeSearchResult } from '@/types';
 
 function formatDuration(secs: number | null): string {
@@ -40,7 +41,10 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [adding, setAdding] = useState<string | null>(null);
   const [loadingRoom, setLoadingRoom] = useState(true);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/join?code=${code}` : '';
 
   // ── Init ─────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -459,6 +463,34 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                 Leave
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Floating QR Button ── */}
+      <button
+        onClick={() => setShowQRModal(true)}
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95"
+        aria-label="Show Room QR Code"
+      >
+        <span className="material-symbols-outlined text-[28px]">qr_code_2</span>
+      </button>
+
+      {/* ── QR Modal ── */}
+      {showQRModal && joinUrl && (
+        <div
+          className="fixed inset-0 z-[100] bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setShowQRModal(false)}
+        >
+          <div className="bg-white p-8 rounded-[40px] shadow-2xl flex flex-col items-center gap-6 border border-outline-variant/30 animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="bg-white p-2 rounded-xl">
+              <QRCodeSVG value={joinUrl} size={200} />
+            </div>
+            <div className="text-center">
+              <p className="text-[12px] font-bold text-secondary/60 uppercase tracking-widest mb-1">Scan to join</p>
+              <p className="text-4xl font-black text-on-background tracking-tighter">{code}</p>
+            </div>
+            <p className="text-[12px] text-secondary font-medium">Click anywhere to close</p>
           </div>
         </div>
       )}

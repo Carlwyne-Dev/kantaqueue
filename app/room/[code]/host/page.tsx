@@ -187,7 +187,8 @@ export default function HostPage({
 
     // Detect newly added items → slide in from right
     const prevIds = new Set(prevQueue.map((i) => i.id));
-    const addedIds = queued.filter((i) => !prevIds.has(i.id)).map((i) => i.id);
+    const addedItems = queued.filter((i) => !prevIds.has(i.id));
+    const addedIds = addedItems.map((i) => i.id);
     if (addedIds.length > 0) {
       setNewQueueIds((prev) => new Set([...prev, ...addedIds]));
       setTimeout(() => {
@@ -197,6 +198,11 @@ export default function HostPage({
           return next;
         });
       }, 700);
+      
+      const firstAdded = addedItems[0];
+      if (firstAdded) {
+        showLocalNotif(`${firstAdded.singer_name} added "${firstAdded.song.title}"`);
+      }
     }
 
     // Detect first queue item being promoted to now-playing → slide up and out
@@ -232,9 +238,6 @@ export default function HostPage({
         'postgres_changes',
         { event: '*', schema: 'public', table: 'queue_items', filter: `room_id=eq.${room.id}` },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
-            showLocalNotif(`${payload.new.singer_name} added a song`);
-          }
           fetchQueue();
         }
       )
@@ -695,7 +698,7 @@ export default function HostPage({
 
           {/* Fullscreen notification */}
           {isFullscreen && localNotif && (
-            <div className="absolute top-20 right-7 z-20 bg-black/50 backdrop-blur-xl rounded-full px-4 py-2.5 border border-white/10 text-white text-[13px] font-semibold animate-[fadeIn_0.2s_ease-out]">
+            <div className="absolute top-28 right-7 z-20 bg-black/50 backdrop-blur-xl rounded-full px-5 py-3 border border-white/10 text-white text-[13px] font-semibold animate-[slideInRightThenOut_2s_ease-in-out_forwards]">
               {localNotif}
             </div>
           )}
@@ -854,7 +857,7 @@ export default function HostPage({
                 className="absolute inset-0 z-50 bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer animate-[fadeIn_0.2s_ease-out]"
                 onClick={() => setShowBigQR(false)}
               >
-                <div className="bg-white p-8 rounded-[24px] shadow-2xl flex flex-col items-center gap-6 border border-outline-variant/30 animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]">
+                <div className="bg-white p-8 rounded-[40px] shadow-2xl flex flex-col items-center gap-6 border border-outline-variant/30 animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]">
                   <div className="bg-white p-2 rounded-xl">
                     <QRCodeSVG value={joinUrl} size={200} />
                   </div>

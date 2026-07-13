@@ -235,14 +235,7 @@ export default function HomePage() {
             <a className="text-secondary hover:text-on-background transition-colors text-[14px] font-semibold tracking-[0.01em] leading-[1.2] font-medium" href="/privacy">Privacy</a>
             <a className="text-secondary hover:text-on-background transition-colors text-[14px] font-semibold tracking-[0.01em] leading-[1.2] font-medium" href="/help">Help</a>
           </div>
-          <div className="flex gap-6">
-            <a className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-secondary hover:text-primary hover:bg-primary-container/20 transition-all" href="#">
-              <span className="material-symbols-outlined text-[20px]">share</span>
-            </a>
-            <a className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-secondary hover:text-primary hover:bg-primary-container/20 transition-all" href="#">
-              <span className="material-symbols-outlined text-[20px]">language</span>
-            </a>
-          </div>
+
         </div>
       </footer>
 
