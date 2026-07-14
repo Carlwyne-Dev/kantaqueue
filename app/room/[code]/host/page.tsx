@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import { getSupabaseClient } from '@/lib/supabase';
 import type { Room, QueueItem, Song } from '@/types';
+import { AnimatedGradient } from '@/components/ui/animated-gradient';
 
 // ── YouTube IFrame API types ──────────────────────────────────────────────────
 declare global {
@@ -654,24 +655,34 @@ export default function HostPage({
           {/* Ambient glow */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(167,183,154,0.08),transparent_70%)] pointer-events-none z-0" />
 
-          {/* YT Player */}
-          <div ref={playerContainerRef} className="w-full h-full" id="yt-player" />
+          {/* YT Player Wrapper */}
+          <div className={`absolute inset-0 z-40 transition-opacity duration-700 ${!nowPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div ref={playerContainerRef} className="w-full h-full" id="yt-player" />
+          </div>
 
           {/* Idle state */}
           {!nowPlaying && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-8 text-white bg-[#1E1E1E]">
-              <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center border border-white/10 backdrop-blur-sm animate-pulse">
-                <svg className="text-[#A7B79A]" fill="none" width="40" height="40" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-                </svg>
-              </div>
-              <div className="text-center">
-                <h2 className="text-3xl font-extrabold tracking-tight">Waiting for the next song</h2>
-                <p className="text-white/40 text-base font-medium mt-2">Ask guests to add songs from their phone</p>
-              </div>
-              <div className="bg-white/5 backdrop-blur-md px-10 py-6 rounded-[2rem] border border-white/10 text-center">
-                <p className="text-[11px] text-white/30 tracking-[0.3em] uppercase font-bold mb-3">Room Code</p>
-                <p className="text-6xl font-black text-[#A7B79A] tracking-tighter">{code}</p>
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-10 text-white overflow-hidden bg-[#1E1E1E]">
+              {/* WebGL Animated Gradient */}
+              <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
+              
+              <div className="relative z-20 flex flex-col items-center gap-10">
+                <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30">
+                  <svg fill="white" width="52" height="52" viewBox="0 0 24 24">
+                    <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm6 8a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V21h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/>
+                  </svg>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
+                  <p className="text-[12px] text-white/50 tracking-[0.3em] uppercase font-bold mb-4">Room Code</p>
+                  <p className="text-7xl font-black text-white tracking-tighter mb-4 drop-shadow-md">{code}</p>
+                  <div className="bg-white/20 px-5 py-2 rounded-full border border-white/10 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-[13px] font-semibold tracking-wide text-white/90">Waiting for songs</span>
+                  </div>
+                </div>
+
+                <p className="text-[13px] text-secondary/60 font-medium">Point a phone camera at the QR code to join</p>
               </div>
             </div>
           )}

@@ -124,7 +124,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   }
 
   async function handleRemoveOwn(itemId: string) {
-    const { error } = await supabase.from('queue_items').update({ status: 'removed' }).eq('id', itemId);
+    const { error } = await supabase.from('queue_items').delete().eq('id', itemId);
     if (error) toast.error('Could not remove. Try again.');
     else { toast('Removed'); fetchQueue(); }
   }
