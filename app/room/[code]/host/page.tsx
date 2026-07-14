@@ -677,7 +677,7 @@ export default function HostPage({
               {/* WebGL Animated Gradient */}
               <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
               
-              <div className="relative z-20 flex flex-col items-center gap-6">
+              <div className="relative z-20 flex flex-col items-center gap-12">
                 {/* Icon */}
                 <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30">
                   <svg fill="white" width="52" height="52" viewBox="0 0 24 24">
