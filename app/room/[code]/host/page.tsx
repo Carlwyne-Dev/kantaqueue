@@ -701,7 +701,7 @@ export default function HostPage({
 
           {/* Fullscreen QR pill */}
           {isFullscreen && joinUrl && (
-            <div className="absolute bottom-7 right-7 z-20 flex items-center gap-3 bg-black/55 backdrop-blur-xl rounded-full px-5 py-2.5 border border-white/10">
+            <div className="absolute bottom-7 right-7 z-[60] flex items-center gap-3 bg-black/55 backdrop-blur-xl rounded-full px-5 py-2.5 border border-white/10">
               <QRCodeSVG value={joinUrl} size={36} />
               <span className="text-white text-base font-bold tracking-[0.1em]">{code}</span>
             </div>
@@ -709,7 +709,7 @@ export default function HostPage({
 
           {/* Fullscreen controls */}
           {isFullscreen && (
-            <div className="absolute top-4 right-4 md:top-7 md:right-7 z-20 flex items-center gap-2 md:gap-3 bg-black/50 backdrop-blur-xl rounded-full px-2.5 py-1.5 md:px-4 md:py-2.5 border border-white/10">
+            <div className="absolute top-4 right-4 md:top-7 md:right-7 z-[60] flex items-center gap-2 md:gap-3 bg-black/50 backdrop-blur-xl rounded-full px-2.5 py-1.5 md:px-4 md:py-2.5 border border-white/10">
               <button id="host-skip-btn-fs" onClick={handleSkip} title="Skip"
                 className="w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/10 hover:bg-white/20 border-none flex items-center justify-center transition-all cursor-pointer">
                 <svg width="14" height="14" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="none"><path d="M5 4l10 8-10 8V4z" fill="white"/><rect x="19" y="4" width="2" height="16" rx="1" fill="white"/></svg>
@@ -724,7 +724,7 @@ export default function HostPage({
 
           {/* Fullscreen notification */}
           {isFullscreen && localNotif && (
-            <div className="absolute top-28 right-7 z-20 bg-black/50 backdrop-blur-xl rounded-full px-5 py-3 border border-white/10 text-white text-[13px] font-semibold animate-[slideInRightThenOut_3.5s_ease-in-out_forwards]">
+            <div className="absolute top-28 right-7 z-[60] bg-black/50 backdrop-blur-xl rounded-full px-5 py-3 border border-white/10 text-white text-[13px] font-semibold animate-[slideInRightThenOut_3.5s_ease-in-out_forwards]">
               {localNotif}
             </div>
           )}
