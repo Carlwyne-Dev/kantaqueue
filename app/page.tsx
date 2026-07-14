@@ -147,7 +147,7 @@ export default function HomePage() {
           </div>
 
           {/* Hero Visuals */}
-          <div className="w-full lg:w-1/2 relative mt-20 lg:mt-0 h-[500px]">
+          <div className="hidden md:block w-full lg:w-1/2 relative mt-20 lg:mt-0 h-[500px]">
             {/* Large Album Art */}
             <div className="absolute top-0 right-0 w-[340px] h-[340px] rounded-3xl overflow-hidden shadow-2xl rotate-3 z-0 ring-8 ring-white/50 max-md:hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -235,31 +235,8 @@ export default function HomePage() {
             <a className="text-secondary hover:text-on-background transition-colors text-[14px] font-semibold tracking-[0.01em] leading-[1.2] font-medium" href="/privacy">Privacy</a>
             <a className="text-secondary hover:text-on-background transition-colors text-[14px] font-semibold tracking-[0.01em] leading-[1.2] font-medium" href="/help">Help</a>
           </div>
-
         </div>
       </footer>
-
-      {/* Mobile Nav */}
-      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] z-50">
-        <div className="glass-panel rounded-full px-8 py-5 flex justify-around items-center border border-white/60 shadow-2xl">
-          <a className="flex flex-col items-center text-primary" href="/">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
-          </a>
-          <a className="flex flex-col items-center text-secondary/70" href="/join">
-            <span className="material-symbols-outlined">queue_music</span>
-          </a>
-          <button onClick={handleCreateRoom} className="bg-primary text-on-primary p-4 rounded-full -mt-16 shadow-xl active:scale-90 transition-transform">
-            <span className="material-symbols-outlined text-3xl">add</span>
-          </button>
-          <a className="flex flex-col items-center text-secondary/70" href="/join">
-            <span className="material-symbols-outlined">search</span>
-          </a>
-          <a className="flex flex-col items-center text-secondary/70" href="/help">
-            <span className="material-symbols-outlined">person</span>
-          </a>
-        </div>
-      </div>
-
     </div>
   );
 }
