@@ -95,15 +95,15 @@ export default function HomePage() {
       />
       {/* Nav — transparent, sits on top of the blur edge */}
       <nav className="fixed top-0 w-full z-50">
-        <div className="flex items-center px-[64px] py-3.5 max-md:px-[20px]">
+        <div className="flex items-center justify-between px-[64px] py-3.5 max-md:px-[20px]">
           {/* Logo — left */}
-          <div className="flex items-center gap-2.5 w-1/3">
+          <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/logo.png" alt="KanTara Logo" className="w-8 h-8 rounded-lg" />
             <span className="text-[20px] font-extrabold text-on-background tracking-tighter font-headline-sm">KanTara</span>
           </div>
           {/* Center links */}
-          <div className="hidden md:flex items-center justify-center gap-8 w-1/3">
+          <div className="hidden md:flex items-center justify-center gap-8">
             <a className="text-secondary hover:text-on-background transition-colors text-[13px] font-semibold" href="/help">Help</a>
             <span className="text-secondary/40 cursor-not-allowed text-[13px] font-semibold relative group">
               Rooms
@@ -111,7 +111,7 @@ export default function HomePage() {
             </span>
           </div>
           {/* Join Room CTA — right */}
-          <div className="flex justify-end w-1/3">
+          <div className="flex justify-end">
             <a className="bg-[#A7B79A] text-[#121f0c] px-6 py-2 rounded-full font-bold text-[13px] hover:brightness-95 active:scale-95 transition-all shadow-sm" href="/join">
               Join Room
             </a>
@@ -129,7 +129,7 @@ export default function HomePage() {
             <p className="font-body-lg text-secondary max-w-md leading-relaxed mt-6">
               Create a room, let everyone join with a QR code, build the queue together, and keep the music flowing without passing one phone around.
             </p>
-            <div className="pt-8 flex flex-wrap gap-[32px]">
+            <div className="pt-8 flex flex-col md:flex-row items-stretch md:items-start gap-4 md:gap-[32px]">
               <button 
                 onClick={handleCreateRoom}
                 disabled={loading}
@@ -139,7 +139,7 @@ export default function HomePage() {
               </button>
               <button 
                 onClick={() => router.push('/join')}
-                className="bg-white border border-outline-variant/50 px-8 py-3.5 rounded-full font-bold text-[18px] text-on-surface hover:bg-surface-container-low transition-all shadow-sm"
+                className="bg-white border border-outline-variant/50 px-8 py-3.5 rounded-full font-bold text-[18px] text-on-surface hover:bg-surface-container-low transition-all shadow-sm text-center"
               >
                 Join Room
               </button>
