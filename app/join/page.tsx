@@ -250,7 +250,7 @@ export default function JoinPage({
             
             <div className="bg-black aspect-square relative">
               <Scanner
-                onScan={(result) => {
+                onScan={async (result) => {
                   if (result && result.length > 0) {
                     const text = result[0].rawValue;
                     let scannedCode = text;
@@ -262,9 +262,48 @@ export default function JoinPage({
                       if (match) scannedCode = match[1];
                     }
                     if (scannedCode && scannedCode.length === 5) {
-                      setCode(scannedCode.toUpperCase());
+                      const upper = scannedCode.toUpperCase();
+                      setCode(upper);
                       setShowScanner(false);
-                      toast.success('Room code scanned!');
+                      toast.success('QR scanned! Joining room...');
+                      // Auto-join directly — set code then call handleJoin with it inline
+                      const trimName = nickname.trim();
+                      if (!trimName) {
+                        toast.error('Please enter a nickname first.');
+                        return;
+                      }
+                      setLoading(true);
+                      try {
+                        const userId = await ensureAnonSession();
+                        if (!userId) { toast.error('Could not start session. Please refresh.'); return; }
+                        const supabase = getSupabaseClient();
+                        const { data: room, error: roomErr } = await supabase
+                          .from('rooms').select('id, status').eq('code', upper).eq('status', 'active').maybeSingle();
+                        if (roomErr || !room) { toast.error('Room not found or has ended.'); return; }
+                        const { data: existing } = await supabase
+                          .from('guests').select('id').eq('room_id', room.id).eq('display_name', trimName).maybeSingle();
+                        if (existing) {
+                          const newName = generateUniqueNickname(new Set([trimName]));
+                          toast(`"${trimName}" is taken — you'll be "${newName}" instead.`);
+                          setNickname(newName);
+                          return;
+                        }
+                        const { data: existingGuest } = await supabase
+                          .from('guests').select('id').eq('room_id', room.id).eq('auth_uid', userId).maybeSingle();
+                        if (!existingGuest) {
+                          const { error: guestErr } = await supabase.from('guests').insert({
+                            room_id: room.id, auth_uid: userId, display_name: trimName,
+                          });
+                          if (guestErr) { toast.error('Failed to join room. Try again.'); return; }
+                        }
+                        sessionStorage.setItem(`kq_nickname_${upper}`, trimName);
+                        router.push(`/room/${upper}/guest`);
+                      } catch (err) {
+                        console.error(err);
+                        toast.error('Something went wrong.');
+                      } finally {
+                        setLoading(false);
+                      }
                     } else {
                       toast.error('Invalid QR code format.');
                       setShowScanner(false);

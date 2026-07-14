@@ -90,6 +90,11 @@ export default function HostPage({
   const currentAttemptRef = useRef<{ queueId: string; songId: string } | null>(null);
   const prevQueueRef = useRef<(QueueItem & { song: Song })[]>([]);
   const prevNowPlayingIdRef = useRef<string | null>(null);
+  // stateRef always holds the latest room/nowPlaying — prevents stale closure in advanceQueue
+  const stateRef = useRef<{ room: Room | null; nowPlaying: (QueueItem & { song: Song }) | null }>({ room: null, nowPlaying: null });
+
+  // Keep stateRef in sync
+  useEffect(() => { stateRef.current = { room, nowPlaying }; }, [room, nowPlaying]);
 
   const showLocalNotif = useCallback((msg: string) => {
     setLocalNotif(msg);
@@ -311,29 +316,35 @@ export default function HostPage({
 
   // ── Auto-play next song ──────────────────────────────────────────────────────
   async function advanceQueue() {
-    if (advancingRef.current || !room) return;
+    // Read FRESH state from ref — avoids stale closure bug when song ends naturally
+    const { room: currentRoom, nowPlaying: currentNowPlaying } = stateRef.current;
+    if (advancingRef.current || !currentRoom) return;
     advancingRef.current = true;
 
     try {
       // Mark current song as played
-      if (nowPlaying) {
-        await supabase
-          .from('queue_items')
-          .update({ status: 'played' })
-          .eq('id', nowPlaying.id);
+      if (currentNowPlaying) {
+        // Double check status hasn't been changed by a skip already
+        const { data: check } = await supabase.from('queue_items').select('status').eq('id', currentNowPlaying.id).single();
+        if (check?.status === 'playing') {
+          await supabase
+            .from('queue_items')
+            .update({ status: 'played' })
+            .eq('id', currentNowPlaying.id);
 
-        // Bump times_played on the song (PRD §9a)
-        await supabase
-          .from('songs')
-          .update({ times_played: nowPlaying.song.times_played + 1, last_played_at: new Date().toISOString() })
-          .eq('id', nowPlaying.song.id);
+          // Bump times_played on the song
+          await supabase
+            .from('songs')
+            .update({ times_played: currentNowPlaying.song.times_played + 1, last_played_at: new Date().toISOString() })
+            .eq('id', currentNowPlaying.song.id);
+        }
       }
 
       // Get next queued item
       const { data: nextItems } = await supabase
         .from('queue_items')
         .select('*, song:songs(*)')
-        .eq('room_id', room.id)
+        .eq('room_id', currentRoom.id)
         .eq('status', 'queued')
         .order('position', { ascending: true, nullsFirst: false })
         .order('requested_at', { ascending: true })
@@ -644,12 +655,12 @@ export default function HostPage({
       }}
     >
       <div
-        className="flex-1 flex overflow-hidden min-h-0"
+        className="flex-1 flex overflow-hidden min-h-0 max-md:justify-center"
         style={{ gap: isFullscreen ? 0 : 24, padding: isFullscreen ? 0 : 24 }}
       >
-        {/* ── Video / Stage area ── */}
+        {/* ── Video / Stage area — hidden on mobile ── */}
         <div
-          className="flex-1 relative overflow-hidden"
+          className="flex-1 relative overflow-hidden max-md:hidden"
           style={{ borderRadius: isFullscreen ? 0 : 20, background: '#1E1E1E', boxShadow: isFullscreen ? 'none' : '0 8px 40px rgba(0,0,0,0.25)' }}
         >
           {/* Ambient glow */}
@@ -675,15 +686,12 @@ export default function HostPage({
                 </div>
 
                 {/* Waiting for songs text */}
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-                  <p className="text-2xl font-bold text-white/90 tracking-tight">Waiting for songs</p>
-                </div>
+                <p className="text-5xl md:text-6xl font-black text-white tracking-tight uppercase">WAITING FOR SONGS</p>
 
-                {/* Room Code Box */}
-                <div className="bg-white/10 backdrop-blur-2xl px-12 py-8 rounded-[2.5rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
-                  <p className="text-[12px] text-white/50 tracking-[0.3em] uppercase font-bold mb-4">Room Code</p>
-                  <p className="text-7xl font-black text-white tracking-tighter drop-shadow-md">{code}</p>
+                {/* Room Code Box — hidden on mobile */}
+                <div className="max-md:hidden bg-white/10 backdrop-blur-2xl px-10 py-5 rounded-[2rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
+                  <p className="text-[11px] text-white/50 tracking-[0.3em] uppercase font-bold mb-2">Room Code</p>
+                  <p className="text-5xl font-black text-white tracking-tighter drop-shadow-md">{code}</p>
                 </div>
 
                 <p className="text-[13px] text-white/40 font-medium">Point a phone camera at the QR code to join</p>
@@ -724,7 +732,7 @@ export default function HostPage({
 
         {/* ── Sidebar ── */}
         {!isFullscreen && (
-          <aside className="w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0">
+          <aside className="max-md:w-full md:w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0">
 
             {/* Now Playing */}
             <section className="bg-[#F9F8F5] p-5 rounded-[20px] border border-outline-variant/30 shadow-sm flex-shrink-0">
@@ -828,7 +836,7 @@ export default function HostPage({
                     onClick: handlePauseRoom, disabled: false, danger: false, primary: true,
                   },
                   {
-                    id: 'host-fullscreen-btn', label: 'Full',
+                    id: 'host-fullscreen-btn', label: 'TV Mode',
                     icon: <svg fill="none" width="18" height="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>,
                     onClick: handleEnterPresentationMode, disabled: false, danger: false, primary: false,
                   },
