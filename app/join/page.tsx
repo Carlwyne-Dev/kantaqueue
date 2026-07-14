@@ -214,14 +214,6 @@ export default function JoinPage({
               {/* CTA Button */}
               <div className="flex gap-4">
                 <button 
-                  type="button"
-                  onClick={() => setShowScanner(true)}
-                  className="p-5 bg-white border border-outline-variant/30 hover:bg-surface-container-low text-secondary rounded-[20px] shadow-[0_4px_12px_rgba(0,0,0,0.03)] transition-all transform active:scale-[0.98] flex items-center justify-center shrink-0 group"
-                  aria-label="Scan QR Code"
-                >
-                  <span className="material-symbols-outlined text-[28px] group-hover:text-primary transition-colors">qr_code_scanner</span>
-                </button>
-                <button 
                   type="submit"
                   disabled={loading || generatingNick}
                   className="flex-1 py-5 bg-[#54634a] hover:bg-[#3d4b34] text-white rounded-[20px] text-[18px] font-bold shadow-xl shadow-[#54634a]/20 transition-all transform active:scale-[0.98] font-display-lg tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -232,6 +224,14 @@ export default function JoinPage({
                       Joining...
                     </>
                   ) : 'Join Room'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setShowScanner(true)}
+                  className="p-5 bg-white border border-outline-variant/30 hover:bg-surface-container-low text-secondary rounded-[20px] shadow-[0_4px_12px_rgba(0,0,0,0.03)] transition-all transform active:scale-[0.98] flex items-center justify-center shrink-0 group"
+                  aria-label="Scan QR Code"
+                >
+                  <span className="material-symbols-outlined text-[28px] group-hover:text-primary transition-colors">qr_code_scanner</span>
                 </button>
               </div>
             </form>
