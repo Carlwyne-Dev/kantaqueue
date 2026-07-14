@@ -636,15 +636,15 @@ export default function HostPage({
   // ── Render: Active Session ───────────────────────────────────────────────────
   return (
     <div
-      className="h-screen overflow-hidden flex flex-col"
+      className="h-[100dvh] overflow-hidden flex flex-col w-full"
       style={{
         background: isFullscreen ? '#000' : ambientColor,
         transition: 'background 1.2s ease',
       }}
     >
       <div
-        className="flex-1 flex overflow-hidden"
-        style={{ gap: isFullscreen ? 0 : 16, padding: isFullscreen ? 0 : 16 }}
+        className="flex-1 flex overflow-hidden min-h-0"
+        style={{ gap: isFullscreen ? 0 : 24, padding: isFullscreen ? 0 : 24 }}
       >
         {/* ── Video / Stage area ── */}
         <div
@@ -709,7 +709,7 @@ export default function HostPage({
 
         {/* ── Sidebar ── */}
         {!isFullscreen && (
-          <aside className="w-80 relative flex flex-col gap-3 h-full overflow-hidden">
+          <aside className="w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0">
 
             {/* Now Playing */}
             <section className="bg-[#F9F8F5] p-5 rounded-[20px] border border-outline-variant/30 shadow-sm flex-shrink-0">
@@ -737,13 +737,13 @@ export default function HostPage({
             </section>
 
             {/* Up Next / Queue */}
-            <section className="bg-[#F9F8F5] rounded-[20px] border border-outline-variant/30 shadow-sm flex-1 flex flex-col" style={{ overflow: 'clip' }}>
+            <section className="bg-[#F9F8F5] rounded-[20px] border border-outline-variant/30 shadow-sm flex-1 flex flex-col min-h-0" style={{ overflow: 'clip' }}>
               <div className="px-5 pt-5 pb-3 border-b border-outline-variant/20 flex-shrink-0">
                 <h2 className="text-[11px] font-extrabold text-secondary/60 uppercase tracking-widest">
                   Up Next {queue.length > 0 && `· ${queue.length}`}
                 </h2>
               </div>
-              <div className="flex-1 overflow-y-auto" style={{ overflowX: 'clip' }}>
+              <div className="flex-1 overflow-y-auto min-h-0" style={{ overflowX: 'clip' }}>
                 {queue.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full gap-3 px-5 py-10 text-center">
                     <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center opacity-40 border border-outline-variant/20">
