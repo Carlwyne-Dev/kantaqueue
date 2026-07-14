@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
 import { generateUniqueNickname } from '@/lib/nickname';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 export default function JoinPage({
   searchParams,
@@ -18,6 +19,7 @@ export default function JoinPage({
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
   const [generatingNick, setGeneratingNick] = useState(true);
+  const [showScanner, setShowScanner] = useState(false);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -210,22 +212,79 @@ export default function JoinPage({
               </div>
 
               {/* CTA Button */}
-              <button 
-                type="submit"
-                disabled={loading || generatingNick}
-                className="w-full py-5 bg-[#54634a] hover:bg-[#3d4b34] text-white rounded-[20px] text-[18px] font-bold shadow-xl shadow-[#54634a]/20 transition-all transform active:scale-[0.98] font-display-lg tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    Joining...
-                  </>
-                ) : 'Join Room'}
-              </button>
+              <div className="flex gap-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowScanner(true)}
+                  className="p-5 bg-white border border-outline-variant/30 hover:bg-surface-container-low text-secondary rounded-[20px] shadow-[0_4px_12px_rgba(0,0,0,0.03)] transition-all transform active:scale-[0.98] flex items-center justify-center shrink-0 group"
+                  aria-label="Scan QR Code"
+                >
+                  <span className="material-symbols-outlined text-[28px] group-hover:text-primary transition-colors">qr_code_scanner</span>
+                </button>
+                <button 
+                  type="submit"
+                  disabled={loading || generatingNick}
+                  className="flex-1 py-5 bg-[#54634a] hover:bg-[#3d4b34] text-white rounded-[20px] text-[18px] font-bold shadow-xl shadow-[#54634a]/20 transition-all transform active:scale-[0.98] font-display-lg tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      Joining...
+                    </>
+                  ) : 'Join Room'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       </main>
+
+      {/* QR Scanner Modal */}
+      {showScanner && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-sm bg-white rounded-[32px] overflow-hidden shadow-2xl relative">
+            <div className="p-6 text-center border-b border-outline-variant/10">
+              <h3 className="text-xl font-bold text-on-surface">Scan Room QR</h3>
+              <p className="text-sm text-secondary mt-1">Point your camera at the host screen.</p>
+            </div>
+            
+            <div className="bg-black aspect-square relative">
+              <Scanner
+                onScan={(result) => {
+                  if (result && result.length > 0) {
+                    const text = result[0].rawValue;
+                    let scannedCode = text;
+                    // If it's a URL, extract the code
+                    if (text.includes('/join?code=')) {
+                      scannedCode = text.split('/join?code=')[1].substring(0, 5);
+                    } else if (text.includes('/room/')) {
+                      const match = text.match(/\/room\/([A-Z0-9]{5})/i);
+                      if (match) scannedCode = match[1];
+                    }
+                    if (scannedCode && scannedCode.length === 5) {
+                      setCode(scannedCode.toUpperCase());
+                      setShowScanner(false);
+                      toast.success('Room code scanned!');
+                    } else {
+                      toast.error('Invalid QR code format.');
+                      setShowScanner(false);
+                    }
+                  }
+                }}
+              />
+            </div>
+            
+            <div className="p-4">
+              <button 
+                onClick={() => setShowScanner(false)}
+                className="w-full py-4 rounded-2xl font-bold text-secondary bg-surface-container-low hover:bg-surface-container-high transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="py-10 text-center text-secondary/50 text-[14px] font-medium z-10">
