@@ -666,23 +666,27 @@ export default function HostPage({
               {/* WebGL Animated Gradient */}
               <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
               
-              <div className="relative z-20 flex flex-col items-center gap-10">
+              <div className="relative z-20 flex flex-col items-center gap-6">
+                {/* Icon */}
                 <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30">
                   <svg fill="white" width="52" height="52" viewBox="0 0 24 24">
                     <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm6 8a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V21h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/>
                   </svg>
                 </div>
-                
-                <div className="bg-white/10 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
-                  <p className="text-[12px] text-white/50 tracking-[0.3em] uppercase font-bold mb-4">Room Code</p>
-                  <p className="text-7xl font-black text-white tracking-tighter mb-4 drop-shadow-md">{code}</p>
-                  <div className="bg-white/20 px-5 py-2 rounded-full border border-white/10 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    <span className="text-[13px] font-semibold tracking-wide text-white/90">Waiting for songs</span>
-                  </div>
+
+                {/* Waiting for songs text */}
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+                  <p className="text-2xl font-bold text-white/90 tracking-tight">Waiting for songs</p>
                 </div>
 
-                <p className="text-[13px] text-secondary/60 font-medium">Point a phone camera at the QR code to join</p>
+                {/* Room Code Box */}
+                <div className="bg-white/10 backdrop-blur-2xl px-12 py-8 rounded-[2.5rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
+                  <p className="text-[12px] text-white/50 tracking-[0.3em] uppercase font-bold mb-4">Room Code</p>
+                  <p className="text-7xl font-black text-white tracking-tighter drop-shadow-md">{code}</p>
+                </div>
+
+                <p className="text-[13px] text-white/40 font-medium">Point a phone camera at the QR code to join</p>
               </div>
             </div>
           )}
