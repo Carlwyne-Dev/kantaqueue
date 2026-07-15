@@ -349,7 +349,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                 </button>
               </div>
             )}
-          </section>
+          </motion.section>
         ) : (
           <>
             {/* ── Now Playing Section ── */}
@@ -407,7 +407,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                   </div>
                 )}
               </div>
-            </section>
+            </motion.section>
 
             {/* ── Tabs Navigation ── */}
             <motion.div 
@@ -429,7 +429,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
               >
                 My Songs {myItems.length > 0 && `(${myItems.length})`}
               </button>
-            </div>
+            </motion.div>
 
             {/* ── List Content ── */}
             <motion.section 
@@ -544,7 +544,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                   </div>
                 )
               )}
-            </section>
+            </motion.section>
           </>
         )}
       </motion.main>
