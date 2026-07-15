@@ -224,9 +224,23 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       </div>
 
       {/* ── Main ── */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col gap-8 pb-32">
+      <motion.main 
+        className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col gap-8 pb-32"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.1 } }
+        }}
+      >
         {/* ── Search Section ── */}
-        <section className="relative">
+        <motion.section 
+          className="relative"
+          variants={{
+            hidden: { opacity: 0, y: 15 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+          }}
+        >
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
             {searching ? (
               <div className="w-5 h-5 rounded-full border-2 border-outline-variant border-t-primary animate-spin" />
@@ -257,7 +271,13 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
 
         {/* ── Search Results ── */}
         {showSearch ? (
-          <section className="bg-surface-container-lowest rounded-[32px] border border-surface-dim/30 p-4 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
+          <motion.section 
+            className="bg-surface-container-lowest rounded-[32px] border border-surface-dim/30 p-4 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]"
+            variants={{
+              hidden: { opacity: 0, y: 15 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+            }}
+          >
             {searchResults.length === 0 ? (
               <div className="py-20 flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 bg-surface-container-low rounded-full flex items-center justify-center mb-4 text-outline/40">
@@ -333,7 +353,12 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
         ) : (
           <>
             {/* ── Now Playing Section ── */}
-            <section>
+            <motion.section
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+              }}
+            >
               <div className="bg-white/40 backdrop-blur-[12px] border border-white/50 rounded-[24px] p-6 flex items-center gap-6 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] overflow-hidden relative">
                 {/* Ambient Blur Background */}
                 {nowPlaying?.song.thumbnail_url && (
@@ -385,7 +410,13 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             </section>
 
             {/* ── Tabs Navigation ── */}
-            <div className="bg-surface-container-low p-1.5 rounded-2xl flex gap-2">
+            <motion.div 
+              className="bg-surface-container-low p-1.5 rounded-2xl flex gap-2"
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+              }}
+            >
               <button
                 onClick={() => setTab('queue')}
                 className={`flex-1 py-3 text-sm font-bold transition-colors font-headline rounded-xl cursor-pointer ${tab === 'queue' ? 'bg-surface-container-lowest text-on-surface shadow-sm border border-surface-dim/20' : 'text-outline hover:text-on-surface bg-transparent border border-transparent'}`}
@@ -401,7 +432,13 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             </div>
 
             {/* ── List Content ── */}
-            <section className="bg-surface-container-lowest rounded-[32px] border border-surface-dim/30 p-2 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]">
+            <motion.section 
+              className="bg-surface-container-lowest rounded-[32px] border border-surface-dim/30 p-2 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]"
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+              }}
+            >
               {tab === 'queue' ? (
                 queue.length === 0 ? (
                   <div className="py-20 flex flex-col items-center justify-center text-center">
@@ -510,7 +547,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             </section>
           </>
         )}
-      </main>
+      </motion.main>
 
       {/* ── Footer ── */}
       <footer className="mt-auto py-8 text-center bg-surface-dim/10">
