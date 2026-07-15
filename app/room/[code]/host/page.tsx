@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { getSupabaseClient } from '@/lib/supabase';
 import type { Room, QueueItem, Song } from '@/types';
 import { AnimatedGradient } from '@/components/ui/animated-gradient';
+import { motion } from 'framer-motion';
 
 // ── YouTube IFrame API types ──────────────────────────────────────────────────
 declare global {
@@ -568,24 +569,39 @@ export default function HostPage({
           <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
 
             {/* Left — Info + CTA */}
-            <div className="space-y-10">
+            <motion.div
+              className="space-y-10"
+              initial={{ opacity: 0, x: -32 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            >
               {/* Active badge */}
-              <div className="inline-flex items-center gap-2.5 bg-[#A7B79A]/20 text-[#3a4832] px-4 py-2 rounded-full border border-[#A7B79A]/30">
+              <motion.div
+                className="inline-flex items-center gap-2.5 bg-[#A7B79A]/20 text-[#3a4832] px-4 py-2 rounded-full border border-[#A7B79A]/30"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#54634a] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#54634a]"></span>
                 </span>
                 <span className="text-[11px] font-bold uppercase tracking-[0.15em]">Room Active</span>
-              </div>
+              </motion.div>
 
-              <div className="space-y-5">
+              <motion.div
+                className="space-y-5"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <h1 className="text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight text-on-background">
                   The stage<br/>is set.
                 </h1>
                 <p className="text-lg text-secondary font-medium max-w-sm leading-relaxed">
                   Share the QR code or room code with your guests. They join from their own phone — no app install needed.
                 </p>
-              </div>
+              </motion.div>
 
               {/* Steps */}
               <ul className="space-y-5">
@@ -594,40 +610,65 @@ export default function HostPage({
                   'They search and queue songs from their phone',
                   'Hit Start — songs play automatically on this screen',
                 ].map((label, i) => (
-                  <li key={i} className="flex items-center gap-4">
+                  <motion.li
+                    key={i}
+                    className="flex items-center gap-4"
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  >
                     <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#A7B79A]/15 flex items-center justify-center text-[#54634a] text-[13px] font-bold">{i + 1}</span>
                     <span className="text-[15px] font-medium text-on-background/80">{label}</span>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
 
               {/* CTA */}
-              <div className="flex flex-col gap-4">
-                <button
+              <motion.div
+                className="flex flex-col gap-4"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <motion.button
                   id="start-party-btn"
                   onClick={handleStartParty}
-                  className="bg-[#54634a] text-white px-10 py-5 rounded-[20px] text-xl font-bold shadow-xl shadow-[#54634a]/20 hover:bg-[#3d4b34] active:scale-[0.98] transition-all w-fit"
+                  whileHover={{ scale: 1.04, boxShadow: '0 20px 40px rgba(84,99,74,0.35)' }}
+                  whileTap={{ scale: 0.97 }}
+                  className="bg-[#54634a] text-white px-10 py-5 rounded-[20px] text-xl font-bold shadow-xl shadow-[#54634a]/20 w-fit"
                 >
                   Start Party
-                </button>
+                </motion.button>
                 <div className="flex items-center gap-2 text-[13px] text-secondary font-medium">
                   <span className="material-symbols-outlined text-[16px]">schedule</span>
                   <span>Room expires in 6 hours · No account required</span>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* Right — QR Card */}
-            <div className="relative">
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            >
               <div className="absolute -top-16 -right-16 w-80 h-80 bg-[#A7B79A]/10 rounded-full blur-[100px] -z-10" />
-              <div className="bg-[#F2F1EC] p-10 lg:p-12 rounded-[32px] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] flex flex-col items-center text-center gap-8">
-
+              <motion.div
+                className="bg-[#F2F1EC] p-10 lg:p-12 rounded-[32px] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] flex flex-col items-center text-center gap-8"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              >
                 {/* QR */}
-                <div className="bg-white p-6 rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-black/[0.03]">
+                <motion.div
+                  className="bg-white p-6 rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-black/[0.03]"
+                  whileHover={{ scale: 1.04, boxShadow: '0 12px_40px_rgba(167,183,154,0.3)' }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
                   {joinUrl && (
                     <QRCodeSVG value={joinUrl} size={220} id="room-qr-code" />
                   )}
-                </div>
+                </motion.div>
 
                 {/* Room code */}
                 <div className="space-y-2">
@@ -635,10 +676,9 @@ export default function HostPage({
                   <p id="room-code-display" className="text-6xl font-extrabold tracking-tighter text-on-background">{code}</p>
                 </div>
 
-
                 <p className="text-[13px] text-secondary/60 font-medium">Point a phone camera at the QR code to join</p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </main>
       </div>
