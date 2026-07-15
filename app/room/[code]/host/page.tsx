@@ -835,13 +835,7 @@ export default function HostPage({
             </div>
           )}
 
-          {/* Fullscreen QR pill */}
-          {isFullscreen && joinUrl && (
-            <div className="absolute bottom-7 right-7 z-[60] flex items-center gap-3 bg-black/55 backdrop-blur-xl rounded-full px-5 py-2.5 border border-white/10">
-              <QRCodeSVG value={joinUrl} size={36} />
-              <span className="text-white text-base font-bold tracking-[0.1em]">{code}</span>
-            </div>
-          )}
+
 
           {/* Fullscreen controls */}
           {isFullscreen && (
