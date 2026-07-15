@@ -5,19 +5,14 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase
-      .from('app_stats')
-      .select('total_rooms_created, total_songs_queued')
-      .eq('id', 1)
-      .single();
-
-    if (error || !data) {
-      return Response.json({ rooms: 0, songs: 0 }, { status: 500 });
-    }
+    const [{ count: roomsCount }, { count: songsCount }] = await Promise.all([
+      supabase.from('rooms').select('*', { count: 'exact', head: true }),
+      supabase.from('queue_items').select('*', { count: 'exact', head: true })
+    ]);
 
     return Response.json({
-      rooms: data.total_rooms_created,
-      songs: data.total_songs_queued,
+      rooms: roomsCount || 0,
+      songs: songsCount || 0,
     }, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=3600',
