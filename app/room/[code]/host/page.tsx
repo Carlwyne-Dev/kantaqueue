@@ -722,22 +722,22 @@ export default function HostPage({
 
           {/* Idle state */}
           {!nowPlaying && (
-            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-10 text-white overflow-hidden bg-[#1E1E1E]">
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center max-md:justify-end max-md:pb-14 gap-10 text-white overflow-hidden bg-[#1E1E1E]">
               {/* WebGL Animated Gradient */}
               <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
               
-              <div className="relative z-20 flex flex-col items-center gap-12">
+              <div className="relative z-20 flex flex-col items-center gap-12 max-md:gap-4">
                 {/* Icon */}
-                <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30">
-                  <svg fill="white" width="52" height="52" viewBox="0 0 24 24">
+                <div className="w-28 h-28 max-md:w-16 max-md:h-16 rounded-[2.5rem] max-md:rounded-[1.5rem] flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30">
+                  <svg fill="white" width="52" height="52" className="max-md:w-8 max-md:h-8" viewBox="0 0 24 24">
                     <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm6 8a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V21h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/>
                   </svg>
                 </div>
 
                 {/* Waiting for songs text */}
-                <p className="text-5xl md:text-6xl font-black text-white tracking-tight uppercase">WAITING FOR SONGS</p>
+                <p className="text-5xl md:text-6xl max-md:text-xl font-black text-white tracking-tight uppercase">WAITING FOR SONGS</p>
 
-                {/* Room Code Box — hidden on mobile */}
+                {/* Room Code Box — desktop only */}
                 <div className="max-md:hidden bg-white/10 backdrop-blur-2xl px-10 py-5 rounded-[2rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
                   <p className="text-[11px] text-white/50 tracking-[0.3em] uppercase font-bold mb-2">Room Code</p>
                   <p className="text-5xl font-black text-white tracking-tighter drop-shadow-md">{code}</p>
