@@ -918,11 +918,11 @@ export default function HostPage({
                     <p className="text-[13px] font-semibold text-secondary/60">Queue is currently empty</p>
                   </div>
                 ) : (
-                  <ul className="m-0 p-0 list-none" style={{ overflowX: 'clip' }}>
+                  <ul className="m-0 p-0 pb-3 list-none" style={{ overflowX: 'clip' }}>
                     {queue.map((item, idx) => (
                       <li
                         key={item.id}
-                        className={`flex items-center gap-3 px-4 py-3 border-b border-outline-variant/10 last:border-0 ${newQueueIds.has(item.id) ? 'queue-item-enter' : isPromoting ? 'queue-item-shift-up' : ''}`}
+                        className={`flex items-center gap-3 p-3 mx-4 mt-3 bg-white border border-outline-variant/20 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] ${newQueueIds.has(item.id) ? 'queue-item-enter' : isPromoting ? 'queue-item-shift-up' : ''}`}
                       >
                         <span className="text-[12px] font-bold text-secondary/40 w-5 text-center flex-shrink-0">{idx + 1}</span>
                         {item.song.thumbnail_url && (
