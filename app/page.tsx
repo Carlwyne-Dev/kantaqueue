@@ -76,20 +76,19 @@ export default function HomePage() {
 
     const supabase = getSupabaseClient();
     
-    const roomsChannel = supabase.channel('landing-rooms-channel')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'rooms' }, () => {
-        if (mounted) setStats(s => ({ ...s, rooms: s.rooms + 1 }));
-      }).subscribe();
-      
-    const queueChannel = supabase.channel('landing-queue-channel')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'queue_items' }, () => {
-        if (mounted) setStats(s => ({ ...s, songs: s.songs + 1 }));
+    const statsChannel = supabase.channel('landing-stats-channel')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_stats', filter: 'id=eq.1' }, (payload) => {
+        if (mounted && payload.new) {
+          setStats({
+            rooms: payload.new.total_rooms_created,
+            songs: payload.new.total_songs_queued,
+          });
+        }
       }).subscribe();
 
     return () => {
       mounted = false;
-      supabase.removeChannel(roomsChannel);
-      supabase.removeChannel(queueChannel);
+      supabase.removeChannel(statsChannel);
     };
   }, []);
 
