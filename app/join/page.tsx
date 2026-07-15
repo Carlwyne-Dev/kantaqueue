@@ -322,7 +322,10 @@ export default function JoinPage({
                    <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-[#A7B79A] rounded-br-3xl" />
                    
                    {/* Scanning line animation */}
-                   <div className="absolute top-0 left-0 right-0 h-1 bg-[#A7B79A] shadow-[0_0_8px_2px_rgba(167,183,154,0.8)] qr-scan-line" />
+                   <div 
+                     className="absolute left-0 right-0 h-1 bg-[#A7B79A] shadow-[0_0_8px_2px_rgba(167,183,154,0.8)]" 
+                     style={{ animation: 'qr-scan 2.5s ease-in-out infinite' }}
+                   />
                 </div>
               </div>
             </div>
