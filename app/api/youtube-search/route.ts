@@ -151,9 +151,10 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (!searchRes.ok) {
-      const err = await searchRes.json();
+      const err = await searchRes.json().catch(() => ({}));
       console.error('[youtube-search] search.list failed:', err);
-      return Response.json([], { status: 200 }); // Fail silently — return empty array
+      const isQuota = err.error?.errors?.[0]?.reason === 'quotaExceeded' || err.error?.code === 403;
+      return Response.json({ error: isQuota ? 'quota_exceeded' : 'youtube_api_error' }, { status: 429 });
     }
 
     const searchData = await searchRes.json();

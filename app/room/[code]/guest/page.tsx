@@ -123,8 +123,12 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       const youtubeRes = await getYouTubeSearchResults(searchQuery, searchResults);
       setSearchResults(youtubeRes);
       setHasSearchedYoutube(true);
-    } catch {
-      toast.error('YouTube search failed. Please try again.');
+    } catch (err: any) {
+      if (err.message === 'QUOTA_EXCEEDED') {
+        toast.error("We've hit our daily YouTube search limit! Thank you so much for trying out our MVP. ❤️ The limit resets at midnight PT.", { duration: 6000 });
+      } else {
+        toast.error('YouTube search failed. Please try again.');
+      }
     } finally {
       setSearching(false);
     }

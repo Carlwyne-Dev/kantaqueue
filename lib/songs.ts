@@ -157,8 +157,12 @@ export async function getYouTubeSearchResults(query: string, cachedResults: YouT
     );
 
     if (!response.ok) {
+      const errBody = await response.json().catch(() => ({}));
       console.warn('[songs] YouTube API proxy returned', response.status);
-      return cachedResults;
+      if (errBody.error === 'quota_exceeded') {
+        throw new Error('QUOTA_EXCEEDED');
+      }
+      throw new Error('YOUTUBE_API_ERROR');
     }
 
     const freshResults: YouTubeSearchResult[] = await response.json();
@@ -185,9 +189,13 @@ export async function getYouTubeSearchResults(query: string, cachedResults: YouT
 
     // Merge: cached first (PRD §8 ranking)
     return [...cachedResults, ...deduped];
-  } catch (err) {
+  } catch (err: any) {
     console.error('[songs] YouTube search fetch failed:', err);
-    // Fall back to cached results rather than a blank error (PRD §8)
+    // Let the frontend handle the quota error explicitly
+    if (err.message === 'QUOTA_EXCEEDED') {
+      throw err;
+    }
+    // Fall back to cached results rather than a blank error for other issues
     return cachedResults;
   }
 }
