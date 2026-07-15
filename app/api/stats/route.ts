@@ -10,13 +10,9 @@ export async function GET() {
       supabase.from('queue_items').select('*', { count: 'exact', head: true }),
     ]);
 
-    // Adding some base numbers so it doesn't look completely empty on launch
-    const baseRooms = 150;
-    const baseSongs = 4500;
-
     return Response.json({
-      rooms: (roomsRes.count || 0) + baseRooms,
-      songs: (songsRes.count || 0) + baseSongs,
+      rooms: roomsRes.count || 0,
+      songs: songsRes.count || 0,
     }, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',

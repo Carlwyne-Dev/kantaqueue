@@ -6,6 +6,25 @@ import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession, isSupabaseConfigured } from '@/lib/supabase';
 import { generateUniqueRoomCode } from '@/lib/roomCode';
 import { QRCodeSVG } from 'qrcode.react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+function RollingNumber({ value }: { value: number }) {
+  return (
+    <div className="relative inline-flex overflow-hidden justify-center items-center h-[1.2em]">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          initial={{ y: "100%", opacity: 0, position: 'absolute' }}
+          animate={{ y: "0%", opacity: 1, position: 'static' }}
+          exit={{ y: "-100%", opacity: 0, position: 'absolute' }}
+          transition={{ type: "spring", stiffness: 300, damping: 25, mass: 1 }}
+        >
+          {value.toLocaleString()}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function GlassPanel({ children, className = '' }: { children: React.ReactNode, className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -42,15 +61,36 @@ function GlassPanel({ children, className = '' }: { children: React.ReactNode, c
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({ rooms: 150, songs: 4500 });
+  const [stats, setStats] = useState({ rooms: 0, songs: 0 });
 
   useEffect(() => {
+    let mounted = true;
     fetch('/api/stats')
       .then(res => res.json())
       .then(data => {
-        if (data && data.rooms) setStats(data);
+        if (mounted && data && typeof data.rooms === 'number') {
+          setStats(data);
+        }
       })
       .catch(console.error);
+
+    const supabase = getSupabaseClient();
+    
+    const roomsChannel = supabase.channel('landing-rooms-channel')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'rooms' }, () => {
+        if (mounted) setStats(s => ({ ...s, rooms: s.rooms + 1 }));
+      }).subscribe();
+      
+    const queueChannel = supabase.channel('landing-queue-channel')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'queue_items' }, () => {
+        if (mounted) setStats(s => ({ ...s, songs: s.songs + 1 }));
+      }).subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(roomsChannel);
+      supabase.removeChannel(queueChannel);
+    };
   }, []);
 
   async function handleCreateRoom() {
@@ -239,17 +279,21 @@ export default function HomePage() {
             <div className="absolute top-[-50%] left-[-10%] w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-[-50%] right-[-10%] w-[300px] h-[300px] bg-[#54634a]/10 rounded-full blur-3xl pointer-events-none" />
             
-            <div className="relative z-10 space-y-2">
-              <h3 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none">{stats.rooms.toLocaleString()}</h3>
-              <p className="text-[16px] md:text-[18px] font-bold text-on-primary-container/80 tracking-widest uppercase">Rooms Created</p>
+            <div className="relative z-10 space-y-2 flex flex-col items-center">
+              <h3 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none flex">
+                <RollingNumber value={stats.rooms} />
+              </h3>
+              <p className="text-[16px] md:text-[18px] font-bold text-on-primary-container/80 tracking-widest uppercase mt-2">Rooms Created</p>
             </div>
             
             <div className="hidden md:block w-px h-24 bg-white/20 relative z-10" />
             <div className="md:hidden w-24 h-px bg-white/20 relative z-10" />
             
-            <div className="relative z-10 space-y-2">
-              <h3 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none">{stats.songs.toLocaleString()}</h3>
-              <p className="text-[16px] md:text-[18px] font-bold text-on-primary-container/80 tracking-widest uppercase">Songs Queued</p>
+            <div className="relative z-10 space-y-2 flex flex-col items-center">
+              <h3 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none flex">
+                <RollingNumber value={stats.songs} />
+              </h3>
+              <p className="text-[16px] md:text-[18px] font-bold text-on-primary-container/80 tracking-widest uppercase mt-2">Songs Queued</p>
             </div>
           </div>
         </section>
