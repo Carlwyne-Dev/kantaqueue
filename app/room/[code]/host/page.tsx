@@ -438,6 +438,14 @@ export default function HostPage({
     setPartyStarted(true);
     await requestWakeLock();
     setSessionStarted(true);
+    // Stamp started_at so the landing page "Rooms Created" stat only counts
+    // rooms where a party was actually started, not just created.
+    if (room) {
+      await supabase
+        .from('rooms')
+        .update({ started_at: new Date().toISOString() })
+        .eq('id', room.id);
+    }
   }
 
   // ── Host controls ────────────────────────────────────────────────────────────

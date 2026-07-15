@@ -10,7 +10,8 @@ create table rooms (
   host_id uuid not null,                  -- auth.uid() of whoever created the room
   status text not null default 'active'   -- active | paused | ended
     check (status in ('active', 'paused', 'ended')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  started_at timestamptz                  -- set when host clicks "Start Party"
 );
 
 alter table rooms enable row level security;

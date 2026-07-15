@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const supabase = getSupabaseClient();
     const [{ count: roomsCount }, { count: songsCount }] = await Promise.all([
-      supabase.from('rooms').select('*', { count: 'exact', head: true }),
+      supabase.from('rooms').select('*', { count: 'exact', head: true }).not('started_at', 'is', null),
       supabase.from('queue_items').select('*', { count: 'exact', head: true })
     ]);
 
