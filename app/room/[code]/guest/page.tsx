@@ -192,7 +192,15 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             <div className="flex items-center gap-2 flex-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/assets/logo.png" alt="KanTara Logo" className="w-7 h-7 rounded-md" />
-              <span className="text-[20px] font-extrabold text-on-background tracking-tighter font-headline-sm">KanTara</span>
+              <div className="flex flex-col">
+                <span className="text-[20px] font-extrabold text-on-background tracking-tighter font-headline-sm leading-none">KanTara</span>
+                {/* Room info — mobile only, stacked under logo */}
+                {nickname && (
+                  <span className="md:hidden text-[11px] text-secondary mt-0.5 leading-none">
+                    Room <span className="font-bold text-on-background tracking-[0.06em]">{code}</span> · {nickname}
+                  </span>
+                )}
+              </div>
             </div>
             {/* Room info — center */}
             <div className="flex-1 text-center hidden md:block">
@@ -226,15 +234,6 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             </div>
           </div>
         </nav>
-        {/* Mobile-only room info strip */}
-        <div className="md:hidden px-5 py-2 border-t border-on-background/5 flex items-center justify-center gap-2 bg-surface/80">
-          <span className="text-[12px] text-secondary font-medium">Room</span>
-          <span className="text-[12px] font-bold tracking-[0.08em] text-on-background">{code}</span>
-          {nickname && <>
-            <span className="text-secondary/40">·</span>
-            <span className="text-[12px] text-secondary truncate max-w-[140px]">{nickname}</span>
-          </>}
-        </div>
       </div>
 
       {/* ── Main ── */}
