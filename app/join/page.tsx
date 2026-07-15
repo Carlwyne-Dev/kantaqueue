@@ -89,7 +89,7 @@ export default function JoinPage({
         if (guestErr) { toast.error('Failed to join room. Try again.'); console.error(guestErr); return; }
       }
 
-      sessionStorage.setItem(`kq_nickname_${trimCode}`, trimName);
+      localStorage.setItem(`kq_nickname_${trimCode}`, trimName);
       router.push(`/room/${trimCode}/guest`);
     } catch (err) {
       console.error(err);
