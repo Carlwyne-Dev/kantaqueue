@@ -80,6 +80,7 @@ function GlassPanel({ children, className = '' }: { children: React.ReactNode; c
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [joining, setJoining] = useState(false);
   const [stats, setStats] = useState({ rooms: 0, songs: 0 });
 
   const { scrollY } = useScroll();
@@ -110,7 +111,7 @@ export default function HomePage() {
     setLoading(true);
     try {
       const userId = await ensureAnonSession();
-      if (!userId) { toast.error('Could not start session. Please refresh.'); return; }
+      if (!userId) { toast.error('Could not start session. Please refresh.'); setLoading(false); return; }
       const supabase = getSupabaseClient();
       supabase.from('rooms').delete().eq('status', 'ended').then(() => {});
       const code = await generateUniqueRoomCode(async (c) => {
@@ -118,12 +119,11 @@ export default function HomePage() {
         return !!data;
       });
       const { data: room, error } = await supabase.from('rooms').insert({ code, host_id: userId, status: 'active' }).select().single();
-      if (error || !room) { toast.error('Failed to create room. Try again.'); return; }
+      if (error || !room) { toast.error('Failed to create room. Try again.'); setLoading(false); return; }
       router.push(`/room/${room.code}/host`);
     } catch (err) {
       console.error(err);
       toast.error('Something went wrong.');
-    } finally {
       setLoading(false);
     }
   }
@@ -229,12 +229,18 @@ export default function HomePage() {
                 ) : 'Start a Room'}
               </motion.button>
               <motion.button
-                onClick={() => router.push('/join')}
+                onClick={() => { setJoining(true); router.push('/join'); }}
+                disabled={joining}
                 whileHover={{ scale: 1.04, backgroundColor: '#f0eeea' }}
                 whileTap={{ scale: 0.97 }}
-                className="bg-white border border-outline-variant/50 px-8 py-3.5 rounded-full font-bold text-[18px] text-on-surface shadow-sm text-center"
+                className="bg-white border border-outline-variant/50 px-8 py-3.5 rounded-full font-bold text-[18px] text-on-surface shadow-sm text-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Join Room
+                {joining ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-outline/30 border-t-outline rounded-full animate-spin" />
+                    Loading...
+                  </span>
+                ) : 'Join Room'}
               </motion.button>
             </motion.div>
           </motion.div>

@@ -697,9 +697,12 @@ export default function HostPage({
         style={{ gap: isFullscreen ? 0 : 24, padding: isFullscreen ? 0 : 24 }}
       >
         {/* ── Video / Stage area — hidden on mobile ── */}
-        <div
+        <motion.div
           className="flex-1 relative overflow-hidden max-md:hidden"
           style={{ borderRadius: isFullscreen ? 0 : 20, background: '#1E1E1E', boxShadow: isFullscreen ? 'none' : '0 8px 40px rgba(0,0,0,0.25)' }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Ambient glow */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(167,183,154,0.08),transparent_70%)] pointer-events-none z-0" />
@@ -766,14 +769,25 @@ export default function HostPage({
               {localNotif}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* ── Sidebar ── */}
         {!isFullscreen && (
-          <aside className="max-md:w-full md:w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0">
+          <motion.aside 
+            className="max-md:w-full md:w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
+            }}
+          >
 
             {/* Now Playing */}
-            <section className="bg-[#F9F8F5] p-5 rounded-[20px] border border-outline-variant/30 shadow-sm flex-shrink-0">
+            <motion.section 
+              className="bg-[#F9F8F5] p-5 rounded-[20px] border border-outline-variant/30 shadow-sm flex-shrink-0"
+              variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } } }}
+            >
               <h2 className="text-[11px] font-extrabold text-secondary/60 uppercase tracking-widest mb-4">Now Playing</h2>
               {nowPlaying ? (
                 <div key={nowPlaying.id} className="flex items-center gap-3 now-playing-enter">
@@ -795,10 +809,13 @@ export default function HostPage({
                   <p className="text-[14px] font-medium text-secondary/50 italic">Nothing playing yet</p>
                 </div>
               )}
-            </section>
+            </motion.section>
 
             {/* Up Next / Queue */}
-            <section className="bg-[#F9F8F5] rounded-[20px] border border-outline-variant/30 shadow-sm flex-1 flex flex-col min-h-0" style={{ overflow: 'clip' }}>
+            <motion.section 
+              className="bg-[#F9F8F5] rounded-[20px] border border-outline-variant/30 shadow-sm flex-1 flex flex-col min-h-0" style={{ overflow: 'clip' }}
+              variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } } }}
+            >
               <div className="px-5 pt-5 pb-3 border-b border-outline-variant/20 flex-shrink-0">
                 <h2 className="text-[11px] font-extrabold text-secondary/60 uppercase tracking-widest">
                   Up Next {queue.length > 0 && `· ${queue.length}`}
@@ -838,10 +855,13 @@ export default function HostPage({
                   </ul>
                 )}
               </div>
-            </section>
+            </motion.section>
 
             {/* Control panel */}
-            <section className="bg-[#F9F8F5] p-4 rounded-[20px] border border-outline-variant/30 shadow-sm flex-shrink-0">
+            <motion.section 
+              className="bg-[#F9F8F5] p-4 rounded-[20px] border border-outline-variant/30 shadow-sm flex-shrink-0"
+              variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } } }}
+            >
               {/* QR + code */}
               {joinUrl && (
                 <div
@@ -898,7 +918,7 @@ export default function HostPage({
                   </button>
                 ))}
               </div>
-            </section>
+            </motion.section>
 
             {/* Sidebar Overlay: Big QR */}
             {showBigQR && joinUrl && (
@@ -918,7 +938,7 @@ export default function HostPage({
                 </div>
               </div>
             )}
-          </aside>
+          </motion.aside>
         )}
       </div>
 
