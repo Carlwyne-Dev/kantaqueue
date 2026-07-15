@@ -755,7 +755,7 @@ export default function HostPage({
         {/* ── Video / Stage area — hidden on mobile ── */}
         <motion.div
           layout
-          className="flex-1 relative overflow-hidden max-md:hidden transition-[border-radius] duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="group flex-1 relative overflow-hidden max-md:hidden transition-[border-radius] duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ borderRadius: isFullscreen ? 0 : 20, background: '#1E1E1E', boxShadow: isFullscreen ? 'none' : '0 8px 40px rgba(0,0,0,0.25)' }}
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -771,7 +771,7 @@ export default function HostPage({
 
           {/* Progress / Scrubber (visible when playing & hovered) */}
           {nowPlaying && (
-            <div className="absolute bottom-0 left-0 right-0 z-50 p-6 pt-20 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center gap-4">
+            <div className="absolute bottom-0 left-0 right-0 z-50 p-6 pt-20 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-4">
               <span className="text-white text-xs font-medium font-mono">{formatDuration(Math.floor(videoProgress))}</span>
               <input
                 type="range"
