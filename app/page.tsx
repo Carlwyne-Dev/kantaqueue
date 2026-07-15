@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, MouseEvent } from 'react';
+import { useState, useRef, MouseEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession, isSupabaseConfigured } from '@/lib/supabase';
@@ -42,6 +42,16 @@ function GlassPanel({ children, className = '' }: { children: React.ReactNode, c
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({ rooms: 150, songs: 4500 });
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.rooms) setStats(data);
+      })
+      .catch(console.error);
+  }, []);
 
   async function handleCreateRoom() {
     if (!isSupabaseConfigured()) {
@@ -219,6 +229,28 @@ export default function HomePage() {
                 <p className="text-[15px] text-secondary leading-relaxed">{desc}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Engagement Metrics */}
+        <section className="py-[64px] px-[64px] max-w-[1200px] mx-auto text-center max-md:px-[20px] max-md:py-[40px]">
+          <div className="bg-[#A7B79A] rounded-[40px] p-12 md:p-16 text-on-primary-container shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-around gap-12 border border-[#bbccae]/30">
+            {/* Background decoration */}
+            <div className="absolute top-[-50%] left-[-10%] w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-[-50%] right-[-10%] w-[300px] h-[300px] bg-[#54634a]/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="relative z-10 space-y-2">
+              <h3 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none">{stats.rooms.toLocaleString()}</h3>
+              <p className="text-[16px] md:text-[18px] font-bold text-on-primary-container/80 tracking-widest uppercase">Rooms Created</p>
+            </div>
+            
+            <div className="hidden md:block w-px h-24 bg-white/20 relative z-10" />
+            <div className="md:hidden w-24 h-px bg-white/20 relative z-10" />
+            
+            <div className="relative z-10 space-y-2">
+              <h3 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none">{stats.songs.toLocaleString()}</h3>
+              <p className="text-[16px] md:text-[18px] font-bold text-on-primary-container/80 tracking-widest uppercase">Songs Queued</p>
+            </div>
           </div>
         </section>
       </main>
