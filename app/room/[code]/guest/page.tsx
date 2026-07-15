@@ -267,7 +267,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
               </svg>
             </button>
           )}
-        </section>
+        </motion.section>
 
         {/* ── Search Results ── */}
         {showSearch ? (
