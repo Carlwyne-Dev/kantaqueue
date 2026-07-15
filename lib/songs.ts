@@ -144,15 +144,16 @@ export async function searchSongs(query: string): Promise<YouTubeSearchResult[]>
     times_played: s.times_played,
   }));
 
-  // If we have cache hits, return them — no API call needed
-  if (cachedResults.length >= 3) {
+  // If we have a lot of cache hits, return them — no API call needed
+  if (cachedResults.length >= 10) {
     return cachedResults;
   }
 
   // Cache miss (or sparse results) → call YouTube API proxy
   try {
     const response = await fetch(
-      `/api/youtube-search?q=${encodeURIComponent(query)}`
+      `/api/youtube-search?q=${encodeURIComponent(query)}`,
+      { cache: 'no-store' }
     );
 
     if (!response.ok) {

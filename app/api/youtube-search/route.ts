@@ -8,6 +8,8 @@
 import { type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 // Keywords that identify a karaoke/videoke track (PRD §8)
 const KARAOKE_KEYWORDS = ['karaoke', 'videoke', 'instrumental', 'minus one'];
 
@@ -103,7 +105,8 @@ export async function GET(request: NextRequest) {
           searchUrl.searchParams.set('maxResults', '15');
           searchUrl.searchParams.set('key', apiKey);
           return searchUrl.toString();
-        })()
+        })(),
+        { cache: 'no-store' }
       ),
     ]);
 
@@ -134,7 +137,7 @@ export async function GET(request: NextRequest) {
     videosUrl.searchParams.set('id', videoIds);
     videosUrl.searchParams.set('key', apiKey);
 
-    const videosRes = await fetch(videosUrl.toString());
+    const videosRes = await fetch(videosUrl.toString(), { cache: 'no-store' });
     const videosData = await videosRes.json();
     const videoDetails: Map<string, number> = new Map(
       (videosData.items as YouTubeVideoItem[]).map((v) => [
