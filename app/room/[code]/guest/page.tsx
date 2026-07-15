@@ -4,7 +4,7 @@ import { use, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
-import { getCachedSearchResults, getYouTubeSearchResults, upsertSong } from '@/lib/songs';
+import { getCachedSearchResults, getYouTubeSearchResults, upsertSong, getPopularSongs, getTrendingSongs, TrendingResult } from '@/lib/songs';
 import { QRCodeSVG } from 'qrcode.react';
 import type { QueueItem, Song, YouTubeSearchResult } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,6 +45,9 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [showQRModal, setShowQRModal] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<(QueueItem & { song: Song }) | null>(null);
   const [hasSearchedYoutube, setHasSearchedYoutube] = useState(false);
+  const [popularSongs, setPopularSongs] = useState<Song[]>([]);
+  const [trendingSongs, setTrendingSongs] = useState<TrendingResult[]>([]);
+  const [discoverOpen, setDiscoverOpen] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/join?code=${code}` : '';
@@ -60,6 +63,9 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       if (error || !room) { toast.error('Room not found or has ended.'); router.push('/'); return; }
       setRoomId(room.id);
       setLoadingRoom(false);
+      // Fetch discover data once room is confirmed
+      getPopularSongs(10).then(setPopularSongs);
+      getTrendingSongs().then(setTrendingSongs);
     }
     init();
   }, [code, router]);
@@ -281,6 +287,121 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             </button>
           )}
         </motion.section>
+
+        {/* ── Discover ── */}
+        <AnimatePresence>
+          {!searchQuery && (popularSongs.length > 0 || trendingSongs.length > 0) && (
+            <motion.div
+              key="discover"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col gap-5"
+            >
+              {/* Single collapsible header */}
+              <button
+                onClick={() => setDiscoverOpen((v) => !v)}
+                className="flex items-center gap-2 w-full group border-none bg-transparent p-0 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px] text-primary">explore</span>
+                <h3 className="text-[13px] font-extrabold text-on-surface uppercase tracking-widest flex-1 text-left">Discover</h3>
+                <motion.span
+                  animate={{ rotate: discoverOpen ? 0 : -90 }}
+                  transition={{ duration: 0.25 }}
+                  className="material-symbols-outlined text-[18px] text-outline/50 group-hover:text-outline transition-colors"
+                >expand_more</motion.span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {discoverOpen && (
+                  <motion.div
+                    key="discover-content"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ overflow: 'hidden' }}
+                    className="flex flex-col gap-5"
+                  >
+                    {/* Popular on KanTara */}
+                    {popularSongs.length > 0 && (
+                      <div>
+                        <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Popular on KanTara</p>
+                        <div className="relative">
+                          <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+                            {popularSongs.map((song) => (
+                              <div
+                                key={song.id}
+                                className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm"
+                              >
+                                {song.thumbnail_url ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={song.thumbnail_url} alt={song.title} className="w-full h-24 object-cover" />
+                                ) : (
+                                  <div className="w-full h-24 bg-surface-container flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-outline/40 text-[32px]">music_note</span>
+                                  </div>
+                                )}
+                                <div className="p-2.5">
+                                  <p className="text-[11px] font-bold text-on-surface line-clamp-2 leading-tight mb-2">{song.title}</p>
+                                  <button
+                                    onClick={() => handleAdd({ youtube_video_id: song.youtube_video_id, title: song.title, artist: song.artist, thumbnail_url: song.thumbnail_url, duration_seconds: song.duration_seconds, from_cache: true, times_played: song.times_played })}
+                                    disabled={adding === song.youtube_video_id}
+                                    className="w-full py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold uppercase tracking-wide border-none cursor-pointer hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+                                  >
+                                    {adding === song.youtube_video_id ? '...' : 'Add'}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Trending in Philippines */}
+                    {trendingSongs.length > 0 && (
+                      <div>
+                        <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Trending in Philippines</p>
+                        <div className="relative">
+                          <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+                            {trendingSongs.map((song) => (
+                              <div
+                                key={song.youtube_video_id}
+                                className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm"
+                              >
+                                {song.thumbnail_url ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={song.thumbnail_url} alt={song.title} className="w-full h-24 object-cover" />
+                                ) : (
+                                  <div className="w-full h-24 bg-surface-container flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-outline/40 text-[32px]">music_note</span>
+                                  </div>
+                                )}
+                                <div className="p-2.5">
+                                  <p className="text-[11px] font-bold text-on-surface line-clamp-2 leading-tight mb-2">{song.title}</p>
+                                  <button
+                                    onClick={() => handleAdd({ ...song, from_cache: false, times_played: 0 })}
+                                    disabled={adding === song.youtube_video_id}
+                                    className="w-full py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold uppercase tracking-wide border-none cursor-pointer hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+                                  >
+                                    {adding === song.youtube_video_id ? '...' : 'Add'}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
 
         {/* ── Search Results ── */}
         {showSearch ? (

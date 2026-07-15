@@ -251,3 +251,50 @@ export async function markSongUnavailable(youtubeVideoId: string, songId?: strin
     });
   }
 }
+
+// ---- Discover: Popular on KanTara ----
+
+/**
+ * Returns the top N most-played songs globally.
+ * PRD §14b: "Popular on KanTara" — pulled from songs.times_played, free, no new infra.
+ */
+export async function getPopularSongs(limit = 10): Promise<Song[]> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('songs')
+    .select('*')
+    .gt('times_played', 0)       // only songs that have actually been played
+    .neq('times_played', -1)     // exclude blocked
+    .order('times_played', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('[songs] Popular fetch error:', error.message);
+    return [];
+  }
+  return (data as Song[]) ?? [];
+}
+
+// ---- Discover: Trending PH ----
+
+export interface TrendingResult {
+  youtube_video_id: string;
+  title: string;
+  artist: string | null;
+  thumbnail_url: string | null;
+  duration_seconds: number | null;
+}
+
+/**
+ * Fetches trending PH karaoke songs from the /api/trending route (cached daily).
+ */
+export async function getTrendingSongs(): Promise<TrendingResult[]> {
+  try {
+    const res = await fetch('/api/trending');
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.items ?? []) as TrendingResult[];
+  } catch {
+    return [];
+  }
+}
