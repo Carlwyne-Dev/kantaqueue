@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       videosUrl.searchParams.set('id', directVideoId);
       videosUrl.searchParams.set('key', apiKey);
 
-      const res = await fetch(videosUrl.toString(), { cache: 'no-store' });
+      const res = await fetch(videosUrl.toString(), { next: { revalidate: 604800 } });
       if (!res.ok) return Response.json([]);
       const data = await res.json();
       const items = data.items || [];
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
           searchUrl.searchParams.set('key', apiKey);
           return searchUrl.toString();
         })(),
-        { cache: 'no-store' }
+        { next: { revalidate: 604800 } } // Cache globally for 1 week to save quota
       ),
     ]);
 
@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
     videosUrl.searchParams.set('id', videoIds);
     videosUrl.searchParams.set('key', apiKey);
 
-    const videosRes = await fetch(videosUrl.toString(), { cache: 'no-store' });
+    const videosRes = await fetch(videosUrl.toString(), { next: { revalidate: 604800 } });
     const videosData = await videosRes.json();
     const videoDetails: Map<string, number> = new Map(
       (videosData.items as YouTubeVideoItem[]).map((v) => [
