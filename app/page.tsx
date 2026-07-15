@@ -99,11 +99,11 @@ export default function HomePage() {
 
     const supabase = getSupabaseClient();
     const statsChannel = supabase.channel('landing-stats-channel')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'rooms' }, () => {
-        if (mounted) setStats(s => ({ ...s, rooms: s.rooms + 1 }));
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'queue_items' }, () => {
-        if (mounted) setStats(s => ({ ...s, songs: s.songs + 1 }));
+      .on('postgres_changes', { event: 'INSERT', schema: 'public' }, (payload) => {
+        if (mounted) {
+          if (payload.table === 'rooms') setStats(s => ({ ...s, rooms: s.rooms + 1 }));
+          if (payload.table === 'queue_items') setStats(s => ({ ...s, songs: s.songs + 1 }));
+        }
       }).subscribe();
 
     return () => { mounted = false; supabase.removeChannel(statsChannel); };
