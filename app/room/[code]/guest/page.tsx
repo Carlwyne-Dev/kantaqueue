@@ -48,6 +48,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [popularSongs, setPopularSongs] = useState<Song[]>([]);
   const [trendingSongs, setTrendingSongs] = useState<TrendingResult[]>([]);
   const [discoverOpen, setDiscoverOpen] = useState(true);
+  const [trendingLoading, setTrendingLoading] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/join?code=${code}` : '';
@@ -65,7 +66,11 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       setLoadingRoom(false);
       // Fetch discover data once room is confirmed
       getPopularSongs(10).then(setPopularSongs);
-      getTrendingSongs().then(setTrendingSongs);
+      setTrendingLoading(true);
+      getTrendingSongs().then((songs) => {
+        setTrendingSongs(songs);
+        setTrendingLoading(false);
+      });
     }
     init();
   }, [code, router]);
@@ -97,7 +102,20 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
 
   useEffect(() => {
     if (!roomId) return;
-    const channel = supabase.channel(`guest-room-${roomId}`).on('postgres_changes', { event: '*', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, () => fetchQueue()).subscribe();
+    const channel = supabase
+      .channel(`guest-room-${roomId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, (payload) => {
+        fetchQueue();
+        // 'removed' status only happens when a song errors out on the host player —
+        // re-fetch Discover so the broken song disappears live without refreshing.
+        if (payload.new?.status === 'removed') {
+          getTrendingSongs().then(setTrendingSongs);
+          getPopularSongs().then(setPopularSongs);
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, () => fetchQueue())
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, () => fetchQueue())
+      .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [roomId, fetchQueue, supabase]);
 
@@ -290,7 +308,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
 
         {/* ── Discover ── */}
         <AnimatePresence>
-          {!searchQuery && (popularSongs.length > 0 || trendingSongs.length > 0) && (
+          {!searchQuery && (popularSongs.length > 0 || trendingLoading || trendingSongs.length > 0) && (
             <motion.div
               key="discover"
               initial={{ opacity: 0, y: 10 }}
@@ -350,7 +368,11 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                                     disabled={adding === song.youtube_video_id}
                                     className="w-full py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold uppercase tracking-wide border-none cursor-pointer hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
                                   >
-                                    {adding === song.youtube_video_id ? '...' : 'Add'}
+                                    {adding === song.youtube_video_id ? (
+                                      <div className="flex items-center justify-center h-4"><svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>
+                                    ) : (
+                                      'Add'
+                                    )}
                                   </button>
                                 </div>
                               </div>
@@ -361,40 +383,54 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                     )}
 
                     {/* Trending in Philippines */}
-                    {trendingSongs.length > 0 && (
-                      <div>
-                        <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Trending in Philippines</p>
-                        <div className="relative">
-                          <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-                            {trendingSongs.map((song) => (
-                              <div
-                                key={song.youtube_video_id}
-                                className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm"
-                              >
-                                {song.thumbnail_url ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={song.thumbnail_url} alt={song.title} className="w-full h-24 object-cover" />
-                                ) : (
-                                  <div className="w-full h-24 bg-surface-container flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-outline/40 text-[32px]">music_note</span>
-                                  </div>
-                                )}
-                                <div className="p-2.5">
-                                  <p className="text-[11px] font-bold text-on-surface line-clamp-2 leading-tight mb-2">{song.title}</p>
-                                  <button
-                                    onClick={() => handleAdd({ ...song, from_cache: false, times_played: 0 })}
-                                    disabled={adding === song.youtube_video_id}
-                                    className="w-full py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold uppercase tracking-wide border-none cursor-pointer hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
-                                  >
-                                    {adding === song.youtube_video_id ? '...' : 'Add'}
-                                  </button>
-                                </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Trending in Philippines</p>
+                      <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+                        {trendingLoading ? (
+                          // Skeleton cards while loading
+                          Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm animate-pulse">
+                              <div className="w-full h-24 bg-surface-container" />
+                              <div className="p-2.5 flex flex-col gap-2">
+                                <div className="h-3 bg-surface-container rounded-full w-full" />
+                                <div className="h-3 bg-surface-container rounded-full w-3/4" />
+                                <div className="h-6 bg-surface-container rounded-xl w-full mt-1" />
                               </div>
-                            ))}
-                          </div>
-                        </div>
+                            </div>
+                          ))
+                        ) : (
+                          trendingSongs.map((song) => (
+                            <div
+                              key={song.youtube_video_id}
+                              className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm"
+                            >
+                              {song.thumbnail_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={song.thumbnail_url} alt={song.title} className="w-full h-24 object-cover" />
+                              ) : (
+                                <div className="w-full h-24 bg-surface-container flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-outline/40 text-[32px]">music_note</span>
+                                </div>
+                              )}
+                              <div className="p-2.5">
+                                <p className="text-[11px] font-bold text-on-surface line-clamp-2 leading-tight mb-2">{song.title}</p>
+                                <button
+                                  onClick={() => handleAdd({ ...song, from_cache: false, times_played: 0 })}
+                                  disabled={adding === song.youtube_video_id}
+                                  className="w-full py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold uppercase tracking-wide border-none cursor-pointer hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                  {adding === song.youtube_video_id ? (
+                                    <div className="flex items-center justify-center h-4"><svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>
+                                  ) : (
+                                    'Add'
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
-                    )}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -461,7 +497,11 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                       disabled={adding === result.youtube_video_id}
                       className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide font-headline uppercase hover:bg-primary/90 active:scale-95 transition-all shadow-sm border-none cursor-pointer flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {adding === result.youtube_video_id ? '...' : 'Add'}
+                      {adding === result.youtube_video_id ? (
+                        <svg className="animate-spin h-4 w-4 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      ) : (
+                        'Add'
+                      )}
                     </button>
                   </motion.div>
                 ))}
@@ -727,23 +767,35 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       </button>
 
       {/* ── QR Modal ── */}
-      {showQRModal && joinUrl && (
-        <div
-          className="fixed inset-0 z-[100] bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer animate-[fadeIn_0.2s_ease-out]"
-          onClick={() => setShowQRModal(false)}
-        >
-          <div className="bg-white p-8 rounded-[40px] shadow-2xl flex flex-col items-center gap-6 border border-outline-variant/30 animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]">
-            <div className="bg-white p-2 rounded-xl">
-              <QRCodeSVG value={joinUrl} size={200} />
-            </div>
-            <div className="text-center">
-              <p className="text-[12px] font-bold text-secondary/60 uppercase tracking-widest mb-1">Scan to join</p>
-              <p className="text-4xl font-black text-on-background tracking-tighter">{code}</p>
-            </div>
-            <p className="text-[12px] text-secondary font-medium">Click anywhere to close</p>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showQRModal && joinUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer"
+            onClick={() => setShowQRModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center gap-6"
+            >
+              <div className="bg-white p-4 rounded-3xl shadow-xl">
+                <QRCodeSVG value={joinUrl} size={240} bgColor="transparent" fgColor="#1b1c1a" />
+              </div>
+              <div className="text-center drop-shadow-md">
+                <p className="text-[12px] font-bold text-[#1b1c1a]/70 uppercase tracking-widest mb-1">Scan to join</p>
+                <p className="text-4xl font-black text-[#1b1c1a] tracking-tighter">{code}</p>
+              </div>
+              <p className="text-[12px] text-[#1b1c1a]/60 font-medium">Click anywhere to close</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Remove Confirm Modal ── */}
       {itemToRemove && (

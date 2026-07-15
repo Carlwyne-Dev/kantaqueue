@@ -293,7 +293,22 @@ export async function getTrendingSongs(): Promise<TrendingResult[]> {
     const res = await fetch('/api/trending');
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.items ?? []) as TrendingResult[];
+    const items = (data.items ?? []) as TrendingResult[];
+
+    if (items.length === 0) return [];
+
+    // Filter out permanently blocked songs (times_played === -1)
+    const supabase = getSupabaseClient();
+    const videoIds = items.map(i => i.youtube_video_id);
+    const { data: blocked } = await supabase
+      .from('songs')
+      .select('youtube_video_id')
+      .in('youtube_video_id', videoIds)
+      .eq('times_played', -1);
+
+    const blockedIds = new Set(blocked?.map(b => b.youtube_video_id) ?? []);
+    
+    return items.filter(i => !blockedIds.has(i.youtube_video_id));
   } catch {
     return [];
   }

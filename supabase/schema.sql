@@ -148,6 +148,24 @@ create policy "host can delete any queue item in their room"
   );
 
 
+-- ---------- TRENDING CACHE ----------
+-- Caches the Trending PH result from YouTube for 24h to avoid burning quota.
+-- To force-refresh: DELETE FROM trending_cache;
+create table trending_cache (
+  id int primary key,
+  items jsonb not null default '[]',
+  refreshed_at timestamptz not null default now()
+);
+
+alter table trending_cache enable row level security;
+
+create policy "anyone can read trending cache"
+  on trending_cache for select using (true);
+
+create policy "service role can upsert trending cache"
+  on trending_cache for all using (true) with check (true);
+
+
 -- ---------- REALTIME ----------
 alter publication supabase_realtime add table queue_items;
 alter publication supabase_realtime add table rooms;

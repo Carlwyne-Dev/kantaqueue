@@ -100,6 +100,7 @@ export default function HostPage({
   const currentAttemptRef = useRef<{ queueId: string; songId: string } | null>(null);
   const prevQueueRef = useRef<(QueueItem & { song: Song })[]>([]);
   const prevNowPlayingIdRef = useRef<string | null>(null);
+  const lastAdvancedQueueId = useRef<string | null>(null);
   // stateRef always holds the latest room/nowPlaying — prevents stale closure in advanceQueue
   const stateRef = useRef<{ room: Room | null; nowPlaying: (QueueItem & { song: Song }) | null }>({ room: null, nowPlaying: null });
 
@@ -337,6 +338,8 @@ export default function HostPage({
         controls: 0,
         rel: 0,
         modestbranding: 1,
+        cc_load_policy: 0,
+        iv_load_policy: 3,
       },
       events: {
         onReady: handlePlayerReady,
@@ -353,13 +356,28 @@ export default function HostPage({
     if (loadedVideoIdRef.current !== videoId) {
       player.loadVideoById(videoId);
       loadedVideoIdRef.current = videoId;
+      // Unload CC module after each new video loads — some videos auto-enable it
+      setTimeout(() => {
+        try {
+          (player as any).unloadModule('cc');
+          (player as any).unloadModule('cc1');
+          (player as any).setOption('captions', 'track', {});
+        } catch {}
+      }, 1000);
     }
 
     player.playVideo();
   }
 
   function handlePlayerReady(event: YTReadyEvent) {
-    playerRef.current = event.target;
+    const player = event.target;
+    playerRef.current = player;
+    // Force-kill CC regardless of browser/user settings
+    try {
+      (player as any).unloadModule('cc');
+      (player as any).unloadModule('cc1');
+      (player as any).setOption('captions', 'track', {});
+    } catch {}
     setPlayerReady(true);
   }
 
@@ -368,7 +386,17 @@ export default function HostPage({
     // Read FRESH state from ref — avoids stale closure bug when song ends naturally
     const { room: currentRoom, nowPlaying: currentNowPlaying } = stateRef.current;
     if (advancingRef.current || !currentRoom) return;
+
+    // Prevent race conditions where ENDED and onError both trigger advanceQueue
+    // for the same failing song, causing it to skip the *next* valid song too.
+    if (currentNowPlaying && lastAdvancedQueueId.current === currentNowPlaying.id) {
+      return;
+    }
+
     advancingRef.current = true;
+    if (currentNowPlaying) {
+      lastAdvancedQueueId.current = currentNowPlaying.id;
+    }
 
     try {
       // Mark current song as played
@@ -456,8 +484,7 @@ export default function HostPage({
         currentAttemptRef.current = null;
       }
 
-      // 3. Advance to next song (advanceQueue handles nowPlaying=null case)
-      advancingRef.current = false; // reset lock so advance works
+      // 3. Advance to next song
       advanceQueue();
     }
   }
@@ -1009,23 +1036,35 @@ export default function HostPage({
             </motion.section>
 
             {/* Sidebar Overlay: Big QR */}
-            {showBigQR && joinUrl && (
-              <div
-                className="absolute inset-0 z-50 bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer animate-[fadeIn_0.2s_ease-out]"
-                onClick={() => setShowBigQR(false)}
-              >
-                <div className="bg-white p-8 rounded-[40px] shadow-2xl flex flex-col items-center gap-6 border border-outline-variant/30 animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]">
-                  <div className="bg-white p-2 rounded-xl">
-                    <QRCodeSVG value={joinUrl} size={200} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[12px] font-bold text-secondary/60 uppercase tracking-widest mb-1">Scan to join</p>
-                    <p className="text-4xl font-black text-on-background tracking-tighter">{code}</p>
-                  </div>
-                  <p className="text-[12px] text-secondary font-medium">Click anywhere to close</p>
-                </div>
-              </div>
-            )}
+            <AnimatePresence>
+              {showBigQR && joinUrl && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 z-50 bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer"
+                  onClick={() => setShowBigQR(false)}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col items-center gap-6"
+                  >
+                    <div className="bg-white p-4 rounded-3xl shadow-xl">
+                      <QRCodeSVG value={joinUrl} size={240} bgColor="transparent" fgColor="#1b1c1a" />
+                    </div>
+                    <div className="text-center drop-shadow-md">
+                      <p className="text-[12px] font-bold text-[#1b1c1a]/70 uppercase tracking-widest mb-1">Scan to join</p>
+                      <p className="text-4xl font-black text-[#1b1c1a] tracking-tighter">{code}</p>
+                    </div>
+                    <p className="text-[12px] text-[#1b1c1a]/60 font-medium">Click anywhere to close</p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             </motion.aside>
           )}
         </AnimatePresence>

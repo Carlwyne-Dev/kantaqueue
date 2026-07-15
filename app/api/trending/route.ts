@@ -11,11 +11,19 @@ export const dynamic = 'force-dynamic';
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-const KARAOKE_KEYWORDS = ['karaoke', 'videoke', 'instrumental', 'minus one'];
+const KARAOKE_KEYWORDS = ['karaoke', 'videoke', 'instrumental', 'minus one', 'no vocals', 'backing track'];
+
+// These signals mean it's a VOCAL version — exclude even if it has a karaoke keyword in description
+const VOCAL_KEYWORDS = ['lyrics', 'lyric video', 'lyric', 'official video', 'official mv', 'music video', ' mv ', '(mv)', '[mv]', 'official audio', 'audio only'];
 
 function isKaraokeVideo(title: string, description: string): boolean {
   const haystack = `${title} ${description}`.toLowerCase();
-  return KARAOKE_KEYWORDS.some((kw) => haystack.includes(kw));
+  // Must match a karaoke keyword
+  const hasKaraokeTag = KARAOKE_KEYWORDS.some((kw) => haystack.includes(kw));
+  if (!hasKaraokeTag) return false;
+  // Reject if it's clearly a vocal/lyrics-only video
+  const isVocal = VOCAL_KEYWORDS.some((kw) => title.toLowerCase().includes(kw));
+  return !isVocal;
 }
 
 function parseDuration(iso: string): number {
