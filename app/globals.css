@@ -226,3 +226,14 @@
 .queue-item-shift-up {
   animation: queue-shift-up-one 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+@keyframes qr-scan {
+  0% { transform: translateY(0); opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { transform: translateY(220px); opacity: 0; }
+}
+
+.qr-scan-line {
+  animation: qr-scan 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

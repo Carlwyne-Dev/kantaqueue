@@ -248,8 +248,9 @@ export default function JoinPage({
               <p className="text-sm text-secondary mt-1">Point your camera at the host screen.</p>
             </div>
             
-            <div className="bg-black aspect-square relative">
+            <div className="bg-black aspect-square relative overflow-hidden">
               <Scanner
+                components={{ finder: false }}
                 onScan={async (result) => {
                   if (result && result.length > 0) {
                     const text = result[0].rawValue;
@@ -311,6 +312,19 @@ export default function JoinPage({
                   }
                 }}
               />
+              {/* Custom Sage Green Overlay */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-[70%] h-[70%] rounded-3xl relative shadow-[0_0_0_1000px_rgba(0,0,0,0.4)]">
+                   {/* Corner accents */}
+                   <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-[#A7B79A] rounded-tl-3xl" />
+                   <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-[#A7B79A] rounded-tr-3xl" />
+                   <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-[#A7B79A] rounded-bl-3xl" />
+                   <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-[#A7B79A] rounded-br-3xl" />
+                   
+                   {/* Scanning line animation */}
+                   <div className="absolute top-0 left-0 right-0 h-1 bg-[#A7B79A] shadow-[0_0_8px_2px_rgba(167,183,154,0.8)] qr-scan-line" />
+                </div>
+              </div>
             </div>
             
             <div className="p-4">
