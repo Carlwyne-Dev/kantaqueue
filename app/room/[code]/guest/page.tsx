@@ -120,7 +120,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     setSearching(true);
     try {
       const youtubeRes = await getYouTubeSearchResults(searchQuery, searchResults);
-      setSearchResults((prev) => [...prev, ...youtubeRes]);
+      setSearchResults(youtubeRes);
       setHasSearchedYoutube(true);
     } catch {
       toast.error('YouTube search failed. Please try again.');
