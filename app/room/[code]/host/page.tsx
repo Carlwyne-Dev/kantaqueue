@@ -746,22 +746,22 @@ export default function HostPage({
               <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
               
               <div className={`relative z-20 flex flex-col items-center ${
-                isFullscreen && isMobile ? 'gap-3' : 'gap-12'
+                isFullscreen && isMobile ? 'gap-5' : 'gap-12'
               }`}>
                 {/* Icon */}
                 <div className={`flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30 ${
                   isFullscreen && isMobile
-                    ? 'w-14 h-14 rounded-[1.2rem]'
+                    ? 'w-20 h-20 rounded-[1.5rem]'
                     : 'w-28 h-28 rounded-[2.5rem]'
                 }`}>
-                  <svg fill="white" width={isFullscreen && isMobile ? 28 : 52} height={isFullscreen && isMobile ? 28 : 52} viewBox="0 0 24 24">
+                  <svg fill="white" width={isFullscreen && isMobile ? 38 : 52} height={isFullscreen && isMobile ? 38 : 52} viewBox="0 0 24 24">
                     <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm6 8a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V21h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/>
                   </svg>
                 </div>
 
                 {/* Waiting for songs text */}
                 <p className={`font-black text-white tracking-tight uppercase ${
-                  isFullscreen && isMobile ? 'text-lg' : 'text-5xl md:text-6xl'
+                  isFullscreen && isMobile ? 'text-2xl' : 'text-5xl md:text-6xl'
                 }`}>WAITING FOR SONGS</p>
 
                 {/* Room Code Box — desktop/TV only */}
