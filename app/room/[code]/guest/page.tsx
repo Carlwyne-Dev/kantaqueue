@@ -226,6 +226,15 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             </div>
           </div>
         </nav>
+        {/* Mobile-only room info strip */}
+        <div className="md:hidden px-5 py-2 border-t border-on-background/5 flex items-center justify-center gap-2 bg-surface/80">
+          <span className="text-[12px] text-secondary font-medium">Room</span>
+          <span className="text-[12px] font-bold tracking-[0.08em] text-on-background">{code}</span>
+          {nickname && <>
+            <span className="text-secondary/40">·</span>
+            <span className="text-[12px] text-secondary truncate max-w-[140px]">{nickname}</span>
+          </>}
+        </div>
       </div>
 
       {/* ── Main ── */}
