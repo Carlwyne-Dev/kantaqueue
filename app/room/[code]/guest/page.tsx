@@ -43,6 +43,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [loadingRoom, setLoadingRoom] = useState(true);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<(QueueItem & { song: Song }) | null>(null);
   const [hasSearchedYoutube, setHasSearchedYoutube] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -535,7 +536,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                             </p>
                           </div>
                           <button
-                            onClick={() => handleRemoveOwn(item.id)}
+                            onClick={() => setItemToRemove(item)}
                             className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-error hover:bg-[#ffdad6]/50 transition-colors border-none bg-transparent cursor-pointer flex-shrink-0"
                           >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -611,6 +612,38 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
               <p className="text-4xl font-black text-on-background tracking-tighter">{code}</p>
             </div>
             <p className="text-[12px] text-secondary font-medium">Click anywhere to close</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Remove Confirm Modal ── */}
+      {itemToRemove && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
+          <div className="w-full max-w-sm bg-white rounded-[28px] p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.25)] animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="w-14 h-14 rounded-full bg-[#ffdad6]/50 flex items-center justify-center mx-auto mb-5 text-[#ba1a1a]">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-[#1b1c1a] mb-2 font-headline">Remove song?</h3>
+            <p className="text-[14px] text-[#5f5e5e] mb-8 leading-relaxed font-body">Are you sure you want to remove <span className="font-bold text-[#1b1c1a]">"{itemToRemove.song.title}"</span> from the queue?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setItemToRemove(null)}
+                className="flex-1 py-3.5 bg-[#f5f3ef] text-[#1b1c1a] rounded-[16px] text-[15px] font-semibold border-none cursor-pointer hover:bg-[#e4e2de] transition-colors font-headline"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleRemoveOwn(itemToRemove.id);
+                  setItemToRemove(null);
+                }}
+                className="flex-1 py-3.5 bg-[#ba1a1a] text-white rounded-[16px] text-[15px] font-semibold border-none cursor-pointer hover:opacity-85 transition-opacity font-headline"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         </div>
       )}
