@@ -157,6 +157,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchData = await searchRes.json();
+    console.log('[youtube-search debug] searchData.items length:', searchData.items?.length);
     const items: YouTubeSearchItem[] = searchData.items ?? [];
 
     // Step 2: Strip any blocked/unavailable video IDs

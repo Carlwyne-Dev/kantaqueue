@@ -4,7 +4,7 @@ import { use, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
-import { searchSongs, upsertSong } from '@/lib/songs';
+import { getCachedSearchResults, getYouTubeSearchResults, upsertSong } from '@/lib/songs';
 import { QRCodeSVG } from 'qrcode.react';
 import type { QueueItem, Song, YouTubeSearchResult } from '@/types';
 
@@ -42,6 +42,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [loadingRoom, setLoadingRoom] = useState(true);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [hasSearchedYoutube, setHasSearchedYoutube] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/join?code=${code}` : '';
@@ -95,13 +96,14 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   // ── Search ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     let isActive = true;
+    setHasSearchedYoutube(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (searchQuery.trim().length < 3) { setSearchResults([]); setSearchDone(false); return; }
     debounceRef.current = setTimeout(async () => {
       if (!isActive) return;
       setSearching(true); setSearchDone(false);
       try { 
-        const res = await searchSongs(searchQuery);
+        const res = await getCachedSearchResults(searchQuery);
         if (isActive) setSearchResults(res);
       }
       catch { if (isActive) toast.error('Search failed. Try again.'); }
@@ -112,6 +114,20 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     
     return () => { isActive = false; };
   }, [searchQuery]);
+
+  async function handleSearchYoutube() {
+    if (searchQuery.trim().length < 3) return;
+    setSearching(true);
+    try {
+      const youtubeRes = await getYouTubeSearchResults(searchQuery, searchResults);
+      setSearchResults((prev) => [...prev, ...youtubeRes]);
+      setHasSearchedYoutube(true);
+    } catch {
+      toast.error('YouTube search failed. Please try again.');
+    } finally {
+      setSearching(false);
+    }
+  }
 
   // ── Add ───────────────────────────────────────────────────────────────────────
   async function handleAdd(result: YouTubeSearchResult) {
@@ -277,6 +293,22 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+            
+            {!hasSearchedYoutube && searchQuery.trim().length >= 3 && searchDone && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={handleSearchYoutube}
+                  disabled={searching}
+                  className="flex items-center gap-2 px-6 py-3 bg-surface-container-high hover:bg-surface-dim text-on-surface rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+                  </svg>
+                  {searching ? 'Searching...' : `Search YouTube for "${searchQuery}"`}
+                </button>
               </div>
             )}
           </section>

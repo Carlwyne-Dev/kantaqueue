@@ -130,11 +130,9 @@ export async function upsertSong(
  *   2. Other cached matches
  *   3. Fresh YouTube API results (karaoke-filtered)
  */
-export async function searchSongs(query: string): Promise<YouTubeSearchResult[]> {
+export async function getCachedSearchResults(query: string): Promise<YouTubeSearchResult[]> {
   const cachedSongs = await searchSongsCache(query);
-
-  // Convert cached songs to YouTubeSearchResult shape
-  const cachedResults: YouTubeSearchResult[] = cachedSongs.map((s) => ({
+  return cachedSongs.map((s) => ({
     youtube_video_id: s.youtube_video_id,
     title: s.title,
     artist: s.artist,
@@ -143,11 +141,13 @@ export async function searchSongs(query: string): Promise<YouTubeSearchResult[]>
     from_cache: true,
     times_played: s.times_played,
   }));
+}
 
-  // If we have a lot of cache hits, return them — no API call needed
-  if (cachedResults.length >= 10) {
-    return cachedResults;
-  }
+/**
+ * Explicitly calls the YouTube API proxy (costs 100 units).
+ * Takes the already cached results to deduplicate properly.
+ */
+export async function getYouTubeSearchResults(query: string, cachedResults: YouTubeSearchResult[]): Promise<YouTubeSearchResult[]> {
 
   // Cache miss (or sparse results) → call YouTube API proxy
   try {
