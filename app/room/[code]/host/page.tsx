@@ -656,8 +656,6 @@ export default function HostPage({
               <div className="absolute -top-16 -right-16 w-80 h-80 bg-[#A7B79A]/10 rounded-full blur-[100px] -z-10" />
               <motion.div
                 className="bg-[#F2F1EC] p-10 lg:p-12 rounded-[32px] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] flex flex-col items-center text-center gap-8"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               >
                 {/* QR */}
                 <motion.div
