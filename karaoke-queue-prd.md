@@ -7,7 +7,7 @@
 
 ## 0. Naming
 
-**KanTara** — reads literally as "kanta" (sing) + "queue," and doubles as "Kantako" ("my song") when said aloud. Playful, Filipino-flavored, and describes exactly what the app does without being generic.
+**KanTara** — "kanta" (sing) + "tara" (the Filipino "let's go / come on"). Reads like the actual invite line people say to get a karaoke session going — *"Tara, kanta tayo!"* Playful, Filipino-flavored, and describes exactly what the app does without being generic.
 
 ---
 
@@ -395,6 +395,38 @@ Clean, native-feeling, iOS-style — not a dark Spotify-clone, not a YouTube loo
 
 ---
 
+## 11a. Host on Mobile (No TV)
+
+Host device can be a phone acting as both screen and speaker — no casting, no TV. This introduces constraints the TV-host flow doesn't have:
+
+**Autoplay restriction:** mobile browsers (Chrome/Safari) block auto-playing video with sound until the user directly interacts with the page. The "song ends → next auto-plays" flow works on desktop but will silently fail to produce audio on mobile. Fix: a one-time "Start Party" tap when the room is created unlocks playback for the rest of that browser session.
+
+**Screen lock kills playback:** if the phone screen times out mid-song, playback can pause and the Realtime connection may drop. Fix: use the Screen Wake Lock API to keep the host screen awake for the duration of an active session.
+
+**QR chicken-and-egg problem:** the host can't display a QR code to guests while also using that same screen as the player. Fix: a distinct "Room Setup" screen shown before the party starts, where the QR + short text room code are both visible. Guests scan once at setup; the room code (not just QR) stays accessible for late joiners to type in manually, since a live QR isn't always on screen once playback starts.
+
+**Layout:** TV layout (Now Playing / Up Next / Full Queue side-by-side) doesn't fit a phone screen. Mobile host view collapses into a stacked layout — large player on top, collapsible/scrollable queue below, with Skip/Pause controls always visible.
+
+**Battery:** screen-on + video + Wake Lock over a multi-hour session drains battery fast. Not a technical fix — just a "keep it plugged in" hint surfaced in the UI when the session starts.
+
+---
+
+## 11b. Host Screen Layout States
+
+**Orientation prompt:** on session start, if the host device is in portrait, show a one-time prompt — "Rotate your screen for the best view." Video content and the split layout both work better in landscape.
+
+**Default view (split layout):**
+- Video/player as the primary element
+- Queue list docked on the side, always visible
+- QR code + room code visible in the layout, not overlapping the video
+
+**Fullscreen view (video-only):**
+- Video expands to fill the entire screen; the side queue panel is hidden
+- QR code collapses into a small semi-transparent overlay pinned to the bottom of the screen, so guests can still scan without the host leaving fullscreen
+- Queue activity (new song added, who's up next) is no longer visible as a static panel, so it surfaces instead as a **toast notification** in the upper-right corner — brief, auto-dismissing, non-blocking. This keeps the host aware of queue changes without breaking the fullscreen video experience.
+
+---
+
 ## 11c. Screen Inventory
 
 ### Guest Flow
@@ -436,38 +468,6 @@ Clean, native-feeling, iOS-style — not a dark Spotify-clone, not a YouTube loo
 
 **4. Idle State**
 - Shown whenever the queue is empty — room code/QR stay visible, with a prompt like "Waiting for the next song" instead of a blank/broken-looking screen (Section 6, MVP feature scope)
-
----
-
-## 11a. Host on Mobile (No TV)
-
-Host device can be a phone acting as both screen and speaker — no casting, no TV. This introduces constraints the TV-host flow doesn't have:
-
-**Autoplay restriction:** mobile browsers (Chrome/Safari) block auto-playing video with sound until the user directly interacts with the page. The "song ends → next auto-plays" flow works on desktop but will silently fail to produce audio on mobile. Fix: a one-time "Start Party" tap when the room is created unlocks playback for the rest of that browser session.
-
-**Screen lock kills playback:** if the phone screen times out mid-song, playback can pause and the Realtime connection may drop. Fix: use the Screen Wake Lock API to keep the host screen awake for the duration of an active session.
-
-**QR chicken-and-egg problem:** the host can't display a QR code to guests while also using that same screen as the player. Fix: a distinct "Room Setup" screen shown before the party starts, where the QR + short text room code are both visible. Guests scan once at setup; the room code (not just QR) stays accessible for late joiners to type in manually, since a live QR isn't always on screen once playback starts.
-
-**Layout:** TV layout (Now Playing / Up Next / Full Queue side-by-side) doesn't fit a phone screen. Mobile host view collapses into a stacked layout — large player on top, collapsible/scrollable queue below, with Skip/Pause controls always visible.
-
-**Battery:** screen-on + video + Wake Lock over a multi-hour session drains battery fast. Not a technical fix — just a "keep it plugged in" hint surfaced in the UI when the session starts.
-
----
-
-## 11b. Host Screen Layout States
-
-**Orientation prompt:** on session start, if the host device is in portrait, show a one-time prompt — "Rotate your screen for the best view." Video content and the split layout both work better in landscape.
-
-**Default view (split layout):**
-- Video/player as the primary element
-- Queue list docked on the side, always visible
-- QR code + room code visible in the layout, not overlapping the video
-
-**Fullscreen view (video-only):**
-- Video expands to fill the entire screen; the side queue panel is hidden
-- QR code collapses into a small semi-transparent overlay pinned to the bottom of the screen, so guests can still scan without the host leaving fullscreen
-- Queue activity (new song added, who's up next) is no longer visible as a static panel, so it surfaces instead as a **toast notification** in the upper-right corner — brief, auto-dismissing, non-blocking. This keeps the host aware of queue changes without breaking the fullscreen video experience.
 
 ---
 
@@ -562,11 +562,52 @@ supabase/schema.sql → Full schema + RLS policies (same SQL as Section 7)
 
 ## 14b. Roadmap (post-MVP)
 
+### Public vs. Private Rooms (v2)
+
+MVP has one room behavior: join by code, period — no password concept at all. v2 splits rooms into two types:
+
+- **Private** (current MVP behavior, unchanged) — not listed anywhere. The only way in is the room code, entered manually or via QR scan. Code = required gate.
+- **Public** — listed on a new "Browse Rooms" page inside the app. A guest taps a room from that list and joins immediately — no code needed to get in. The room's code still exists, but only as a shareable/searchable reference (e.g. "just search KJ48X" in a group chat), not as an access gate. Capped at **10 guests** — the 11th join attempt is rejected with a clear "This room is full" message.
+
+**Schema note:** this needs a `visibility` column on `rooms` (`'public' | 'private'`, default `'private'`) and a guest-count check on join for public rooms (reject at 10). The RLS insert policy on `guests` would need an added condition for public rooms: allow insert only if current guest count for that room_id is under 10. Private rooms keep today's behavior — no cap, no visibility check, code is the only gate.
+
+**Open question for later:** does a "Browse Rooms" listing need any filtering/sorting (e.g. by activity, by number of guests), or is a flat list fine at this scale? Not worth deciding now — revisit once public rooms are actually being used.
+
+### Dedications (v2)
+
+A guest can optionally tag who a song is for when queuing it (e.g. "Para kay Tita Rosa"). Shows next to the singer name in the queue and on the host's Now Playing card.
+
+**Schema note:** one nullable `dedication` text column on `queue_items`. No new table, no RLS changes needed beyond what already governs that row.
+
+### Session Recap (v2)
+
+When a room ends (auto-expiry per Section 6a, or host explicitly ends it), generate a shareable summary card: total songs sung, total session duration, top singer (most songs played), and a list of song titles from that session. Downloadable/shareable as a PNG.
+
+**Mechanics:**
+- All the data needed already exists in `queue_items` + `songs` (status = `played`, `requested_at`, `singer_name`) — no new tables required, just an aggregation query once a room's status flips to `ended`.
+- Render the recap as a styled off-screen DOM card, then convert to a PNG client-side (e.g. via `html-to-image` or `dom-to-image`) for download/share — no server-side image generation needed.
+- Think Spotify Wrapped energy: bold numbers, one or two fun stats, KanTara branding — built to actually get posted/shared, not just a plain data table.
+
+### Reactions (v2)
+
+Guests can tap a quick reaction (🔥, 👏) while a song is playing; it appears as a brief animated burst on the host screen.
+
+**Mechanics:** this should NOT be a `queue_items`-adjacent DB table — that would mean a write to Postgres per tap, which doesn't scale well and isn't data worth persisting. Instead, use **Supabase Realtime Broadcast** (channel-based, ephemeral pub/sub, not tied to a table) scoped to the room's `id` as the channel name. Guests broadcast `{ emoji }` events; the host client (and other guests, optionally) subscribe and render a transient animation — nothing touches the database, so there's no RLS or storage concern at all. Purely in-the-moment fun — not tracked, counted, or fed into the Session Recap.
+
 - Song voting
 - Favorites / playlists
 - Session history
 - Password-protected rooms
-- AI song recommendations from past sessions
+### Discover: Popular + Trending (v2, replaces earlier vague "AI recommendations" idea)
+
+A "Discover" section on the guest search screen, surfacing songs before anyone has to type anything. Two data sources, both scoped to avoid the per-singer personalization problem (Section 14b intro — that data cascade-deletes with the room):
+
+- **"Popular on KanTara"** — pulled straight from the `songs` table's `times_played`, which is global and persists forever regardless of any single room's 6-hour lifespan. Free, already-available data — no new infrastructure.
+- **"Trending in the Philippines"** — pulled from YouTube's own trending data (`videos.list` with `chart=mostPopular`, `regionCode=PH`), cross-referenced against the existing karaoke-filtered search (Section 8/9) to surface actual karaoke versions of currently-trending songs, not just the trending music videos themselves.
+
+**Mechanics:** don't call the trending endpoint per-user — that burns quota fast for something that only changes daily. Refresh it once a day via a scheduled job (Supabase cron/edge function), store results in a small `trending_suggestions` table, and serve that cached list to every guest. This keeps the feature essentially free on quota, same spirit as the cache-first search architecture in Section 8.
+
+No per-singer personalization, no AI model needed — just two well-sourced "what's popular" lists, one from your own usage data and one from what's actually charting in PH right now.
 - Multiple concurrent rooms per host
 - Remote playback controls
 - PWA + offline metadata cache
