@@ -160,10 +160,8 @@ export async function GET(request: NextRequest) {
     const searchData = await searchRes.json();
     const items: YouTubeSearchItem[] = searchData.items ?? [];
 
-    // Step 2: Post-filter — only keep karaoke-signal videos (PRD §8)
-    //         AND strip any blocked/unavailable video IDs
+    // Step 2: Strip any blocked/unavailable video IDs
     const karaokeItems = items.filter((item) =>
-      isKaraokeVideo(item.snippet.title, item.snippet.description) &&
       !blockedIds.has(item.id.videoId)
     );
 
