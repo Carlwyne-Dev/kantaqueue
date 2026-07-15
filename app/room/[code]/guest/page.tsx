@@ -7,6 +7,7 @@ import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
 import { getCachedSearchResults, getYouTubeSearchResults, upsertSong } from '@/lib/songs';
 import { QRCodeSVG } from 'qrcode.react';
 import type { QueueItem, Song, YouTubeSearchResult } from '@/types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function formatDuration(secs: number | null): string {
   if (!secs) return '';
@@ -269,9 +270,26 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                 <p className="text-outline font-medium text-sm">Try a different song title or artist</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <motion.div 
+                className="flex flex-col gap-2"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: {},
+                  visible: {
+                    transition: { staggerChildren: 0.05 }
+                  }
+                }}
+              >
                 {searchResults.map((result) => (
-                  <div key={result.youtube_video_id} className="flex items-center gap-4 p-3 hover:bg-surface-container-low/50 rounded-2xl transition-colors">
+                  <motion.div 
+                    key={result.youtube_video_id} 
+                    className="flex items-center gap-4 p-3 hover:bg-surface-container-low/50 rounded-2xl transition-colors"
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+                    }}
+                  >
                     {result.thumbnail_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={result.thumbnail_url} alt={result.title} className="w-16 h-12 rounded-xl object-cover flex-shrink-0 shadow-sm" />
@@ -291,9 +309,9 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                     >
                       {adding === result.youtube_video_id ? '...' : 'Add'}
                     </button>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
             
             {!hasSearchedYoutube && searchQuery.trim().length >= 3 && searchDone && (
@@ -400,29 +418,39 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                   </div>
                 ) : (
                   <div className="flex flex-col">
-                    {queue.map((item, idx) => (
-                      <div key={item.id} className="flex items-center gap-4 p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors">
-                        <span className="w-6 text-center text-xs font-extrabold text-outline/40">{idx + 1}</span>
-                        {item.song.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
-                        ) : (
-                          <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
-                        )}
-                        <div className="flex-1 overflow-hidden">
-                          <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
-                          <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
-                            <span className="text-primary font-bold">{item.singer_name}</span>
-                            {item.song.duration_seconds && ` • ${formatDuration(item.song.duration_seconds)}`}
-                          </p>
-                        </div>
-                        {item.requested_by === userId && (
-                          <div className="px-3 py-1 bg-surface-container-high rounded-lg flex-shrink-0">
-                            <span className="text-[11px] font-bold text-on-surface whitespace-nowrap">{estimateWaitTime(queue, item)}</span>
+                    <AnimatePresence>
+                      {queue.map((item, idx) => (
+                        <motion.div 
+                          key={item.id} 
+                          className="flex items-center gap-4 p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3, delay: idx * 0.05 }}
+                          layout
+                        >
+                          <span className="w-6 text-center text-xs font-extrabold text-outline/40">{idx + 1}</span>
+                          {item.song.thumbnail_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
+                          ) : (
+                            <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
+                          )}
+                          <div className="flex-1 overflow-hidden">
+                            <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
+                            <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
+                              <span className="text-primary font-bold">{item.singer_name}</span>
+                              {item.song.duration_seconds && ` • ${formatDuration(item.song.duration_seconds)}`}
+                            </p>
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          {item.requested_by === userId && (
+                            <div className="px-3 py-1 bg-surface-container-high rounded-lg flex-shrink-0">
+                              <span className="text-[11px] font-bold text-on-surface whitespace-nowrap">{estimateWaitTime(queue, item)}</span>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )
               ) : (
@@ -442,30 +470,40 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                   </div>
                 ) : (
                   <div className="flex flex-col">
-                    {myItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-4 p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors">
-                        {item.song.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
-                        ) : (
-                          <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
-                        )}
-                        <div className="flex-1 overflow-hidden">
-                          <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
-                          <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
-                            <span className="font-semibold text-primary/80">Wait time: {estimateWaitTime(queue, item)}</span>
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleRemoveOwn(item.id)}
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-error hover:bg-[#ffdad6]/50 transition-colors border-none bg-transparent cursor-pointer flex-shrink-0"
+                    <AnimatePresence>
+                      {myItems.map((item) => (
+                        <motion.div 
+                          key={item.id} 
+                          className="flex items-center gap-4 p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          layout
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <path d="M18 6L6 18M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
+                          {item.song.thumbnail_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
+                          ) : (
+                            <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
+                          )}
+                          <div className="flex-1 overflow-hidden">
+                            <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
+                            <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
+                              <span className="font-semibold text-primary/80">Wait time: {estimateWaitTime(queue, item)}</span>
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveOwn(item.id)}
+                            className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-error hover:bg-[#ffdad6]/50 transition-colors border-none bg-transparent cursor-pointer flex-shrink-0"
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )
               )}
