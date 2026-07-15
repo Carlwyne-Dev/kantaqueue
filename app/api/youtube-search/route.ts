@@ -142,7 +142,6 @@ export async function GET(request: NextRequest) {
           searchUrl.searchParams.set('part', 'snippet');
           searchUrl.searchParams.set('q', searchQuery);
           searchUrl.searchParams.set('type', 'video');
-          searchUrl.searchParams.set('videoCategoryId', '10'); // Music
           searchUrl.searchParams.set('maxResults', '15');
           searchUrl.searchParams.set('key', apiKey);
           return searchUrl.toString();

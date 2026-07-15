@@ -94,14 +94,23 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
 
   // ── Search ────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    let isActive = true;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (searchQuery.trim().length < 3) { setSearchResults([]); setSearchDone(false); return; }
     debounceRef.current = setTimeout(async () => {
+      if (!isActive) return;
       setSearching(true); setSearchDone(false);
-      try { setSearchResults(await searchSongs(searchQuery)); }
-      catch { toast.error('Search failed. Try again.'); }
-      finally { setSearching(false); setSearchDone(true); }
+      try { 
+        const res = await searchSongs(searchQuery);
+        if (isActive) setSearchResults(res);
+      }
+      catch { if (isActive) toast.error('Search failed. Try again.'); }
+      finally { 
+        if (isActive) { setSearching(false); setSearchDone(true); }
+      }
     }, 500);
+    
+    return () => { isActive = false; };
   }, [searchQuery]);
 
   // ── Add ───────────────────────────────────────────────────────────────────────
