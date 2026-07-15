@@ -56,6 +56,14 @@ function isKaraokeVideo(title: string, description: string): boolean {
 }
 
 /**
+ * Extracts an 11-character YouTube video ID from a URL, if present.
+ */
+function extractVideoId(query: string): string | null {
+  const match = query.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  return match ? match[1] : null;
+}
+
+/**
  * Fetches all blocked video IDs (times_played = -1) from the songs table.
  * Used to strip unavailable/broken videos from fresh YouTube results server-side.
  */
@@ -88,10 +96,43 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: 'YouTube API key not configured' }, { status: 500 });
   }
 
-  // PRD §8: append "karaoke" to the search term so raw results skew karaoke
-  const searchQuery = `${query.trim()} karaoke`;
+  const directVideoId = extractVideoId(query);
 
   try {
+    if (directVideoId) {
+      // Direct URL flow: fetch the specific video and bypass karaoke filter
+      const videosUrl = new URL('https://www.googleapis.com/youtube/v3/videos');
+      videosUrl.searchParams.set('part', 'snippet,contentDetails');
+      videosUrl.searchParams.set('id', directVideoId);
+      videosUrl.searchParams.set('key', apiKey);
+
+      const res = await fetch(videosUrl.toString(), { cache: 'no-store' });
+      if (!res.ok) return Response.json([]);
+      const data = await res.json();
+      const items = data.items || [];
+
+      if (items.length === 0) return Response.json([]);
+      const item = items[0];
+
+      const result = {
+        youtube_video_id: item.id,
+        title: item.snippet.title,
+        artist: item.snippet.channelTitle,
+        thumbnail_url:
+          item.snippet.thumbnails?.medium?.url ??
+          item.snippet.thumbnails?.default?.url ??
+          null,
+        duration_seconds: parseDuration(item.contentDetails?.duration || ''),
+        from_cache: false,
+        times_played: 0,
+      };
+
+      return Response.json([result]);
+    }
+
+    // Normal search flow: append "karaoke" to the search term
+    const searchQuery = `${query.trim()} karaoke`;
+
     // Load blocked IDs in parallel with the YouTube search call
     const [blockedIds, searchRes] = await Promise.all([
       getBlockedVideoIds(),
