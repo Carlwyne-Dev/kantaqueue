@@ -30,6 +30,8 @@ interface YTPlayer {
   stopVideo(): void;
   getPlayerState(): number;
   getCurrentTime(): number;
+  getDuration(): number;
+  seekTo(seconds: number, allowSeekAhead: boolean): void;
   destroy(): void;
 }
 
@@ -78,6 +80,12 @@ export default function HostPage({
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showBigQR, setShowBigQR] = useState(false);
   const [ambientColor, setAmbientColor] = useState<string>('#F2F1EC');
+  
+  // ── Scrubber state ────────────────────────────────────────────────────────
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  
   // ── Animation state ────────────────────────────────────────────────────────
   const [newQueueIds, setNewQueueIds] = useState<Set<string>>(new Set());
   const [exitingQueueItem, setExitingQueueItem] = useState<(QueueItem & { song: Song }) | null>(null);
@@ -97,6 +105,31 @@ export default function HostPage({
 
   // Keep stateRef in sync
   useEffect(() => { stateRef.current = { room, nowPlaying }; }, [room, nowPlaying]);
+
+  // ── Sync progress ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!nowPlaying || !playerReady) return;
+    const interval = setInterval(() => {
+      if (!isScrubbing && playerRef.current) {
+        const t = playerRef.current.getCurrentTime();
+        const d = playerRef.current.getDuration?.() || 0;
+        if (t !== undefined) setVideoProgress(t);
+        if (d) setVideoDuration(d);
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [nowPlaying, playerReady, isScrubbing]);
+
+  function handleScrub(e: React.ChangeEvent<HTMLInputElement>) {
+    setVideoProgress(Number(e.target.value));
+  }
+
+  function handleScrubEnd() {
+    if (playerRef.current) {
+      playerRef.current.seekTo(videoProgress, true);
+    }
+    setIsScrubbing(false);
+  }
 
   // ── Detect mobile (used for fullscreen layout decisions) ──────────────────
   useEffect(() => {
@@ -735,6 +768,30 @@ export default function HostPage({
           <div className={`absolute inset-0 z-40 transition-opacity duration-700 ${!nowPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <div ref={playerContainerRef} className="w-full h-full" id="yt-player" />
           </div>
+
+          {/* Progress / Scrubber (visible when playing & hovered) */}
+          {nowPlaying && (
+            <div className="absolute bottom-0 left-0 right-0 z-50 p-6 pt-20 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center gap-4">
+              <span className="text-white text-xs font-medium font-mono">{formatDuration(Math.floor(videoProgress))}</span>
+              <input
+                type="range"
+                min={0}
+                max={videoDuration || 100}
+                value={videoProgress}
+                onChange={(e) => {
+                  setIsScrubbing(true);
+                  handleScrub(e);
+                }}
+                onMouseUp={handleScrubEnd}
+                onTouchEnd={handleScrubEnd}
+                className="flex-1 h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all"
+                style={{
+                  background: `linear-gradient(to right, white ${(videoProgress / (videoDuration || 1)) * 100}%, rgba(255,255,255,0.3) ${(videoProgress / (videoDuration || 1)) * 100}%)`
+                }}
+              />
+              <span className="text-white/70 text-xs font-medium font-mono">{formatDuration(Math.floor(videoDuration))}</span>
+            </div>
+          )}
 
           {/* Idle state */}
           {!nowPlaying && (
