@@ -59,7 +59,7 @@ function isKaraokeVideo(title: string, description: string): boolean {
  * Extracts an 11-character YouTube video ID from a URL, if present.
  */
 function extractVideoId(query: string): string | null {
-  const match = query.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  const match = query.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
   return match ? match[1] : null;
 }
 
