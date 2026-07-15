@@ -7,7 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { getSupabaseClient } from '@/lib/supabase';
 import type { Room, QueueItem, Song } from '@/types';
 import { AnimatedGradient } from '@/components/ui/animated-gradient';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ── YouTube IFrame API types ──────────────────────────────────────────────────
 declare global {
@@ -716,16 +716,17 @@ export default function HostPage({
       }}
     >
       <div
-        className="flex-1 flex overflow-hidden min-h-0 max-md:justify-center"
+        className="flex-1 flex overflow-hidden min-h-0 max-md:justify-center transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
         style={{ gap: isFullscreen ? 0 : 24, padding: isFullscreen ? 0 : 24 }}
       >
         {/* ── Video / Stage area — hidden on mobile ── */}
         <motion.div
-          className="flex-1 relative overflow-hidden max-md:hidden"
+          layout
+          className="flex-1 relative overflow-hidden max-md:hidden transition-[border-radius] duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ borderRadius: isFullscreen ? 0 : 20, background: '#1E1E1E', boxShadow: isFullscreen ? 'none' : '0 8px 40px rgba(0,0,0,0.25)' }}
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], layout: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }}
         >
           {/* Ambient glow */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(167,183,154,0.08),transparent_70%)] pointer-events-none z-0" />
@@ -809,16 +810,15 @@ export default function HostPage({
         </motion.div>
 
         {/* ── Sidebar ── */}
-        {!isFullscreen && (
-          <motion.aside 
-            className="max-md:w-full md:w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
-            }}
-          >
+        <AnimatePresence initial={false}>
+          {!isFullscreen && (
+            <motion.aside 
+              layout
+              className="max-md:w-full md:w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0"
+              initial={{ opacity: 0, x: 30, width: 0 }}
+              animate={{ opacity: 1, x: 0, width: 'auto', transition: { staggerChildren: 0.15, delayChildren: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
+              exit={{ opacity: 0, x: 30, width: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
+            >
 
             {/* Now Playing */}
             <motion.section 
@@ -975,8 +975,9 @@ export default function HostPage({
                 </div>
               </div>
             )}
-          </motion.aside>
-        )}
+            </motion.aside>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Quit Modal */}
