@@ -69,6 +69,7 @@ export default function HostPage({
   const [queue, setQueue] = useState<(QueueItem & { song: Song })[]>([]);
   const [nowPlaying, setNowPlaying] = useState<(QueueItem & { song: Song }) | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [partyStarted, setPartyStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -96,6 +97,14 @@ export default function HostPage({
 
   // Keep stateRef in sync
   useEffect(() => { stateRef.current = { room, nowPlaying }; }, [room, nowPlaying]);
+
+  // ── Detect mobile (used for fullscreen layout decisions) ──────────────────
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 900 || ('ontouchstart' in window));
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const showLocalNotif = useCallback((msg: string) => {
     setLocalNotif(msg);
@@ -728,26 +737,40 @@ export default function HostPage({
 
           {/* Idle state */}
           {!nowPlaying && (
-            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center max-md:justify-end max-md:pb-14 gap-10 text-white overflow-hidden bg-[#1E1E1E]">
+            <div className={`absolute inset-0 z-50 flex flex-col items-center text-white overflow-hidden bg-[#1E1E1E] ${
+              isFullscreen && isMobile
+                ? 'justify-end pb-14'
+                : 'justify-center gap-10'
+            }`}>
               {/* WebGL Animated Gradient */}
               <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
               
-              <div className="relative z-20 flex flex-col items-center gap-12 max-md:gap-4">
+              <div className={`relative z-20 flex flex-col items-center ${
+                isFullscreen && isMobile ? 'gap-3' : 'gap-12'
+              }`}>
                 {/* Icon */}
-                <div className="w-28 h-28 max-md:w-16 max-md:h-16 rounded-[2.5rem] max-md:rounded-[1.5rem] flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30">
-                  <svg fill="white" width="52" height="52" className="max-md:w-8 max-md:h-8" viewBox="0 0 24 24">
+                <div className={`flex items-center justify-center shadow-[0_0_80px_rgba(167,183,154,0.3)] bg-white/20 backdrop-blur-xl border border-white/30 ${
+                  isFullscreen && isMobile
+                    ? 'w-14 h-14 rounded-[1.2rem]'
+                    : 'w-28 h-28 rounded-[2.5rem]'
+                }`}>
+                  <svg fill="white" width={isFullscreen && isMobile ? 28 : 52} height={isFullscreen && isMobile ? 28 : 52} viewBox="0 0 24 24">
                     <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm6 8a1 1 0 0 1 1 1 7 7 0 0 1-6 6.92V21h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.08A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0 1 1 0 0 1 1-1z"/>
                   </svg>
                 </div>
 
                 {/* Waiting for songs text */}
-                <p className="text-5xl md:text-6xl max-md:text-xl font-black text-white tracking-tight uppercase">WAITING FOR SONGS</p>
+                <p className={`font-black text-white tracking-tight uppercase ${
+                  isFullscreen && isMobile ? 'text-lg' : 'text-5xl md:text-6xl'
+                }`}>WAITING FOR SONGS</p>
 
-                {/* Room Code Box — desktop only */}
-                <div className="max-md:hidden bg-white/10 backdrop-blur-2xl px-10 py-5 rounded-[2rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
-                  <p className="text-[11px] text-white/50 tracking-[0.3em] uppercase font-bold mb-2">Room Code</p>
-                  <p className="text-5xl font-black text-white tracking-tighter drop-shadow-md">{code}</p>
-                </div>
+                {/* Room Code Box — desktop/TV only */}
+                {!(isFullscreen && isMobile) && (
+                  <div className="max-md:hidden bg-white/10 backdrop-blur-2xl px-10 py-5 rounded-[2rem] border border-white/20 text-center flex flex-col items-center shadow-2xl">
+                    <p className="text-[11px] text-white/50 tracking-[0.3em] uppercase font-bold mb-2">Room Code</p>
+                    <p className="text-5xl font-black text-white tracking-tighter drop-shadow-md">{code}</p>
+                  </div>
+                )}
 
                 <p className="text-[13px] text-white/40 font-medium">Point a phone camera at the QR code to join</p>
               </div>
