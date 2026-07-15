@@ -34,7 +34,7 @@ export default function JoinPage({
         }
         const supabase = getSupabaseClient();
         const { data: room } = await supabase
-          .from('rooms').select('id').eq('code', initialCode.toUpperCase()).eq('status', 'active').maybeSingle();
+          .from('rooms').select('id').eq('code', initialCode.toUpperCase()).in('status', ['active', 'paused']).maybeSingle();
         if (room) {
           const { data: guests } = await supabase.from('guests').select('display_name').eq('room_id', room.id);
           const taken = new Set((guests ?? []).map((g: { display_name: string }) => g.display_name));
@@ -66,7 +66,7 @@ export default function JoinPage({
 
       const supabase = getSupabaseClient();
       const { data: room, error: roomErr } = await supabase
-        .from('rooms').select('id, status').eq('code', trimCode).eq('status', 'active').maybeSingle();
+        .from('rooms').select('id, status').eq('code', trimCode).in('status', ['active', 'paused']).maybeSingle();
 
       if (roomErr || !room) { toast.error('Room not found or has ended.'); return; }
 
