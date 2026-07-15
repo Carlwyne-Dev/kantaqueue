@@ -170,6 +170,12 @@ export default function HostPage({
       }
       setRoom(data);
       setLoadingRoom(false);
+      // If the party was already started (e.g. host refreshed), jump straight
+      // to the active session so we don't re-trigger the Start Party logic.
+      if (data.started_at) {
+        setPartyStarted(true);
+        setSessionStarted(true);
+      }
     }
     loadRoom();
   }, [code]);
