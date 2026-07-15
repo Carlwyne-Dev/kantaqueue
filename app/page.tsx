@@ -180,7 +180,6 @@ export default function HomePage() {
         <section className="relative px-[64px] py-[64px] max-w-[1200px] mx-auto lg:min-h-[750px] flex flex-col lg:flex-row items-center justify-between overflow-visible ambient-gradient max-md:px-[20px]">
           <motion.div
             className="w-full lg:w-1/2 z-10 space-y-[32px]"
-            style={{ y: heroSpringY, opacity: heroOpacity }}
           >
             {/* Headline stagger */}
             <motion.h1
@@ -351,7 +350,7 @@ export default function HomePage() {
                   >
                     <span className="material-symbols-outlined text-secondary text-3xl">{icon}</span>
                   </motion.div>
-                  <p className="text-[11px] font-bold tracking-[0.15em] text-primary/60 uppercase mb-2">{step}</p>
+                  <p className="text-[11px] font-bold tracking-[0.15em] text-primary/60 uppercase mb-2 hidden">{step}</p>
                   <h3 className="text-[20px] font-semibold text-on-surface mb-3">{title}</h3>
                   <p className="text-[15px] text-secondary leading-relaxed">{desc}</p>
                 </motion.div>
