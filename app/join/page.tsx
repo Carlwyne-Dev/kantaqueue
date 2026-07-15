@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
 import { generateUniqueNickname } from '@/lib/nickname';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { motion } from 'framer-motion';
 
 export default function JoinPage({
   searchParams,
@@ -124,18 +125,33 @@ export default function JoinPage({
         <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           
           {/* Left Column (Hero Info) */}
-          <div className="space-y-10">
-            <div className="bg-[#A7B79A] inline-flex p-4 rounded-[20px] shadow-lg shadow-[#A7B79A]/20">
+          <motion.div
+            className="space-y-10"
+            initial={{ opacity: 0, x: -32 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.div
+              className="bg-[#A7B79A] inline-flex p-4 rounded-[20px] shadow-lg shadow-[#A7B79A]/20"
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.5, type: 'spring', stiffness: 280, damping: 20 }}
+            >
               <span className="material-symbols-outlined text-white text-[32px]">group_add</span>
-            </div>
-            <div className="space-y-4">
+            </motion.div>
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
               <h1 className="text-5xl lg:text-6xl font-extrabold leading-[1.05] font-display-lg text-on-background tracking-tight">
                 Join the<br/>karaoke room.
               </h1>
               <p className="text-lg text-secondary max-w-md font-medium">
                 Enter the 5-character code shown on the host screen, pick a name, and you&apos;re in.
               </p>
-            </div>
+            </motion.div>
             
             {/* Features Checklist */}
             <ul className="space-y-5">
@@ -144,18 +160,29 @@ export default function JoinPage({
                 'Search and queue songs from your phone',
                 'See the live queue in real time'
               ].map((text, i) => (
-                <li key={i} className="flex items-center gap-4">
+                <motion.li
+                  key={i}
+                  className="flex items-center gap-4"
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                >
                   <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#A7B79A]/15 flex items-center justify-center text-[#A7B79A]">
                     <span className="material-symbols-outlined text-[16px] font-bold">check</span>
                   </span>
                   <span className="font-semibold text-on-background/80 text-[16px]">{text}</span>
-                </li>
+                </motion.li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Right Column (Form) */}
-          <div className="bg-[#F2F1EC] p-8 lg:p-12 rounded-[32px] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)]">
+          <motion.div
+            className="bg-[#F2F1EC] p-8 lg:p-12 rounded-[32px] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)]"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
             <form className="space-y-10" onSubmit={handleJoin}>
               
               {/* Room Code Input Group */}
@@ -213,10 +240,12 @@ export default function JoinPage({
 
               {/* CTA Button */}
               <div className="flex gap-4">
-                <button 
+                <motion.button 
                   type="submit"
                   disabled={loading || generatingNick}
-                  className="flex-1 py-5 bg-[#54634a] hover:bg-[#3d4b34] text-white rounded-[20px] text-[18px] font-bold shadow-xl shadow-[#54634a]/20 transition-all transform active:scale-[0.98] font-display-lg tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.04, boxShadow: '0 20px 40px rgba(84,99,74,0.35)' }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex-1 py-5 bg-[#54634a] text-white rounded-[20px] text-[18px] font-bold shadow-xl shadow-[#54634a]/20 font-display-lg tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -224,7 +253,7 @@ export default function JoinPage({
                       Joining...
                     </>
                   ) : 'Join Room'}
-                </button>
+                </motion.button>
                 <button 
                   type="button"
                   onClick={() => setShowScanner(true)}
@@ -235,7 +264,7 @@ export default function JoinPage({
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       </main>
 
