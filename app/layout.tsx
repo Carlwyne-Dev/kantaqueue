@@ -15,7 +15,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: 'KanTara — Karaoke Queue App',
+  title: 'KanTara — Modern Karaoke',
   description:
     'Fix the "passing the phone around" problem at karaoke sessions. Guests scan a QR code, search songs from their own phone, and the host screen handles playback automatically.',
   keywords: ['karaoke', 'queue', 'youtube', 'kanta', 'kantara'],
