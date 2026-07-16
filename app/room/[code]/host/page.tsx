@@ -466,7 +466,7 @@ export default function HostPage({
   async function handlePlayerError(event: { data: number }) {
     // YT error codes: 100=not found, 101/150=embedding disabled, 110=private? We'll catch any error since the player fails anyway
     if ([100, 101, 150].includes(event.data) || event.data > 0) {
-      toast.error('Video unavailable — skipping', { duration: 3000 });
+      toast.error('Oops, this video is broken or blocked! 🚫 Skipping... Try queuing a different lyric version!', { duration: 5000 });
 
       const attempt = currentAttemptRef.current;
       if (attempt) {
@@ -1066,7 +1066,7 @@ export default function HostPage({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute inset-0 z-50 bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer"
+                  className="absolute inset-0 z-50 bg-[#F2F1EC]/90 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer rounded-[20px]"
                   onClick={() => setShowBigQR(false)}
                 >
                   <motion.div
@@ -1076,7 +1076,7 @@ export default function HostPage({
                     transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                     className="flex flex-col items-center gap-6"
                   >
-                    <div className="bg-white p-4 rounded-3xl shadow-xl">
+                    <div className="bg-white p-6 rounded-[48px] shadow-2xl">
                       <QRCodeSVG value={joinUrl} size={240} bgColor="transparent" fgColor="#1b1c1a" />
                     </div>
                     <div className="text-center drop-shadow-md">

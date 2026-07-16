@@ -18,33 +18,30 @@ function getSupabase() {
   return createClient(url, key);
 }
 
-/**
- * Increments the daily YouTube API quota usage counter.
- * Fails silently — never throws.
- */
 export async function logQuotaUsage(units: number): Promise<void> {
   try {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     const supabase = getSupabase();
-    // Try update first
+    
+    // Read current
     const { data } = await supabase
       .from('api_quota')
       .select('units_used')
       .eq('date', today)
       .maybeSingle();
 
-    if (data) {
-      await supabase
-        .from('api_quota')
-        .update({ units_used: data.units_used + units })
-        .eq('date', today);
-    } else {
-      await supabase
-        .from('api_quota')
-        .insert({ date: today, units_used: units });
-    }
-  } catch {
+    const currentUsed = data?.units_used ?? 0;
+    
+    // Upsert avoids duplicate key errors on race conditions
+    await supabase
+      .from('api_quota')
+      .upsert({ 
+        date: today, 
+        units_used: currentUsed + units 
+      });
+  } catch (err) {
     // Non-critical — never block the response
+    console.error('Failed to log quota:', err);
   }
 }
 
