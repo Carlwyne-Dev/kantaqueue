@@ -21,7 +21,9 @@ export default function JoinPage({
   const [loading, setLoading] = useState(false);
   const [generatingNick, setGeneratingNick] = useState(true);
   const [showScanner, setShowScanner] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const codeInputRef = useRef<HTMLInputElement>(null);
+  const autoJoinedRef = useRef(false);
 
   useEffect(() => {
     async function assignNickname() {
@@ -51,6 +53,14 @@ export default function JoinPage({
     }
     assignNickname();
   }, [initialCode]);
+
+  useEffect(() => {
+    if (initialCode && initialCode.length === 5 && !generatingNick && nickname && !autoJoinedRef.current) {
+      autoJoinedRef.current = true;
+      handleJoin();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCode, generatingNick, nickname]);
 
   async function handleJoin(e?: React.FormEvent) {
     if (e) e.preventDefault();
@@ -192,24 +202,34 @@ export default function JoinPage({
                   className="grid grid-cols-5 gap-3 relative cursor-text"
                   onClick={() => codeInputRef.current?.focus()}
                 >
-                  {codeChars.map((char, index) => (
-                    <div 
-                      key={index}
-                      className={`w-full aspect-square flex items-center justify-center text-2xl font-bold border rounded-2xl transition-all shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] ${char ? 'border-[#A7B79A] bg-white text-on-background ring-2 ring-[#A7B79A]/20' : 'border-outline-variant/30 bg-white/80 text-secondary/30'}`}
-                    >
-                      {char || '•'}
-                    </div>
-                  ))}
+                  {codeChars.map((char, index) => {
+                    const isActive = isFocused && (code.length === index || (code.length === 5 && index === 4));
+                    return (
+                      <div 
+                        key={index}
+                        className={`w-full aspect-square flex items-center justify-center text-2xl font-bold border rounded-2xl transition-all duration-200 shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] ${
+                          isActive
+                            ? 'border-[#A7B79A] bg-white text-on-background ring-4 ring-[#A7B79A]/30 scale-[1.02]'
+                            : char 
+                              ? 'border-[#A7B79A] bg-white text-on-background ring-2 ring-[#A7B79A]/10' 
+                              : 'border-outline-variant/30 bg-white/80 text-secondary/30'
+                        }`}
+                      >
+                        {char || '•'}
+                      </div>
+                    );
+                  })}
                   <input
                     ref={codeInputRef}
                     id="room-code"
                     type="text"
                     maxLength={5}
                     value={code}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
                     onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
                     className="absolute inset-0 opacity-0 cursor-text z-10 w-full h-full"
                     autoComplete="off"
-                    autoFocus={!initialCode}
                   />
                 </div>
               </div>

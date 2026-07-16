@@ -6,6 +6,8 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logQuotaUsage } from '@/lib/quota';
+import { normalizeTitle } from '@/lib/songs';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,10 +140,37 @@ export async function GET() {
       }
     }
 
-    // ── Write to cache ────────────────────────────────────────────────────
+    // ── Write to trending_cache ────────────────────────────────────────
     await supabase
       .from('trending_cache')
       .upsert({ id: 1, items, refreshed_at: new Date().toISOString() });
+
+    // ── Pre-cache songs into songs table so they appear in search cache ───────
+    // This means guests can find trending songs via cache search immediately,
+    // and times_played stats start being tracked as soon as they're played.
+    await Promise.allSettled(
+      items
+        .filter(item => item.youtube_video_id) // skip any malformed items
+        .map(item =>
+          supabase
+            .from('songs')
+            .upsert(
+              {
+                youtube_video_id: item.youtube_video_id,
+                title: item.title,
+                normalized_title: normalizeTitle(item.title),
+                artist: item.artist,
+                thumbnail_url: item.thumbnail_url,
+                duration_seconds: item.duration_seconds,
+                // Don't overwrite times_played if song already exists
+              },
+              { onConflict: 'youtube_video_id', ignoreDuplicates: true }
+            )
+        )
+    );
+
+    // Log quota: 1 unit for videos.list chart, ~100 per karaoke search (up to items.length calls)
+    await logQuotaUsage(1 + items.length * 100);
 
     return NextResponse.json({ items, source: 'youtube' });
   } catch (err) {

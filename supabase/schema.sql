@@ -166,6 +166,22 @@ create policy "service role can upsert trending cache"
   on trending_cache for all using (true) with check (true);
 
 
+-- ---------- API QUOTA ----------
+-- Tracks daily YouTube API usage to avoid burning quota limits
+create table api_quota (
+  date date primary key,
+  units_used int not null default 0
+);
+
+alter table api_quota enable row level security;
+
+create policy "anyone can read quota"
+  on api_quota for select using (true);
+
+create policy "service role can update quota"
+  on api_quota for all using (true) with check (true);
+
+
 -- ---------- REALTIME ----------
 alter publication supabase_realtime add table queue_items;
 alter publication supabase_realtime add table rooms;

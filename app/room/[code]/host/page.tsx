@@ -90,6 +90,7 @@ export default function HostPage({
   const [newQueueIds, setNewQueueIds] = useState<Set<string>>(new Set());
   const [exitingQueueItem, setExitingQueueItem] = useState<(QueueItem & { song: Song }) | null>(null);
   const [isPromoting, setIsPromoting] = useState(false);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
   const playerRef = useRef<YTPlayer | null>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -946,27 +947,49 @@ export default function HostPage({
                   </div>
                 ) : (
                   <ul className="m-0 p-0 pb-3 list-none" style={{ overflowX: 'clip' }}>
-                    {queue.map((item, idx) => (
-                      <li
-                        key={item.id}
-                        className={`flex items-center gap-3 p-3 mx-4 mt-3 bg-white border border-outline-variant/20 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] ${newQueueIds.has(item.id) ? 'queue-item-enter' : isPromoting ? 'queue-item-shift-up' : ''}`}
-                      >
-                        <span className="text-[12px] font-bold text-secondary/40 w-5 text-center flex-shrink-0">{idx + 1}</span>
-                        {item.song.thumbnail_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.song.thumbnail_url} alt={item.song.title}
-                            className="w-10 h-8 rounded-lg object-cover flex-shrink-0" />
-                        )}
-                        <div className="flex-1 overflow-hidden">
-                          <p className="text-[12px] font-semibold text-on-background truncate">{item.song.title}</p>
-                          <p className="text-[11px] text-secondary truncate mt-0.5">{item.singer_name}{item.song.duration_seconds ? ` · ${formatDuration(item.song.duration_seconds)}` : ''}</p>
-                        </div>
-                        <button id={`remove-queue-${item.id}`} onClick={() => handleRemove(item.id)} aria-label="Remove"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-secondary/30 hover:text-error hover:bg-error-container/40 transition-all border-none bg-transparent cursor-pointer flex-shrink-0">
-                          <span className="material-symbols-outlined text-[16px]">close</span>
-                        </button>
-                      </li>
-                    ))}
+                    <AnimatePresence mode="popLayout">
+                      {queue.map((item, idx) => (
+                        <motion.li
+                          key={item.id}
+                          layout="position"
+                          initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9, x: -20 }}
+                          transition={{ layout: { type: 'spring', stiffness: 150, damping: 15, mass: 1 }, duration: 0.3 }}
+                          className={`flex items-center gap-3 p-3 mx-4 mt-3 bg-white border border-outline-variant/20 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)]`}
+                        >
+                          <span className="text-[12px] font-bold text-secondary/40 w-5 text-center flex-shrink-0">{idx + 1}</span>
+                          {item.song.thumbnail_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.song.thumbnail_url} alt={item.song.title}
+                              className="w-10 h-8 rounded-lg object-cover flex-shrink-0" />
+                          )}
+                          <div className="flex-1 overflow-hidden">
+                            <p className="text-[12px] font-semibold text-on-background truncate">{item.song.title}</p>
+                            <p className="text-[11px] text-secondary truncate mt-0.5">{item.singer_name}{item.song.duration_seconds ? ` · ${formatDuration(item.song.duration_seconds)}` : ''}</p>
+                          </div>
+                          {confirmRemoveId === item.id ? (
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="flex items-center gap-1.5 flex-shrink-0"
+                            >
+                              <button onClick={() => setConfirmRemoveId(null)} title="Cancel" className="w-7 h-7 flex items-center justify-center bg-surface-container rounded-md text-secondary border border-outline-variant/30 hover:bg-surface-container-high transition-colors cursor-pointer">
+                                <span className="material-symbols-outlined text-[16px]">close</span>
+                              </button>
+                              <button onClick={() => { setConfirmRemoveId(null); handleRemove(item.id); }} title="Confirm Remove" className="w-7 h-7 flex items-center justify-center bg-[#FF5A5F] rounded-md text-white hover:opacity-90 transition-opacity cursor-pointer shadow-sm">
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                              </button>
+                            </motion.div>
+                          ) : (
+                            <button id={`remove-queue-${item.id}`} onClick={() => setConfirmRemoveId(item.id)} aria-label="Remove"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-secondary/70 hover:text-[#FF5A5F] hover:bg-[#FF5A5F]/10 transition-all border-none bg-transparent cursor-pointer flex-shrink-0">
+                              <span className="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                          )}
+                        </motion.li>
+                      ))}
+                    </AnimatePresence>
                   </ul>
                 )}
               </div>

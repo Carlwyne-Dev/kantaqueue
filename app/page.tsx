@@ -82,6 +82,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [joining, setJoining] = useState(false);
   const [stats, setStats] = useState({ rooms: 0, songs: 0 });
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [instructionMode, setInstructionMode] = useState<'guest' | 'host'>('host');
 
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, -60]);
@@ -95,13 +97,17 @@ export default function HomePage() {
       .then(data => {
         if (mounted && data && typeof data.rooms === 'number') setStats(data);
       })
-      .catch(console.error);
+    function fetchLeaderboard() {
+      fetch('/api/leaderboard').then(r => r.json()).then(data => {
+        if (mounted && data?.songs) setLeaderboard(data.songs);
+      }).catch(console.error);
+    }
+    fetchLeaderboard();
 
     const supabase = getSupabaseClient();
     const statsChannel = supabase.channel('landing-stats-channel')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public' }, (payload) => {
         if (mounted) {
-          // Only count when started_at is freshly stamped (party started)
           if (payload.table === 'rooms' && payload.new?.started_at && !payload.old?.started_at) {
             setStats(s => ({ ...s, rooms: s.rooms + 1 }));
           }
@@ -109,7 +115,10 @@ export default function HomePage() {
         }
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'queue_items' }, () => {
-        if (mounted) setStats(s => ({ ...s, songs: s.songs + 1 }));
+        if (mounted) {
+          setStats(s => ({ ...s, songs: s.songs + 1 }));
+          fetchLeaderboard();
+        }
       }).subscribe();
 
     return () => { mounted = false; supabase.removeChannel(statsChannel); };
@@ -137,11 +146,18 @@ export default function HomePage() {
     }
   }
 
-  const stepsData = [
-    { icon: 'qr_code_scanner', step: '01', title: 'Scan', desc: 'Use any smartphone camera. No app download required.' },
-    { icon: 'search', step: '02', title: 'Search', desc: 'Find your song. Results load instantly from your library.' },
-    { icon: 'playlist_add_check', step: '03', title: 'Queue', desc: 'Add it — your song appears on the shared screen live.' },
-  ];
+  const stepsData = {
+    guest: [
+      { icon: 'qr_code_scanner', step: '01', title: 'Scan', desc: 'Use your phone to scan the QR code on the host screen. No apps needed.' },
+      { icon: 'search', step: '02', title: 'Search', desc: 'Find your song. Results load instantly from your library.' },
+      { icon: 'playlist_add_check', step: '03', title: 'Queue', desc: 'Add it — your song appears on the shared screen live.' },
+    ],
+    host: [
+      { icon: 'desktop_windows', step: '01', title: 'Open', desc: 'Open KanTara on your laptop, tablet, or smart TV browser.' },
+      { icon: 'cast', step: '02', title: 'Display', desc: 'Show the big screen to your guests so they can scan the QR code.' },
+      { icon: 'settings_remote', step: '03', title: 'Control & Sing', desc: 'Manage the queue, skip songs, and let everyone queue their own tracks.' },
+    ]
+  };
 
   return (
     <div className="bg-background min-h-screen text-on-background selection:bg-primary-container/30 overflow-x-hidden">
@@ -231,7 +247,7 @@ export default function HomePage() {
                 className="bg-[#A7B79A] text-on-primary-container px-8 py-3.5 rounded-full font-bold text-[18px] shadow-lg shadow-[#A7B79A]/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-[#121f0c]/30 border-t-[#121f0c] rounded-full animate-spin" />
                     Starting...
                   </span>
@@ -345,33 +361,60 @@ export default function HomePage() {
             <h2 className="text-[32px] font-semibold leading-[1.2] text-on-surface mb-4">
               No apps. No passwords.<br />Just scan and sing.
             </h2>
-            <p className="text-[16px] font-normal leading-[1.5] text-secondary max-w-md mx-auto">
+            <p className="text-[16px] font-normal leading-[1.5] text-secondary max-w-md mx-auto mb-8">
               Project the QR code on the TV. Guests scan once and they&apos;re in — no sign-up, no friction.
             </p>
+            <div className="inline-flex bg-surface-container-low p-1.5 rounded-full shadow-inner mb-12 border border-outline-variant/20 relative z-10">
+              <button 
+                onClick={() => setInstructionMode('host')}
+                className={`px-6 py-2.5 rounded-full text-[14px] font-bold transition-all ${instructionMode === 'host' ? 'bg-white text-primary shadow-[0_2px_8px_rgba(0,0,0,0.06)] scale-[1.02]' : 'text-secondary/70 hover:text-on-surface'}`}
+              >
+                For Hosts
+              </button>
+              <button 
+                onClick={() => setInstructionMode('guest')}
+                className={`px-6 py-2.5 rounded-full text-[14px] font-bold transition-all ${instructionMode === 'guest' ? 'bg-white text-primary shadow-[0_2px_8px_rgba(0,0,0,0.06)] scale-[1.02]' : 'text-secondary/70 hover:text-on-surface'}`}
+              >
+                For Guests
+              </button>
+            </div>
           </FadeUp>
 
-          <div className="grid md:grid-cols-3 gap-8 mt-16">
-            {stepsData.map(({ icon, step, title, desc }, i) => (
-              <FadeUp key={step} delay={i * 0.12}>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={instructionMode}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              variants={{
+                show: { transition: { staggerChildren: 0.12 } },
+                exit: { transition: { staggerChildren: 0.05, staggerDirection: -1 } }
+              }}
+              className="grid md:grid-cols-3 gap-8"
+            >
+              {stepsData[instructionMode].map(({ icon, step, title, desc }, i) => (
                 <motion.div
+                  key={step}
+                  variants={{
+                    hidden: { opacity: 0, x: -30 },
+                    show: { opacity: 1, x: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+                    exit: { opacity: 0, x: 20, transition: { duration: 0.3, ease: 'easeIn' } }
+                  }}
                   className="p-10 rounded-[32px] bg-white border border-outline-variant/10 shadow-sm cursor-default h-full"
                   whileHover={{ y: -8, boxShadow: '0 24px 48px rgba(0,0,0,0.08)' }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
                   <motion.div
-                    className="w-14 h-14 rounded-[20px] bg-surface-container-low flex items-center justify-center mx-auto mb-6"
+                    className="w-14 h-14 rounded-[20px] bg-surface-container-low flex items-center justify-center mx-auto mb-6 transition-all"
                     whileHover={{ backgroundColor: 'rgba(167,183,154,0.2)', scale: 1.08 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   >
                     <span className="material-symbols-outlined text-secondary text-3xl">{icon}</span>
                   </motion.div>
-                  <p className="text-[11px] font-bold tracking-[0.15em] text-primary/60 uppercase mb-2 hidden">{step}</p>
                   <h3 className="text-[20px] font-semibold text-on-surface mb-3">{title}</h3>
                   <p className="text-[15px] text-secondary leading-relaxed">{desc}</p>
                 </motion.div>
-              </FadeUp>
-            ))}
-          </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </section>
 
         {/* ── Engagement Metrics ───────────────────────────────────────────── */}
@@ -405,6 +448,67 @@ export default function HomePage() {
             </div>
           </FadeUp>
         </section>
+
+        {/* ── Global Leaderboard ────────────────────────────────────────────── */}
+        {leaderboard.length > 0 && (
+          <section className="py-[32px] px-[64px] max-w-[800px] mx-auto max-md:px-[20px]">
+            <FadeUp delay={0.2}>
+              <div className="flex items-end justify-between mb-6">
+                <div>
+                  <h2 className="text-[28px] font-bold text-on-surface tracking-tight">Global Top Tracks</h2>
+                  <p className="text-secondary text-[14px]">The most requested songs on KanTara</p>
+                </div>
+                <div className="flex items-center gap-2 text-[12px] font-bold text-primary bg-[#A7B79A]/10 px-3 py-1.5 rounded-full">
+                  <div className="w-2 h-2 rounded-full bg-[#A7B79A] animate-pulse" />
+                  LIVE
+                </div>
+              </div>
+              
+              {/* Minimalist List Container */}
+              <motion.div 
+                className="flex flex-col gap-2"
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-50px' }}
+                variants={{
+                  show: { transition: { staggerChildren: 0.08 } }
+                }}
+              >
+                <AnimatePresence mode="popLayout">
+                  {leaderboard.map((song, i) => (
+                    <motion.div 
+                      key={song.id}
+                      layout="position"
+                      transition={{ layout: { type: 'spring', stiffness: 150, damping: 15, mass: 1 } }}
+                      variants={{
+                        hidden: { opacity: 0, x: -20, filter: 'blur(4px)' },
+                        show: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { type: 'spring', stiffness: 200, damping: 20 } },
+                        exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }
+                      }}
+                      className="flex items-center gap-4 p-3 rounded-2xl bg-surface-container-lowest/50 hover:bg-surface-container-low transition-colors group cursor-default relative z-10"
+                    >
+                      <div className="w-6 text-center font-black italic text-outline-variant/60 group-hover:text-primary transition-colors text-[18px]">
+                        {i + 1}
+                      </div>
+                      <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-surface-container">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={song.thumbnail_url || '/assets/default_thumbnail.png'} alt={song.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      </div>
+                      <div className="flex-1 min-w-0 pr-4">
+                        <h4 className="font-bold text-[15px] text-on-surface truncate group-hover:text-primary transition-colors">{song.title}</h4>
+                        <p className="text-[13px] text-secondary truncate">{song.artist || 'Unknown Artist'}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-secondary shrink-0">
+                        <span className="material-symbols-outlined text-[16px] text-primary/70">local_fire_department</span>
+                        <span className="text-[13px] font-bold tracking-wide">{song.times_played}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </FadeUp>
+          </section>
+        )}
       </main>
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}

@@ -7,6 +7,7 @@
 
 import { type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logQuotaUsage } from '@/lib/quota';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,6 +128,7 @@ export async function GET(request: NextRequest) {
         times_played: 0,
       };
 
+      await logQuotaUsage(1); // 1 unit for videos.list
       return Response.json([result]);
     }
 
@@ -199,6 +201,8 @@ export async function GET(request: NextRequest) {
       from_cache: false,
       times_played: 0,
     }));
+
+    await logQuotaUsage(101); // 100 for search.list + 1 for videos.list
 
     return Response.json(results);
   } catch (err) {
