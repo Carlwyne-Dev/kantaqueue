@@ -914,7 +914,10 @@ export default function HostPage({
                   )}
                   <div className="overflow-hidden">
                     <p className="text-[13px] font-semibold text-on-background truncate">{nowPlaying.song.title}</p>
-                    <p className="text-[12px] text-secondary truncate mt-0.5">{nowPlaying.singer_name}</p>
+                    <p className="text-[12px] text-secondary truncate mt-0.5">
+                      {nowPlaying.singer_name}
+                      {nowPlaying.dedication && <span className="italic text-secondary/80 ml-1"> • For: {nowPlaying.dedication}</span>}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -966,7 +969,10 @@ export default function HostPage({
                           )}
                           <div className="flex-1 overflow-hidden">
                             <p className="text-[12px] font-semibold text-on-background truncate">{item.song.title}</p>
-                            <p className="text-[11px] text-secondary truncate mt-0.5">{item.singer_name}{item.song.duration_seconds ? ` · ${formatDuration(item.song.duration_seconds)}` : ''}</p>
+                            <p className="text-[11px] text-secondary truncate mt-0.5">
+                              {item.singer_name}{item.song.duration_seconds ? ` · ${formatDuration(item.song.duration_seconds)}` : ''}
+                              {item.dedication && <span className="italic text-secondary/80 ml-1"> • For: {item.dedication}</span>}
+                            </p>
                           </div>
                           {confirmRemoveId === item.id ? (
                             <motion.div 

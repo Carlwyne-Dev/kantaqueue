@@ -51,6 +51,10 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [trendingLoading, setTrendingLoading] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [editingDedicationId, setEditingDedicationId] = useState<string | null>(null);
+  const [dedicationInput, setDedicationInput] = useState('');
+  const [savingDedication, setSavingDedication] = useState<string | null>(null);
+
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/join?code=${code}` : '';
 
   // ── Init ─────────────────────────────────────────────────────────────────────
@@ -182,6 +186,19 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     const { error } = await supabase.from('queue_items').delete().eq('id', itemId);
     if (error) toast.error('Could not remove. Try again.');
     else { toast('Removed'); fetchQueue(); }
+  }
+
+  async function handleUpdateDedication(itemId: string) {
+    setSavingDedication(itemId);
+    const val = dedicationInput.trim() || null;
+    const { error } = await supabase.from('queue_items').update({ dedication: val }).eq('id', itemId);
+    if (error) {
+      toast.error('Could not save dedication.');
+    } else {
+      toast.success(val ? 'Dedication added!' : 'Dedication removed');
+      setEditingDedicationId(null);
+    }
+    setSavingDedication(null);
   }
 
   const myItems = queue.filter((i) => i.requested_by === userId);
@@ -702,7 +719,33 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                             <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
                             <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
                               <span className="font-semibold text-primary/80">Wait time: {estimateWaitTime(queue, item)}</span>
+                              {item.dedication && (
+                                <span className="text-secondary/70 italic truncate ml-2">For: {item.dedication}</span>
+                              )}
                             </p>
+                            {editingDedicationId === item.id ? (
+                              <div className="flex items-center gap-2 mt-2">
+                                <input 
+                                  autoFocus
+                                  value={dedicationInput}
+                                  onChange={(e) => setDedicationInput(e.target.value)}
+                                  placeholder="Dedicate to..."
+                                  className="flex-1 bg-surface-container rounded-lg px-3 py-1.5 text-[13px] border border-outline-variant/30 focus:outline-none focus:border-primary/50"
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateDedication(item.id); else if (e.key === 'Escape') setEditingDedicationId(null); }}
+                                />
+                                <button onClick={() => handleUpdateDedication(item.id)} disabled={savingDedication === item.id} className="text-xs font-bold text-primary px-3 py-1.5 bg-primary/10 rounded-lg hover:bg-primary/20 border-none cursor-pointer">
+                                  {savingDedication === item.id ? '...' : 'Save'}
+                                </button>
+                              </div>
+                            ) : (
+                              <button 
+                                onClick={() => { setDedicationInput(item.dedication || ''); setEditingDedicationId(item.id); }}
+                                className="text-[11px] font-bold text-secondary flex items-center gap-1 mt-1.5 hover:text-primary transition-colors bg-transparent border-none p-0 cursor-pointer"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">{item.dedication ? 'edit' : 'add'}</span>
+                                {item.dedication ? 'Edit dedication' : 'Add dedication'}
+                              </button>
+                            )}
                           </div>
                           <button
                             onClick={() => setItemToRemove(item)}

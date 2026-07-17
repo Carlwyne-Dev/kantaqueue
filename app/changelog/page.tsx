@@ -9,13 +9,14 @@ export default function ChangelogPage() {
       version: 'v1.1.0',
       date: 'July 2026',
       badge: 'New Features',
-      title: 'Global Leaderboards & Live Animations',
-      description: 'Added a live global leaderboard showing the top 5 most played songs. We also overhauled the host player UI with physics-based queue reordering, buttery smooth entrance animations, and a massive rounded QR overlay that looks incredible.',
+      title: 'Leaderboards, Physics & Feedback',
+      description: 'Added a live global leaderboard showing the top 5 most played songs. We also overhauled the landing page with interactive draggable cards, smoothed out host animations, and added a direct feedback system.',
       features: [
         'Minimalist global leaderboard on the homepage',
+        'Interactive, draggable floating cards in the hero section',
+        'New in-app Report & Feedback system',
         'Framer Motion layout animations for the active queue',
-        'Redesigned "Scan to join" QR modal',
-        'Smarter API Quota tracker for the admin dashboard'
+        'Redesigned "Scan to join" QR modal'
       ]
     },
     {

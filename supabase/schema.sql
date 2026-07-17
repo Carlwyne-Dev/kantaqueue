@@ -95,6 +95,7 @@ create table queue_items (
   song_id uuid not null references songs(id),
   requested_by uuid not null,
   singer_name text not null,
+  dedication text,
   status text not null default 'queued'
     check (status in ('queued', 'playing', 'played', 'skipped', 'removed')),
   requested_at timestamptz not null default now(),

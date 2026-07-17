@@ -685,7 +685,9 @@ export default function AdminPage() {
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: C.onSurface }}>{item.message}</p>
                 {item.page && (
-                  <p className="text-xs font-mono" style={{ color: C.outline }}>Page: {item.page}</p>
+                  <p className="text-xs font-mono" style={{ color: C.outline }}>
+                    Page: {item.page === '/' ? 'Home' : item.page}
+                  </p>
                 )}
                 <div className="pt-1">
                   <button

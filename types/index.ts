@@ -44,6 +44,7 @@ export interface QueueItem {
   song_id: string;
   requested_by: string;
   singer_name: string;
+  dedication: string | null;
   status: QueueItemStatus;
   requested_at: string;
   position: number | null;

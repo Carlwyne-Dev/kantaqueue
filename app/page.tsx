@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession, isSupabaseConfigured } from '@/lib/supabase';
 import { generateUniqueRoomCode } from '@/lib/roomCode';
 import { QRCodeSVG } from 'qrcode.react';
+import Image from 'next/image';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView, useAnimation, useMotionValueEvent } from 'framer-motion';
 import { FeedbackModal } from '@/app/components/FeedbackModal';
 
@@ -185,8 +186,7 @@ export default function HomePage() {
       >
         <div className="flex items-center justify-between px-[64px] py-3.5 max-md:px-[20px]">
           <div className="flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/logo.png" alt="KanTara Logo" className="w-8 h-8 rounded-lg" />
+            <Image src="/assets/logo.png" alt="KanTara Logo" width={32} height={32} className="w-8 h-8 rounded-lg" priority />
             <span className="text-[20px] font-extrabold text-on-background tracking-tighter font-headline-sm">KanTara</span>
           </div>
           <div className="hidden md:flex items-center justify-center gap-8">
@@ -293,8 +293,7 @@ export default function HomePage() {
                 animate={dragControls}
                 className="w-full h-full rounded-3xl overflow-hidden shadow-2xl ring-8 ring-white/50 cursor-grab active:cursor-grabbing"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="w-full h-full object-cover" src="/assets/landing.png" alt="Karaoke Night" />
+                <Image className="object-cover" src="/assets/landing.png" alt="Karaoke Night" fill sizes="(max-width: 768px) 100vw, 340px" priority />
               </motion.div>
             </motion.div>
 

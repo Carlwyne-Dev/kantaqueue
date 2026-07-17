@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FeedbackModal } from '@/app/components/FeedbackModal';
 
@@ -28,8 +29,7 @@ export function DocLayout({ title, children }: { title: string; children: React.
         <div className="flex items-center px-[64px] py-3.5 max-md:px-[20px]">
           {/* Logo — left */}
           <div className="flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/logo.png" alt="KanTara Logo" className="w-8 h-8 rounded-lg" />
+            <Image src="/assets/logo.png" alt="KanTara Logo" width={32} height={32} className="w-8 h-8 rounded-lg" priority />
             <Link href="/" className="text-[20px] font-extrabold tracking-tighter font-headline-sm hover:opacity-80 transition-opacity">KanTara</Link>
           </div>
           
