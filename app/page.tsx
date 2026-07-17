@@ -365,18 +365,22 @@ export default function HomePage() {
               Project the QR code on the TV. Guests scan once and they&apos;re in — no sign-up, no friction.
             </p>
             <div className="inline-flex bg-surface-container-low p-1.5 rounded-full shadow-inner mb-12 border border-outline-variant/20 relative z-10">
-              <button 
-                onClick={() => setInstructionMode('host')}
-                className={`px-6 py-2.5 rounded-full text-[14px] font-bold transition-all ${instructionMode === 'host' ? 'bg-white text-primary shadow-[0_2px_8px_rgba(0,0,0,0.06)] scale-[1.02]' : 'text-secondary/70 hover:text-on-surface'}`}
-              >
-                For Hosts
-              </button>
-              <button 
-                onClick={() => setInstructionMode('guest')}
-                className={`px-6 py-2.5 rounded-full text-[14px] font-bold transition-all ${instructionMode === 'guest' ? 'bg-white text-primary shadow-[0_2px_8px_rgba(0,0,0,0.06)] scale-[1.02]' : 'text-secondary/70 hover:text-on-surface'}`}
-              >
-                For Guests
-              </button>
+              {['host', 'guest'].map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setInstructionMode(mode as 'host' | 'guest')}
+                  className={`relative px-6 py-2.5 rounded-full text-[14px] font-bold transition-colors ${instructionMode === mode ? 'text-primary' : 'text-secondary/70 hover:text-on-surface'}`}
+                >
+                  {instructionMode === mode && (
+                    <motion.div
+                      layoutId="toggle-active-bg"
+                      className="absolute inset-0 bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">For {mode === 'host' ? 'Hosts' : 'Guests'}</span>
+                </button>
+              ))}
             </div>
           </FadeUp>
 
