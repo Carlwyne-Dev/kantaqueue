@@ -6,10 +6,7 @@ import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession, isSupabaseConfigured } from '@/lib/supabase';
 import { generateUniqueRoomCode } from '@/lib/roomCode';
 import { QRCodeSVG } from 'qrcode.react';
-import {
-  motion, AnimatePresence, useScroll, useTransform,
-  useSpring, useInView,
-} from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView, useAnimation, useMotionValueEvent } from 'framer-motion';
 
 // ── Rolling Number ────────────────────────────────────────────────────────────
 function RollingNumber({ value }: { value: number }) {
@@ -90,6 +87,13 @@ export default function HomePage() {
   const heroY = useTransform(scrollY, [0, 500], [0, -60]);
   const heroOpacity = useTransform(scrollY, [0, 350], [1, 0]);
   const heroSpringY = useSpring(heroY, { stiffness: 80, damping: 20 });
+
+  const dragControls = useAnimation();
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    if (latest > 100) {
+      dragControls.start({ x: 0, y: 0, transition: { type: 'spring', bounce: 0.3 } });
+    }
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -275,95 +279,96 @@ export default function HomePage() {
           <div ref={containerRef} className="hidden md:block w-full lg:w-1/2 relative mt-20 lg:mt-0 h-[500px]">
             {/* Album art */}
             <motion.div
-              drag
-              dragConstraints={containerRef}
-              dragSnapToOrigin={true}
-              className="absolute top-0 right-0 w-[340px] h-[340px] rounded-3xl overflow-hidden shadow-2xl z-0 ring-8 ring-white/50 cursor-grab active:cursor-grabbing"
+              className="absolute top-0 right-0 w-[340px] h-[340px] z-0"
               initial={{ opacity: 0, scale: 0.92, rotate: 1 }}
               animate={{ opacity: 1, scale: 1, rotate: 3 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
               style={{ rotate: 3 }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="w-full h-full object-cover" src="/assets/landing.png" alt="Karaoke Night" />
+              <motion.div
+                drag
+                dragConstraints={containerRef}
+                animate={dragControls}
+                className="w-full h-full rounded-3xl overflow-hidden shadow-2xl ring-8 ring-white/50 cursor-grab active:cursor-grabbing"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="w-full h-full object-cover" src="/assets/landing.png" alt="Karaoke Night" />
+              </motion.div>
             </motion.div>
 
             {/* Card 1 — Now Playing */}
             <motion.div
-              drag
-              dragConstraints={containerRef}
-              dragSnapToOrigin={true}
-              className="absolute top-12 left-0 z-20 cursor-grab active:cursor-grabbing"
+              className="absolute top-12 left-0 z-20"
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
               style={{ y: useSpring(useTransform(scrollY, [0, 500], [0, -20]), { stiffness: 60, damping: 18 }) }}
             >
-              <GlassPanel className="p-4 rounded-3xl w-[300px] -rotate-2 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #A7B79A 0%, #6e8b5e 100%)' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="6" cy="18" r="3" fill="white" />
-                    <circle cx="18" cy="16" r="3" fill="white" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-on-surface text-[14px] truncate">Paraluman</p>
-                  <p className="text-secondary text-[12px] font-bold">Adie</p>
-                </div>
-                <motion.div
-                  className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"
-                  animate={{ scale: [1, 1.15, 1] }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <span className="material-symbols-outlined text-primary text-[18px]">play_arrow</span>
-                </motion.div>
-              </GlassPanel>
+              <motion.div drag dragConstraints={containerRef} animate={dragControls} className="cursor-grab active:cursor-grabbing">
+                <GlassPanel className="p-4 rounded-3xl w-[300px] -rotate-2 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #A7B79A 0%, #6e8b5e 100%)' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="6" cy="18" r="3" fill="white" />
+                      <circle cx="18" cy="16" r="3" fill="white" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-on-surface text-[14px] truncate">Paraluman</p>
+                    <p className="text-secondary text-[12px] font-bold">Adie</p>
+                  </div>
+                  <motion.div
+                    className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <span className="material-symbols-outlined text-primary text-[18px]">play_arrow</span>
+                  </motion.div>
+                </GlassPanel>
+              </motion.div>
             </motion.div>
 
             {/* Card 2 — QR */}
             <motion.div
-              drag
-              dragConstraints={containerRef}
-              dragSnapToOrigin={true}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 cursor-grab active:cursor-grabbing"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
             >
-              <GlassPanel className="p-6 rounded-[32px] w-[200px] shadow-2xl ring-1 ring-white/80">
-                <div className="bg-white p-3 rounded-2xl aspect-square flex items-center justify-center shadow-inner overflow-hidden">
-                  <QRCodeSVG value="https://kantaraph.vercel.app/" size={130} style={{ width: '100%', height: '100%', borderRadius: '8px' }} />
-                </div>
-                <p className="text-center mt-4 font-bold text-secondary text-[10px] tracking-[0.1em] uppercase">SCAN TO JOIN</p>
-              </GlassPanel>
+              <motion.div drag dragConstraints={containerRef} animate={dragControls} className="cursor-grab active:cursor-grabbing">
+                <GlassPanel className="p-6 rounded-[32px] w-[200px] shadow-2xl ring-1 ring-white/80">
+                  <div className="bg-white p-3 rounded-2xl aspect-square flex items-center justify-center shadow-inner overflow-hidden">
+                    <QRCodeSVG value="https://kantaraph.vercel.app/" size={130} style={{ width: '100%', height: '100%', borderRadius: '8px' }} />
+                  </div>
+                  <p className="text-center mt-4 font-bold text-secondary text-[10px] tracking-[0.1em] uppercase">SCAN TO JOIN</p>
+                </GlassPanel>
+              </motion.div>
             </motion.div>
 
             {/* Card 3 — Up next */}
             <motion.div
-              drag
-              dragConstraints={containerRef}
-              dragSnapToOrigin={true}
-              className="absolute bottom-12 right-6 z-10 cursor-grab active:cursor-grabbing"
+              className="absolute bottom-12 right-6 z-10"
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
               style={{ y: useSpring(useTransform(scrollY, [0, 500], [0, 20]), { stiffness: 60, damping: 18 }) }}
             >
-              <GlassPanel className="p-4 rounded-3xl w-[260px] rotate-1 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #c9b99a 0%, #9c7b52 100%)' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="6" cy="18" r="3" fill="white" />
-                    <circle cx="18" cy="16" r="3" fill="white" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-on-surface text-[12px] truncate">Hawak Kamay</p>
-                  <p className="text-secondary text-[11px] font-bold truncate">Yeng Constantino</p>
-                </div>
-                <span className="material-symbols-outlined text-secondary/30 text-[20px]">more_horiz</span>
-              </GlassPanel>
+              <motion.div drag dragConstraints={containerRef} animate={dragControls} className="cursor-grab active:cursor-grabbing">
+                <GlassPanel className="p-4 rounded-3xl w-[260px] rotate-1 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #c9b99a 0%, #9c7b52 100%)' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18V5l12-2v13" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="6" cy="18" r="3" fill="white" />
+                      <circle cx="18" cy="16" r="3" fill="white" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-on-surface text-[12px] truncate">Hawak Kamay</p>
+                    <p className="text-secondary text-[11px] font-bold truncate">Yeng Constantino</p>
+                  </div>
+                  <span className="material-symbols-outlined text-secondary/30 text-[20px]">more_horiz</span>
+                </GlassPanel>
+              </motion.div>
             </motion.div>
           </div>
         </section>
