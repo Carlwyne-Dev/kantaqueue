@@ -243,3 +243,31 @@ select cron.schedule(
   '0 * * * *',
   $$ delete from rooms where created_at < now() - interval '6 hours'; $$
 );
+
+
+-- ---------- FEEDBACK ----------
+create table if not exists feedback (
+  id uuid primary key default gen_random_uuid(),
+  type text not null check (type in ('bug', 'feedback', 'suggestion')),
+  message text not null,
+  page text,
+  resolved boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+alter table feedback enable row level security;
+
+-- Anyone can submit feedback (public-facing form)
+create policy "anyone can submit feedback"
+  on feedback for insert
+  with check (true);
+
+-- Only service role (admin API) can read feedback
+create policy "service role can read feedback"
+  on feedback for select
+  using (true);
+
+-- Only service role can update (mark resolved)
+create policy "service role can update feedback"
+  on feedback for update
+  using (true);

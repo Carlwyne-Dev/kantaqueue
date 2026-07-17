@@ -31,6 +31,15 @@ interface TrendingCache {
   refreshed_at: string;
 }
 
+interface FeedbackItem {
+  id: string;
+  type: 'bug' | 'feedback' | 'suggestion';
+  message: string;
+  page: string | null;
+  created_at: string;
+  resolved: boolean;
+}
+
 interface Stats {
   totalRooms: number;
   activeRooms: number;
@@ -87,11 +96,12 @@ export default function AdminPage() {
   const [topSongs, setTopSongs] = useState<Song[]>([]);
   const [blockedSongs, setBlockedSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState<'overview' | 'rooms' | 'songs' | 'blocked' | 'trending'>('overview');
+  const [tab, setTab] = useState<'overview' | 'rooms' | 'songs' | 'blocked' | 'trending' | 'feedback'>('overview');
   const [refreshingTrending, setRefreshingTrending] = useState(false);
   const [unblockedId, setUnblockedId] = useState<string | null>(null);
   const [confirmEndRoom, setConfirmEndRoom] = useState<Room | null>(null);
   const [confirmUnblock, setConfirmUnblock] = useState<Song | null>(null);
+  const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([]);
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -118,6 +128,14 @@ export default function AdminPage() {
         supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('api_quota').select('units_used').eq('date', new Date().toISOString().slice(0, 10)).maybeSingle(),
       ]);
+
+      // Fetch feedback separately
+      const { data: feedbackData } = await supabase
+        .from('feedback')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      setFeedbackItems((feedbackData ?? []) as FeedbackItem[]);
 
       const roomsWithCounts = await Promise.all(
         (roomsData ?? []).map(async (room: Room) => {
@@ -267,6 +285,7 @@ export default function AdminPage() {
     { key: 'songs', label: 'Top Songs' },
     { key: 'blocked', label: `Blocked (${blockedSongs.length})` },
     { key: 'trending', label: 'Trending Cache' },
+    { key: 'feedback', label: `Feedback (${feedbackItems.filter(f => !f.resolved).length})` },
   ];
 
   return (
@@ -634,6 +653,53 @@ export default function AdminPage() {
                 ))}
               </div>
             )}
+          </div>
+        {tab === 'feedback' && (
+          <div className="space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.outline }}>
+              {feedbackItems.length} submissions
+            </p>
+            {feedbackItems.length === 0 && (
+              <div className="rounded-3xl px-6 py-12 text-center" style={{ background: C.surfaceLow, border: `1px solid ${C.outlineVariant}` }}>
+                <p className="text-sm font-medium" style={{ color: C.outline }}>No feedback yet</p>
+              </div>
+            )}
+            {feedbackItems.map(item => (
+              <div
+                key={item.id}
+                className="rounded-3xl p-5 space-y-2"
+                style={{ background: item.resolved ? C.surfaceLow : C.surface, border: `1px solid ${item.resolved ? C.outlineVariant : C.primaryContainer}`, opacity: item.resolved ? 0.6 : 1 }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg"
+                    style={{
+                      background: item.type === 'bug' ? '#fde8e8' : item.type === 'suggestion' ? '#fef3c7' : C.primaryFixed,
+                      color: item.type === 'bug' ? C.error : item.type === 'suggestion' ? '#92400e' : C.primary,
+                    }}
+                  >
+                    {item.type === 'bug' ? '🐛 Bug' : item.type === 'suggestion' ? '💡 Suggestion' : '💬 Feedback'}
+                  </span>
+                  <span className="text-xs" style={{ color: C.outline }}>{timeAgo(item.created_at)}</span>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: C.onSurface }}>{item.message}</p>
+                {item.page && (
+                  <p className="text-xs font-mono" style={{ color: C.outline }}>Page: {item.page}</p>
+                )}
+                <div className="pt-1">
+                  <button
+                    onClick={async () => {
+                      await supabase.from('feedback').update({ resolved: !item.resolved }).eq('id', item.id);
+                      setFeedbackItems(prev => prev.map(f => f.id === item.id ? { ...f, resolved: !f.resolved } : f));
+                    }}
+                    className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95"
+                    style={{ background: item.resolved ? C.surfaceContainer : C.primaryFixed, color: item.resolved ? C.outline : C.primary }}
+                  >
+                    {item.resolved ? 'Mark unresolved' : '✓ Mark resolved'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

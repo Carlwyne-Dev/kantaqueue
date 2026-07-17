@@ -1,12 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
 import { motion } from 'framer-motion';
+import { FeedbackModal } from '@/app/components/FeedbackModal';
 
 export function DocLayout({ title, children }: { title: string; children: React.ReactNode }) {
   const router = useRouter();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background font-body flex flex-col text-on-background">
@@ -66,7 +68,7 @@ export function DocLayout({ title, children }: { title: string; children: React.
       {/* Footer */}
       <footer className="border-t border-outline-variant/30 py-8 px-6 md:px-16 flex flex-col md:flex-row items-center justify-between gap-6 bg-surface-container-lowest">
         <span className="text-sm font-semibold text-secondary/70 tracking-wide uppercase">&copy; {new Date().getFullYear()} KanTara</span>
-        <div className="flex gap-8">
+        <div className="flex gap-8 items-center">
           {[
             { label: 'Terms', href: '/terms' }, 
             { label: 'Privacy', href: '/privacy' },
@@ -77,8 +79,16 @@ export function DocLayout({ title, children }: { title: string; children: React.
               {label}
             </Link>
           ))}
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            className="flex items-center gap-1.5 text-sm font-bold text-secondary/80 hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-[15px]">flag</span>
+            Feedback
+          </button>
         </div>
       </footer>
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </div>
   );
 }
