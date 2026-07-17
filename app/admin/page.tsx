@@ -654,6 +654,7 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+        )}
         {tab === 'feedback' && (
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.outline }}>
