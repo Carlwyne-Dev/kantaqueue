@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+import { motion } from 'framer-motion';
+
 export function DocLayout({ title, children }: { title: string; children: React.ReactNode }) {
   const router = useRouter();
 
@@ -47,20 +49,30 @@ export function DocLayout({ title, children }: { title: string; children: React.
       {/* Spacer to push content down below fixed nav */}
       <div className="h-20" />
 
-      <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-16 md:py-24">
+      <motion.main 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="flex-1 w-full max-w-3xl mx-auto px-6 py-16 md:py-24"
+      >
         <h1 className="text-4xl md:text-5xl font-black font-headline tracking-tighter mb-12 text-on-background">
           {title}
         </h1>
         <div className="flex flex-col gap-10">
           {children}
         </div>
-      </main>
+      </motion.main>
 
       {/* Footer */}
       <footer className="border-t border-outline-variant/30 py-8 px-6 md:px-16 flex flex-col md:flex-row items-center justify-between gap-6 bg-surface-container-lowest">
         <span className="text-sm font-semibold text-secondary/70 tracking-wide uppercase">&copy; {new Date().getFullYear()} KanTara</span>
         <div className="flex gap-8">
-          {[{ label: 'Help', href: '/help' }, { label: 'Terms', href: '/terms' }, { label: 'Privacy', href: '/privacy' }].map(({ label, href }) => (
+          {[
+            { label: 'Terms', href: '/terms' }, 
+            { label: 'Privacy', href: '/privacy' },
+            { label: 'Help', href: '/help' }, 
+            { label: 'Updates', href: '/changelog' }
+          ].map(({ label, href }) => (
             <Link key={label} href={href} className="text-sm font-bold text-secondary/80 hover:text-primary transition-colors">
               {label}
             </Link>

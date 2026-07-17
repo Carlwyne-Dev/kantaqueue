@@ -106,19 +106,17 @@ export default function AdminPage() {
         { data: songsData },
         { data: blockedData },
         { data: trendingData },
-        { count: totalRooms },
+        { data: globalStats },
         { count: activeRooms },
-        { data: quotaData },
-        { count: totalPlaysCount }
+        { data: quotaData }
       ] = await Promise.all([
         supabase.from('rooms').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('songs').select('*').gt('times_played', 0).order('times_played', { ascending: false }).limit(20),
         supabase.from('songs').select('*').eq('times_played', -1).order('date_added', { ascending: false }).limit(30),
         supabase.from('trending_cache').select('*').eq('id', 1).maybeSingle(),
-        supabase.from('rooms').select('*', { count: 'exact', head: true }).not('started_at', 'is', null),
+        supabase.from('global_stats').select('total_rooms, total_songs').eq('id', 1).single(),
         supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('api_quota').select('units_used').eq('date', new Date().toISOString().slice(0, 10)).maybeSingle(),
-        supabase.from('queue_items').select('*', { count: 'exact', head: true }),
       ]);
 
       const roomsWithCounts = await Promise.all(
@@ -138,10 +136,10 @@ export default function AdminPage() {
       const completedRooms = roomsWithCounts.filter(r => r.status === 'active' && (r._guest_count ?? 0) > 0).length;
 
       setStats({
-        totalRooms: totalRooms ?? 0,
+        totalRooms: globalStats?.total_rooms ?? 0,
         activeRooms: completedRooms,
         totalSongs: (songsData?.length ?? 0) + (blockedData?.length ?? 0),
-        totalPlays: totalPlaysCount ?? 0,
+        totalPlays: globalStats?.total_songs ?? 0,
         blockedSongs: blockedData?.length ?? 0,
         trendingCache: trendingData as TrendingCache | null,
         apiQuota: {

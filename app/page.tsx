@@ -519,7 +519,7 @@ export default function HomePage() {
             <p className="text-secondary text-[12px] font-bold tracking-[0.05em]">© {new Date().getFullYear()} Kantara Karaoke. All rights reserved.</p>
           </div>
           <div className="flex gap-12">
-            {[['Terms', '/terms'], ['Privacy', '/privacy'], ['Help', '/help']].map(([label, href]) => (
+            {[['Terms', '/terms'], ['Privacy', '/privacy'], ['Help', '/help'], ['Updates', '/changelog']].map(([label, href]) => (
               <motion.a
                 key={label}
                 href={href}

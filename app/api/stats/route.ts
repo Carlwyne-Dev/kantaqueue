@@ -5,14 +5,17 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const supabase = getSupabaseClient();
-    const [{ count: roomsCount }, { count: songsCount }] = await Promise.all([
-      supabase.from('rooms').select('*', { count: 'exact', head: true }).not('started_at', 'is', null),
-      supabase.from('queue_items').select('*', { count: 'exact', head: true })
-    ]);
+    
+    // Fetch lifetime stats from the new global_stats table
+    const { data } = await supabase
+      .from('global_stats')
+      .select('total_rooms, total_songs')
+      .eq('id', 1)
+      .single();
 
     return Response.json({
-      rooms: roomsCount || 0,
-      songs: songsCount || 0,
+      rooms: data?.total_rooms || 0,
+      songs: data?.total_songs || 0,
     }, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=3600',

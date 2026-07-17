@@ -193,3 +193,53 @@ create index idx_queue_items_room_id on queue_items(room_id);
 create index idx_queue_items_requested_by on queue_items(requested_by);
 create index idx_songs_youtube_video_id on songs(youtube_video_id);
 create index idx_rooms_code on rooms(code);
+
+-- ---------- GLOBAL STATS ----------
+-- Keeps track of lifetime totals so that when rooms are deleted, counts don't go down.
+create table global_stats (
+  id int primary key,
+  total_rooms bigint not null default 0,
+  total_songs bigint not null default 0
+);
+
+-- Backfill table with initial values
+insert into global_stats (id, total_rooms, total_songs)
+values (1, (select count(*) from rooms), (select count(*) from queue_items))
+on conflict (id) do nothing;
+
+alter table global_stats enable row level security;
+create policy "anyone can read global_stats" on global_stats for select using (true);
+create policy "service role can update global_stats" on global_stats for all using (true) with check (true);
+
+-- Trigger: Increment total_rooms when a room is created
+create or replace function increment_total_rooms() returns trigger as $$
+begin
+  update global_stats set total_rooms = total_rooms + 1 where id = 1;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger on_room_created
+after insert on rooms for each row
+execute function increment_total_rooms();
+
+-- Trigger: Increment total_songs when a queue_item is created
+create or replace function increment_total_songs() returns trigger as $$
+begin
+  update global_stats set total_songs = total_songs + 1 where id = 1;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger on_queue_item_created
+after insert on queue_items for each row
+execute function increment_total_songs();
+
+-- ---------- AUTO DELETE OLD ROOMS ----------
+-- Requires pg_cron extension to be enabled in Supabase Dashboard (Database -> Extensions)
+-- This deletes rooms older than 6 hours, running every hour.
+select cron.schedule(
+  'delete-old-rooms',
+  '0 * * * *',
+  $$ delete from rooms where created_at < now() - interval '6 hours'; $$
+);
