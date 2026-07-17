@@ -406,8 +406,9 @@ export default function HomePage() {
             <motion.div 
               key={instructionMode}
               initial="hidden"
-              animate="show"
+              whileInView="show"
               exit="exit"
+              viewport={{ once: true, margin: "-50px" }}
               variants={{
                 show: { transition: { staggerChildren: 0.12 } },
                 exit: { transition: { staggerChildren: 0.05, staggerDirection: -1 } }
