@@ -84,6 +84,7 @@ export default function HomePage() {
   const [stats, setStats] = useState({ rooms: 0, songs: 0 });
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [instructionMode, setInstructionMode] = useState<'guest' | 'host'>('host');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, -60]);
@@ -271,10 +272,12 @@ export default function HomePage() {
           </motion.div>
 
           {/* ── Hero Visuals ─────────────────────────────────────────────── */}
-          <div className="hidden md:block w-full lg:w-1/2 relative mt-20 lg:mt-0 h-[500px]">
+          <div ref={containerRef} className="hidden md:block w-full lg:w-1/2 relative mt-20 lg:mt-0 h-[500px]">
             {/* Album art */}
             <motion.div
-              className="absolute top-0 right-0 w-[340px] h-[340px] rounded-3xl overflow-hidden shadow-2xl z-0 ring-8 ring-white/50"
+              drag
+              dragConstraints={containerRef}
+              className="absolute top-0 right-0 w-[340px] h-[340px] rounded-3xl overflow-hidden shadow-2xl z-0 ring-8 ring-white/50 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, scale: 0.92, rotate: 1 }}
               animate={{ opacity: 1, scale: 1, rotate: 3 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
@@ -286,7 +289,9 @@ export default function HomePage() {
 
             {/* Card 1 — Now Playing */}
             <motion.div
-              className="absolute top-12 left-0 z-20"
+              drag
+              dragConstraints={containerRef}
+              className="absolute top-12 left-0 z-20 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -316,7 +321,9 @@ export default function HomePage() {
 
             {/* Card 2 — QR */}
             <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
+              drag
+              dragConstraints={containerRef}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
@@ -331,7 +338,9 @@ export default function HomePage() {
 
             {/* Card 3 — Up next */}
             <motion.div
-              className="absolute bottom-12 right-6 z-10"
+              drag
+              dragConstraints={containerRef}
+              className="absolute bottom-12 right-6 z-10 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
