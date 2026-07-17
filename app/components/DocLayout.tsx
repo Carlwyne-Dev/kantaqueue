@@ -66,26 +66,29 @@ export function DocLayout({ title, children }: { title: string; children: React.
       </motion.main>
 
       {/* Footer */}
-      <footer className="border-t border-outline-variant/30 py-8 px-6 md:px-16 flex flex-col md:flex-row items-center justify-between gap-6 bg-surface-container-lowest">
-        <span className="text-sm font-semibold text-secondary/70 tracking-wide uppercase">&copy; {new Date().getFullYear()} KanTara</span>
-        <div className="flex gap-8 items-center">
-          {[
-            { label: 'Terms', href: '/terms' }, 
-            { label: 'Privacy', href: '/privacy' },
-            { label: 'Help', href: '/help' }, 
-            { label: 'Updates', href: '/changelog' }
-          ].map(({ label, href }) => (
-            <Link key={label} href={href} className="text-sm font-bold text-secondary/80 hover:text-primary transition-colors">
-              {label}
-            </Link>
-          ))}
-          <button
-            onClick={() => setFeedbackOpen(true)}
-            className="flex items-center gap-1.5 text-sm font-bold text-secondary/80 hover:text-primary transition-colors"
-          >
-            <span className="material-symbols-outlined text-[15px]">flag</span>
-            Feedback
-          </button>
+      <footer className="border-t border-outline-variant/30 py-8 px-6 md:px-16 bg-surface-container-lowest">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <span className="text-sm font-semibold text-secondary/70 tracking-wide uppercase">&copy; {new Date().getFullYear()} KanTara</span>
+          <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3">
+            {[
+              { label: 'Terms', href: '/terms' }, 
+              { label: 'Privacy', href: '/privacy' },
+              { label: 'Help', href: '/help' }, 
+              { label: 'Updates', href: '/changelog' }
+            ].map(({ label, href }) => (
+              <Link key={label} href={href} className="text-sm font-bold text-secondary/80 hover:text-primary transition-colors">
+                {label}
+              </Link>
+            ))}
+            <span className="hidden md:block w-px h-4 bg-outline-variant/40" />
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="flex items-center gap-1.5 text-sm font-bold text-primary hover:text-primary/70 transition-colors cursor-pointer border-none bg-transparent"
+            >
+              <span className="material-symbols-outlined text-[16px]">flag</span>
+              Report / Feedback
+            </button>
+          </div>
         </div>
       </footer>
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
