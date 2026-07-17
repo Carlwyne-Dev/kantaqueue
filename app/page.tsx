@@ -7,6 +7,7 @@ import { getSupabaseClient, ensureAnonSession, isSupabaseConfigured } from '@/li
 import { generateUniqueRoomCode } from '@/lib/roomCode';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView, useAnimation, useMotionValueEvent } from 'framer-motion';
+import { FeedbackModal } from '@/app/components/FeedbackModal';
 
 // ── Rolling Number ────────────────────────────────────────────────────────────
 function RollingNumber({ value }: { value: number }) {
@@ -82,6 +83,7 @@ export default function HomePage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [instructionMode, setInstructionMode] = useState<'guest' | 'host'>('host');
   const containerRef = useRef<HTMLDivElement>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, -60]);
@@ -541,7 +543,7 @@ export default function HomePage() {
             <div className="text-[18px] font-extrabold text-on-background tracking-tighter mb-3 font-headline-sm">KANTARA</div>
             <p className="text-secondary text-[12px] font-bold tracking-[0.05em]">© {new Date().getFullYear()} Kantara Karaoke. All rights reserved.</p>
           </div>
-          <div className="flex gap-12">
+          <div className="flex flex-wrap gap-8 items-center">
             {[['Terms', '/terms'], ['Privacy', '/privacy'], ['Help', '/help'], ['Updates', '/changelog']].map(([label, href]) => (
               <motion.a
                 key={label}
@@ -552,9 +554,18 @@ export default function HomePage() {
                 {label}
               </motion.a>
             ))}
+            <span className="w-px h-4 bg-outline-variant/30" />
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="flex items-center gap-1.5 text-[14px] font-bold text-primary hover:text-primary/70 transition-colors cursor-pointer border-none bg-transparent"
+            >
+              <span className="material-symbols-outlined text-[16px]">flag</span>
+              Report / Feedback
+            </button>
           </div>
         </div>
       </footer>
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </div>
   );
 }
