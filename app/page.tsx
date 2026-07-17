@@ -277,6 +277,7 @@ export default function HomePage() {
             <motion.div
               drag
               dragConstraints={containerRef}
+              dragSnapToOrigin={true}
               className="absolute top-0 right-0 w-[340px] h-[340px] rounded-3xl overflow-hidden shadow-2xl z-0 ring-8 ring-white/50 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, scale: 0.92, rotate: 1 }}
               animate={{ opacity: 1, scale: 1, rotate: 3 }}
@@ -291,6 +292,7 @@ export default function HomePage() {
             <motion.div
               drag
               dragConstraints={containerRef}
+              dragSnapToOrigin={true}
               className="absolute top-12 left-0 z-20 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
@@ -323,6 +325,7 @@ export default function HomePage() {
             <motion.div
               drag
               dragConstraints={containerRef}
+              dragSnapToOrigin={true}
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -340,6 +343,7 @@ export default function HomePage() {
             <motion.div
               drag
               dragConstraints={containerRef}
+              dragSnapToOrigin={true}
               className="absolute bottom-12 right-6 z-10 cursor-grab active:cursor-grabbing"
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
