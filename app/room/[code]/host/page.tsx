@@ -896,9 +896,10 @@ export default function HostPage({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.6 }}
-                className="absolute inset-0 z-[55] flex flex-col items-center justify-center text-white overflow-hidden bg-[#1E1E1E]"
+                className="absolute inset-0 z-[55] flex flex-col items-center justify-center text-white overflow-hidden"
               >
-                <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
+                <div className="absolute inset-0 z-0 bg-[#141513]" />
+                <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_40%,rgba(167,183,154,0.25),transparent_70%)]" />
                 <motion.div
                   className="relative z-10 flex flex-col items-center text-center px-8 gap-5"
                   initial={{ opacity: 0, y: 28 }}
