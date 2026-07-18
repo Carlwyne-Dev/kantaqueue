@@ -250,7 +250,12 @@ export default function JoinPage({
                     <input 
                       type="text" 
                       value={nickname}
-                      onChange={(e) => setNickname(e.target.value)}
+                      onChange={(e) => {
+                        setNickname(e.target.value);
+                        if (e.target.value.trim()) {
+                          localStorage.setItem('kq_global_nickname', e.target.value.trim());
+                        }
+                      }}
                       className="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl text-lg font-bold shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-[#A7B79A] focus:border-[#A7B79A] focus:bg-white transition-all outline-none text-on-background"
                     />
                   )}
