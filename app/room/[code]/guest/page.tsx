@@ -65,8 +65,13 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     async function init() {
       const uid = await ensureAnonSession();
       setUserId(uid);
-      const saved = localStorage.getItem(`kq_nickname_${code}`);
-      if (saved) setNickname(saved);
+      const saved = localStorage.getItem(`kq_nickname_${code}`) || localStorage.getItem('kq_global_nickname');
+      if (saved) {
+        setNickname(saved);
+        // Ensure both keys are in sync
+        localStorage.setItem(`kq_nickname_${code}`, saved);
+        localStorage.setItem('kq_global_nickname', saved);
+      }
       const { data: room, error } = await supabase.from('rooms').select('id, status').eq('code', code).in('status', ['active', 'paused']).maybeSingle();
       if (error || !room) { toast.error('Room not found or has ended.'); router.push('/'); return; }
       setRoomId(room.id);
