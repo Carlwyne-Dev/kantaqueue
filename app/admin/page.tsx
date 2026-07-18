@@ -48,6 +48,8 @@ interface Stats {
   blockedSongs: number;
   trendingCache: TrendingCache | null;
   apiQuota: { used: number, remaining: number };
+  totalUsers: number;
+  recurringUsers: number;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -118,15 +120,19 @@ export default function AdminPage() {
         { data: trendingData },
         { data: globalStats },
         { count: activeRooms },
-        { data: quotaData }
+        { data: quotaData },
+        { count: totalUsers },
+        { count: recurringUsers }
       ] = await Promise.all([
-        supabase.from('rooms').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('rooms').select('*').not('started_at', 'is', null).order('created_at', { ascending: false }).limit(50),
         supabase.from('songs').select('*').gt('times_played', 0).order('times_played', { ascending: false }).limit(20),
         supabase.from('songs').select('*').eq('times_played', -1).order('date_added', { ascending: false }).limit(30),
         supabase.from('trending_cache').select('*').eq('id', 1).maybeSingle(),
         supabase.from('global_stats').select('total_rooms, total_songs').eq('id', 1).single(),
         supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('api_quota').select('units_used').eq('date', new Date().toISOString().slice(0, 10)).maybeSingle(),
+        supabase.from('users').select('id', { count: 'exact', head: true }),
+        supabase.from('users').select('id', { count: 'exact', head: true }).gt('rooms_joined', 1),
       ]);
 
       // Fetch feedback separately
@@ -164,6 +170,8 @@ export default function AdminPage() {
           used: quotaData?.units_used ?? 0,
           remaining: 10000 - (quotaData?.units_used ?? 0),
         },
+        totalUsers: totalUsers ?? 0,
+        recurringUsers: recurringUsers ?? 0,
       });
     } finally {
       setLoading(false);
@@ -260,6 +268,8 @@ export default function AdminPage() {
 
   // ── Config ────────────────────────────────────────────────────────────────
   const statCards = [
+    { label: 'Total Users', value: String(stats?.totalUsers ?? '—'), accent: '#54634a' },
+    { label: 'Recurring Users', value: String(stats?.recurringUsers ?? '—'), accent: '#8c9c7f' },
     { label: 'Total Rooms', value: String(stats?.totalRooms ?? '—'), accent: C.primary },
     { label: 'Active Rooms', value: String(stats?.activeRooms ?? '—'), accent: '#5a7a4e' },
     { label: 'Songs in DB', value: String(stats?.totalSongs ?? '—'), accent: '#6b7f62' },

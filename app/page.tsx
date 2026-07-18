@@ -536,13 +536,13 @@ export default function HomePage() {
       </main>
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
-      <footer className="bg-surface-container-lowest py-20 border-t border-outline-variant/10">
-        <div className="flex flex-col md:flex-row justify-between items-center px-[64px] max-w-[1200px] mx-auto gap-12 max-md:px-[20px]">
-          <div className="flex flex-col items-center md:items-start">
+      <footer className="bg-surface-container-lowest py-16 md:py-20 border-t border-outline-variant/10">
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-end px-6 md:px-16 max-w-[1200px] mx-auto gap-10">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <div className="text-[18px] font-extrabold text-on-background tracking-tighter mb-3 font-headline-sm">KANTARA</div>
-            <p className="text-secondary text-[12px] font-bold tracking-[0.05em]">© {new Date().getFullYear()} Kantara Karaoke. All rights reserved.</p>
+            <p className="text-secondary text-[12px] font-bold tracking-[0.05em]">© {new Date().getFullYear()} KanTara Karaoke. All rights reserved.</p>
           </div>
-          <div className="flex flex-wrap gap-8 items-center">
+          <div className="flex flex-wrap gap-6 md:gap-8 items-center justify-center">
             {[['Terms', '/terms'], ['Privacy', '/privacy'], ['Help', '/help'], ['Updates', '/changelog']].map(([label, href]) => (
               <motion.a
                 key={label}
@@ -554,13 +554,14 @@ export default function HomePage() {
               </motion.a>
             ))}
             <span className="hidden md:block w-px h-4 bg-outline-variant/40" />
-            <button
+            <motion.button
               onClick={() => setFeedbackOpen(true)}
-              className="flex items-center gap-1.5 text-xs font-bold text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors px-4 py-2 rounded-full border border-outline-variant/30 active:scale-95"
+              whileHover={{ y: -2, color: 'var(--color-on-background)' }}
+              className="flex items-center gap-1.5 text-secondary text-[14px] font-semibold"
             >
-              <span className="material-symbols-outlined text-[14px]">flag</span>
+              <span className="material-symbols-outlined text-[16px]">flag</span>
               Report / Feedback
-            </button>
+            </motion.button>
           </div>
         </div>
       </footer>

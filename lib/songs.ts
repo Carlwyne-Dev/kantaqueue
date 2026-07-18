@@ -290,7 +290,7 @@ export interface TrendingResult {
  */
 export async function getTrendingSongs(): Promise<TrendingResult[]> {
   try {
-    const res = await fetch('/api/trending');
+    const res = await fetch('/api/trending', { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     const items = (data.items ?? []) as TrendingResult[];

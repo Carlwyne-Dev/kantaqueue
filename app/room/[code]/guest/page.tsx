@@ -55,6 +55,9 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [dedicationInput, setDedicationInput] = useState('');
   const [savingDedication, setSavingDedication] = useState<string | null>(null);
 
+  const hostChannelRef = useRef<any>(null);
+  const [showReactions, setShowReactions] = useState(false);
+
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/join?code=${code}` : '';
 
   // ── Init ─────────────────────────────────────────────────────────────────────
@@ -108,20 +111,48 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     if (!roomId) return;
     const channel = supabase
       .channel(`guest-room-${roomId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, async (payload) => {
         fetchQueue();
         // 'removed' status only happens when a song errors out on the host player —
         // re-fetch Discover so the broken song disappears live without refreshing.
         if (payload.new?.status === 'removed') {
           getTrendingSongs().then(setTrendingSongs);
           getPopularSongs().then(setPopularSongs);
+          // Re-trigger search to filter out the blocked video from current results
+          const { data: brokenSong } = await supabase.from('songs').select('youtube_video_id').eq('id', payload.new.song_id).single();
+          if (brokenSong) {
+            setSearchResults(prev => prev.filter(r => r.youtube_video_id !== brokenSong.youtube_video_id));
+          }
         }
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, () => fetchQueue())
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'queue_items', filter: `room_id=eq.${roomId}` }, () => fetchQueue())
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      
+    // Set up broadcast channel to host
+    const hostChannel = supabase.channel(`host-room-${roomId}`);
+    hostChannel.subscribe();
+    hostChannelRef.current = hostChannel;
+    
+    return () => { 
+      supabase.removeChannel(channel);
+      supabase.removeChannel(hostChannel);
+    };
   }, [roomId, fetchQueue, supabase]);
+
+  // ── Reactions ─────────────────────────────────────────────────────────────────
+  function handleSendReaction(emoji: string) {
+    if (hostChannelRef.current) {
+      hostChannelRef.current.send({
+        type: 'broadcast',
+        event: 'reaction',
+        payload: { emoji }
+      });
+    }
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+  }
 
   // ── Search ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -702,59 +733,76 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                       {myItems.map((item) => (
                         <motion.div 
                           key={item.id} 
-                          className="flex items-center gap-4 p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors"
+                          className="flex flex-col p-3 hover:bg-surface-container-low/30 rounded-[24px] transition-colors"
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ duration: 0.3 }}
                           layout
                         >
-                          {item.song.thumbnail_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
-                          ) : (
-                            <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
-                          )}
-                          <div className="flex-1 overflow-hidden">
-                            <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
-                            <p className="text-[13px] text-outline font-medium mt-0.5 truncate flex items-center gap-1.5">
-                              <span className="font-semibold text-primary/80">Wait time: {estimateWaitTime(queue, item)}</span>
-                              {item.dedication && (
-                                <span className="text-secondary/70 italic truncate ml-2">For: {item.dedication}</span>
-                              )}
-                            </p>
-                            {editingDedicationId === item.id ? (
-                              <div className="flex items-center gap-2 mt-2">
-                                <input 
-                                  autoFocus
-                                  value={dedicationInput}
-                                  onChange={(e) => setDedicationInput(e.target.value)}
-                                  placeholder="Dedicate to..."
-                                  className="flex-1 bg-surface-container rounded-lg px-3 py-1.5 text-[13px] border border-outline-variant/30 focus:outline-none focus:border-primary/50"
-                                  onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateDedication(item.id); else if (e.key === 'Escape') setEditingDedicationId(null); }}
-                                />
-                                <button onClick={() => handleUpdateDedication(item.id)} disabled={savingDedication === item.id} className="text-xs font-bold text-primary px-3 py-1.5 bg-primary/10 rounded-lg hover:bg-primary/20 border-none cursor-pointer">
-                                  {savingDedication === item.id ? '...' : 'Save'}
+                          {/* Top row: thumbnail + song info + remove btn */}
+                          <div className="flex items-center gap-4">
+                            {item.song.thumbnail_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.song.thumbnail_url} alt={item.song.title} className="w-14 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm" />
+                            ) : (
+                              <div className="w-14 h-10 bg-surface-container rounded-xl flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-bold text-on-surface truncate">{item.song.title}</h4>
+                              <p className="text-[13px] text-outline font-medium mt-0.5 truncate">
+                                <span className="font-semibold text-primary/80">Wait time: {estimateWaitTime(queue, item)}</span>
+                                {item.dedication && (
+                                  <span className="text-secondary/70 italic truncate ml-2">• For: {item.dedication}</span>
+                                )}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setItemToRemove(item)}
+                              className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-error hover:bg-[#ffdad6]/50 transition-colors border-none bg-transparent cursor-pointer flex-shrink-0"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                <path d="M18 6L6 18M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+
+                          {/* Dedication editor — always full width below */}
+                          {editingDedicationId === item.id ? (
+                            <div className="mt-2.5 flex flex-col gap-2">
+                              <input 
+                                autoFocus
+                                value={dedicationInput}
+                                onChange={(e) => setDedicationInput(e.target.value)}
+                                placeholder="Who is this song for?"
+                                className="w-full bg-surface-container rounded-xl px-4 py-2.5 text-[14px] border border-outline-variant/30 focus:outline-none focus:border-primary/50"
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateDedication(item.id); else if (e.key === 'Escape') setEditingDedicationId(null); }}
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setEditingDedicationId(null)}
+                                  className="flex-1 py-2 text-[13px] font-bold text-secondary bg-surface-container rounded-xl hover:bg-surface-container-high border-none cursor-pointer transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateDedication(item.id)}
+                                  disabled={savingDedication === item.id}
+                                  className="flex-1 py-2 text-[13px] font-bold text-primary bg-primary/10 rounded-xl hover:bg-primary/20 border-none cursor-pointer transition-colors disabled:opacity-50"
+                                >
+                                  {savingDedication === item.id ? 'Saving...' : 'Save'}
                                 </button>
                               </div>
-                            ) : (
-                              <button 
-                                onClick={() => { setDedicationInput(item.dedication || ''); setEditingDedicationId(item.id); }}
-                                className="text-[11px] font-bold text-secondary flex items-center gap-1 mt-1.5 hover:text-primary transition-colors bg-transparent border-none p-0 cursor-pointer"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">{item.dedication ? 'edit' : 'add'}</span>
-                                {item.dedication ? 'Edit dedication' : 'Add dedication'}
-                              </button>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => setItemToRemove(item)}
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-error hover:bg-[#ffdad6]/50 transition-colors border-none bg-transparent cursor-pointer flex-shrink-0"
-                          >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                              <path d="M18 6L6 18M6 6l12 12" />
-                            </svg>
-                          </button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => { setDedicationInput(item.dedication || ''); setEditingDedicationId(item.id); }}
+                              className="text-[11px] font-bold text-secondary flex items-center gap-1 mt-1.5 ml-[4.5rem] hover:text-primary transition-colors bg-transparent border-none p-0 cursor-pointer self-start"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">{item.dedication ? 'edit' : 'add'}</span>
+                              {item.dedication ? 'Edit dedication' : 'Add dedication'}
+                            </button>
+                          )}
                         </motion.div>
                       ))}
                     </AnimatePresence>
@@ -799,6 +847,45 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
           </div>
         </div>
       )}
+      {/* ── Reactions Floating Button ── */}
+      <div className="fixed bottom-6 left-6 z-50 flex items-center gap-2">
+        <button
+          onClick={() => setShowReactions(prev => !prev)}
+          className="w-14 h-14 bg-surface-container-high/90 backdrop-blur-md text-on-surface rounded-full shadow-lg flex items-center justify-center hover:bg-surface-container-highest transition-all active:scale-95 border border-outline-variant/20"
+          aria-label="Reactions"
+        >
+          <span className="material-symbols-outlined text-[28px]">add_reaction</span>
+        </button>
+        <AnimatePresence>
+          {showReactions && (
+            <motion.div
+              initial={{ opacity: 0, x: -20, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -20, scale: 0.8 }}
+              className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-3 rounded-[28px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-black/5"
+            >
+              {[
+                { icon: 'local_fire_department', color: '#f97316' },
+                { icon: 'favorite', color: '#f43f5e' },
+                { icon: 'celebration', color: '#eab308' },
+                { icon: 'thumb_up', color: '#3b82f6' },
+                { icon: 'mic', color: '#a855f7' },
+              ].map(({ icon, color }) => (
+                <button
+                  key={icon}
+                  onClick={() => handleSendReaction(icon)}
+                  className="hover:scale-125 transition-transform active:scale-90 bg-transparent border-none cursor-pointer flex items-center justify-center"
+                  style={{ color }}
+                >
+                  <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {icon}
+                  </span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* ── Floating QR Button ── */}
       <button

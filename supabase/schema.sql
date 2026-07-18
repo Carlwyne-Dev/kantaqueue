@@ -212,16 +212,18 @@ alter table global_stats enable row level security;
 create policy "anyone can read global_stats" on global_stats for select using (true);
 create policy "service role can update global_stats" on global_stats for all using (true) with check (true);
 
--- Trigger: Increment total_rooms when a room is created
+-- Trigger: Increment total_rooms when a room is actually started
 create or replace function increment_total_rooms() returns trigger as $$
 begin
-  update global_stats set total_rooms = total_rooms + 1 where id = 1;
+  if (TG_OP = 'UPDATE' and old.started_at is null and new.started_at is not null) then
+    update global_stats set total_rooms = total_rooms + 1 where id = 1;
+  end if;
   return new;
 end;
 $$ language plpgsql;
 
-create trigger on_room_created
-after insert on rooms for each row
+create trigger on_room_started
+after update of started_at on rooms for each row
 execute function increment_total_rooms();
 
 -- Trigger: Increment total_songs when a queue_item is created
@@ -272,3 +274,47 @@ create policy "service role can read feedback"
 create policy "service role can update feedback"
   on feedback for update
   using (true);
+
+-- ---------- USERS (Tracker) ----------
+create table if not exists users (
+  id uuid primary key, -- matches auth.uid()
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  rooms_joined int not null default 0
+);
+
+alter table users enable row level security;
+create policy "anyone can read users" on users for select using (true);
+create policy "users can update themselves" on users for all using (auth.uid() = id) with check (auth.uid() = id);
+
+-- Trigger: track returning guests
+create or replace function track_guest_user() returns trigger as $$
+begin
+  insert into users (id, first_seen_at, last_seen_at, rooms_joined)
+  values (new.auth_uid, now(), now(), 1)
+  on conflict (id) do update set
+    last_seen_at = now(),
+    rooms_joined = users.rooms_joined + 1;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger on_guest_joined
+after insert on guests for each row
+execute function track_guest_user();
+
+-- Trigger: track returning hosts
+create or replace function track_host_user() returns trigger as $$
+begin
+  insert into users (id, first_seen_at, last_seen_at, rooms_joined)
+  values (new.host_id, now(), now(), 1)
+  on conflict (id) do update set
+    last_seen_at = now(),
+    rooms_joined = users.rooms_joined + 1;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger on_room_host
+after insert on rooms for each row
+execute function track_host_user();

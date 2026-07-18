@@ -22,6 +22,7 @@ export async function GET() {
       }
     });
   } catch (error) {
+    console.error('Stats API error:', error);
     return Response.json({ rooms: 0, songs: 0 }, { status: 500 });
   }
 }

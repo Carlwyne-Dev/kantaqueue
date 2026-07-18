@@ -83,9 +83,9 @@ export function DocLayout({ title, children }: { title: string; children: React.
             <span className="hidden md:block w-px h-4 bg-outline-variant/40" />
             <button
               onClick={() => setFeedbackOpen(true)}
-              className="flex items-center gap-1.5 text-xs font-bold text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors px-4 py-2 rounded-full border border-outline-variant/30 active:scale-95"
+              className="flex items-center gap-1.5 text-sm font-bold text-secondary/80 hover:text-primary transition-colors"
             >
-              <span className="material-symbols-outlined text-[14px]">flag</span>
+              <span className="material-symbols-outlined text-[16px]">flag</span>
               Report / Feedback
             </button>
           </div>

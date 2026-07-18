@@ -15,8 +15,12 @@ export default function ChangelogPage() {
         'Minimalist global leaderboard on the homepage',
         'Interactive, draggable floating cards in the hero section',
         'New in-app Report & Feedback system',
+        'Live emoji reactions on the Host screen',
+        'Song Dedications: dedicate a song to someone special',
         'Framer Motion layout animations for the active queue',
-        'Redesigned "Scan to join" QR modal'
+        'Redesigned "Scan to join" QR modal',
+        'Persistent guest nicknames across all rooms',
+        'Refined Host TV UI with new cast icon badges'
       ]
     },
     {

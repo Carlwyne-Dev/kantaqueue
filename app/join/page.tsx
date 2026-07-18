@@ -29,6 +29,13 @@ export default function JoinPage({
     async function assignNickname() {
       setGeneratingNick(true);
       try {
+        const savedGlobal = typeof window !== 'undefined' ? localStorage.getItem('kq_global_nickname') : null;
+        if (savedGlobal) {
+          setNickname(savedGlobal);
+          setGeneratingNick(false);
+          return;
+        }
+
         await ensureAnonSession();
         if (!initialCode) {
           setNickname(generateUniqueNickname(new Set()));
@@ -80,27 +87,20 @@ export default function JoinPage({
 
       if (roomErr || !room) { toast.error('Room not found or has ended.'); return; }
 
-      const { data: existing } = await supabase
-        .from('guests').select('id').eq('room_id', room.id).eq('display_name', trimName).maybeSingle();
-
-      if (existing) {
-        const newName = generateUniqueNickname(new Set([trimName]));
-        toast(`"${trimName}" is taken — you'll be "${newName}" instead.`);
-        setNickname(newName);
-        return;
-      }
-
       const { data: existingGuest } = await supabase
-        .from('guests').select('id').eq('room_id', room.id).eq('auth_uid', userId).maybeSingle();
+        .from('guests').select('id, display_name').eq('room_id', room.id).eq('auth_uid', userId).maybeSingle();
 
       if (!existingGuest) {
         const { error: guestErr } = await supabase.from('guests').insert({
           room_id: room.id, auth_uid: userId, display_name: trimName,
         });
         if (guestErr) { toast.error('Failed to join room. Try again.'); console.error(guestErr); return; }
+      } else if (existingGuest.display_name !== trimName) {
+        await supabase.from('guests').update({ display_name: trimName }).eq('id', existingGuest.id);
       }
 
       localStorage.setItem(`kq_nickname_${trimCode}`, trimName);
+      localStorage.setItem('kq_global_nickname', trimName);
       router.push(`/room/${trimCode}/guest`);
     } catch (err) {
       console.error(err);
@@ -330,23 +330,18 @@ export default function JoinPage({
                         const { data: room, error: roomErr } = await supabase
                           .from('rooms').select('id, status').eq('code', upper).eq('status', 'active').maybeSingle();
                         if (roomErr || !room) { toast.error('Room not found or has ended.'); return; }
-                        const { data: existing } = await supabase
-                          .from('guests').select('id').eq('room_id', room.id).eq('display_name', trimName).maybeSingle();
-                        if (existing) {
-                          const newName = generateUniqueNickname(new Set([trimName]));
-                          toast(`"${trimName}" is taken — you'll be "${newName}" instead.`);
-                          setNickname(newName);
-                          return;
-                        }
                         const { data: existingGuest } = await supabase
-                          .from('guests').select('id').eq('room_id', room.id).eq('auth_uid', userId).maybeSingle();
+                          .from('guests').select('id, display_name').eq('room_id', room.id).eq('auth_uid', userId).maybeSingle();
                         if (!existingGuest) {
                           const { error: guestErr } = await supabase.from('guests').insert({
                             room_id: room.id, auth_uid: userId, display_name: trimName,
                           });
                           if (guestErr) { toast.error('Failed to join room. Try again.'); return; }
+                        } else if (existingGuest.display_name !== trimName) {
+                          await supabase.from('guests').update({ display_name: trimName }).eq('id', existingGuest.id);
                         }
                         sessionStorage.setItem(`kq_nickname_${upper}`, trimName);
+                        localStorage.setItem('kq_global_nickname', trimName);
                         router.push(`/room/${upper}/guest`);
                       } catch (err) {
                         console.error(err);
@@ -392,8 +387,8 @@ export default function JoinPage({
       )}
 
       {/* Footer */}
-      <footer className="py-10 text-center text-secondary/50 text-[14px] font-medium z-10">
-        © {new Date().getFullYear()} Kantara Karaoke. Sing your heart out.
+      <footer className="py-10 text-center text-secondary text-[12px] font-bold tracking-[0.05em] z-10">
+        © {new Date().getFullYear()} KanTara Karaoke. Sing your heart out.
       </footer>
     </div>
   );

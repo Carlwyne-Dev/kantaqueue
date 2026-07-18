@@ -32,6 +32,8 @@ interface YTPlayer {
   getCurrentTime(): number;
   getDuration(): number;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
+  getVolume(): number;
+  setVolume(volume: number): void;
   destroy(): void;
 }
 
@@ -91,9 +93,11 @@ export default function HostPage({
   const [exitingQueueItem, setExitingQueueItem] = useState<(QueueItem & { song: Song }) | null>(null);
   const [isPromoting, setIsPromoting] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [dedicationSplash, setDedicationSplash] = useState<{ singerName: string; songTitle: string; dedication: string } | null>(null);
 
   const playerRef = useRef<YTPlayer | null>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
+  const reactionsContainerRef = useRef<HTMLDivElement>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const advancingRef = useRef(false); // prevent double-advance
   const notifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,6 +106,7 @@ export default function HostPage({
   const prevQueueRef = useRef<(QueueItem & { song: Song })[]>([]);
   const prevNowPlayingIdRef = useRef<string | null>(null);
   const lastAdvancedQueueId = useRef<string | null>(null);
+  const upNextNotifFiredRef = useRef<string | null>(null); // tracks which nowPlaying.id triggered the notif
   // stateRef always holds the latest room/nowPlaying — prevents stale closure in advanceQueue
   const stateRef = useRef<{ room: Room | null; nowPlaying: (QueueItem & { song: Song }) | null }>({ room: null, nowPlaying: null });
 
@@ -121,6 +126,7 @@ export default function HostPage({
     }, 500);
     return () => clearInterval(interval);
   }, [nowPlaying, playerReady, isScrubbing]);
+
 
   function handleScrub(e: React.ChangeEvent<HTMLInputElement>) {
     setVideoProgress(Number(e.target.value));
@@ -146,6 +152,26 @@ export default function HostPage({
     if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
     notifTimeoutRef.current = setTimeout(() => setLocalNotif(null), 3500);
   }, []);
+
+  // ── Up Next notification — fires when ≤15s remain ──────────────────────────
+  useEffect(() => {
+    if (!isFullscreen || !nowPlaying || !videoDuration || videoDuration < 70) return;
+    const remaining = videoDuration - videoProgress;
+    const nextSong = queue[0];
+    if (
+      remaining <= 60 &&
+      remaining > 0 &&
+      nextSong &&
+      upNextNotifFiredRef.current !== nowPlaying.id
+    ) {
+      upNextNotifFiredRef.current = nowPlaying.id;
+      showLocalNotif(`Up Next: ${nextSong.singer_name} — "${nextSong.song.title}"`);
+    }
+    // Reset flag when a new song starts
+    if (upNextNotifFiredRef.current === nowPlaying.id && remaining > 65) {
+      upNextNotifFiredRef.current = null;
+    }
+  }, [videoProgress, videoDuration, nowPlaying, queue, isFullscreen, showLocalNotif]);
 
   // ── Extract dominant color from thumbnail ─────────────────────────────────────
   useEffect(() => {
@@ -308,6 +334,40 @@ export default function HostPage({
           showLocalNotif(`${(payload.new as { display_name: string }).display_name} joined`);
         }
       )
+      .on('broadcast', { event: 'reaction' }, (payload) => {
+        if (!reactionsContainerRef.current) return;
+        const reactionColors: Record<string, string> = {
+          local_fire_department: '#f97316',
+          favorite: '#f43f5e',
+          celebration: '#eab308',
+          thumb_up: '#3b82f6',
+          mic: '#a855f7'
+        };
+        const emoji = payload.payload.emoji;
+        const color = reactionColors[emoji] || '#ffffff';
+        
+        const el = document.createElement('div');
+        el.className = 'absolute bottom-0 drop-shadow-2xl flex items-center justify-center';
+        // Random horizontal spread around the container's center
+        const xOffset = (Math.random() - 0.5) * 80;
+        
+        el.innerHTML = `<span class="material-symbols-outlined text-5xl md:text-6xl" style="font-variation-settings: 'FILL' 1; color: ${color};">${emoji}</span>`;
+        
+        reactionsContainerRef.current.appendChild(el);
+        
+        // Fast, hardware-accelerated Web Animation API (bypasses React render cycle)
+        const anim = el.animate([
+          { opacity: 0, transform: `translate(${xOffset}px, 50px) scale(0.5)` },
+          { opacity: 1, transform: `translate(${xOffset}px, -50px) scale(1.2)`, offset: 0.15 },
+          { opacity: 1, transform: `translate(${xOffset}px, -150px) scale(1)`, offset: 0.4 },
+          { opacity: 0, transform: `translate(${xOffset}px, -350px) scale(1)` }
+        ], {
+          duration: 2500,
+          easing: 'ease-out',
+        });
+        
+        anim.onfinish = () => el.remove();
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -438,7 +498,34 @@ export default function HostPage({
           .update({ status: 'playing' })
           .eq('id', next.id);
 
-        loadAndPlay(next.song.youtube_video_id);
+        if (next.dedication) {
+          // Fade out the audio smoothly over 600ms to match the visual fade
+          const startVol = playerRef.current?.getVolume() || 100;
+          let vol = startVol;
+          const fadeInterval = setInterval(() => {
+            vol -= (startVol / 10);
+            if (vol <= 0) {
+              clearInterval(fadeInterval);
+              playerRef.current?.stopVideo();
+              playerRef.current?.setVolume(startVol); // Reset for next song
+            } else {
+              playerRef.current?.setVolume(vol);
+            }
+          }, 60);
+
+          setDedicationSplash({
+            singerName: next.singer_name,
+            songTitle: next.song.title,
+            dedication: next.dedication,
+          });
+          
+          setTimeout(() => {
+            setDedicationSplash(null);
+            loadAndPlay(next.song.youtube_video_id);
+          }, 4500);
+        } else {
+          loadAndPlay(next.song.youtube_video_id);
+        }
       } else {
         currentAttemptRef.current = null;
         playerRef.current?.stopVideo();
@@ -659,18 +746,14 @@ export default function HostPage({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Active badge */}
+              {/* Icon */}
               <motion.div
-                className="inline-flex items-center gap-2.5 bg-[#A7B79A]/20 text-[#3a4832] px-4 py-2 rounded-full border border-[#A7B79A]/30"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-[#A7B79A] inline-flex p-4 rounded-[20px] shadow-lg shadow-[#A7B79A]/20"
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1, duration: 0.5, type: 'spring', stiffness: 280, damping: 20 }}
               >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#54634a] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#54634a]"></span>
-                </span>
-                <span className="text-[11px] font-bold uppercase tracking-[0.15em]">Room Active</span>
+                <span className="material-symbols-outlined text-white text-[32px]">cast</span>
               </motion.div>
 
               <motion.div
@@ -763,6 +846,11 @@ export default function HostPage({
             </motion.div>
           </div>
         </main>
+
+        {/* Footer */}
+        <footer className="mt-auto py-10 w-full text-center text-secondary text-[12px] font-bold tracking-[0.05em] z-10">
+          © {new Date().getFullYear()} KanTara Karaoke. Sing your heart out.
+        </footer>
       </div>
     );
   }
@@ -776,6 +864,8 @@ export default function HostPage({
         transition: 'background 1.2s ease',
       }}
     >
+      {/* Dedication Splash — removed from here, placed inside video container */}
+
       <div
         className="flex-1 flex overflow-hidden min-h-0 max-md:justify-center transition-all duration-[800ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
         style={{ gap: isFullscreen ? 0 : 24, padding: isFullscreen ? 0 : 24 }}
@@ -792,10 +882,39 @@ export default function HostPage({
           {/* Ambient glow */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(167,183,154,0.08),transparent_70%)] pointer-events-none z-0" />
 
-          {/* YT Player Wrapper */}
-          <div className={`absolute inset-0 z-40 transition-opacity duration-700 ${!nowPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          {/* YT Player Wrapper — hidden when nothing is playing or dedication splash is active */}
+          <div className={`absolute inset-0 z-40 transition-opacity duration-700 ${(!nowPlaying || dedicationSplash) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <div ref={playerContainerRef} className="w-full h-full" id="yt-player" />
           </div>
+
+          {/* Dedication Splash — absolute within video container, respects layout in all modes */}
+          <AnimatePresence>
+            {dedicationSplash && (
+              <motion.div
+                key="dedication-splash"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6 }}
+                className="absolute inset-0 z-[55] flex flex-col items-center justify-center text-white overflow-hidden bg-[#1E1E1E]"
+              >
+                <AnimatedGradient config={{ preset: "Sage" }} className="absolute inset-0 z-0 opacity-80" />
+                <motion.div
+                  className="relative z-10 flex flex-col items-center text-center px-8 gap-5"
+                  initial={{ opacity: 0, y: 28 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <p className="text-[12px] font-bold tracking-[0.3em] uppercase text-white/50">This song is dedicated to</p>
+                  <p className="text-5xl md:text-7xl font-black tracking-tight drop-shadow-lg leading-none">{dedicationSplash.dedication}</p>
+                  <div className="flex flex-col items-center gap-1 mt-3">
+                    <p className="text-[16px] font-semibold text-white/70 italic">"{dedicationSplash.songTitle}"</p>
+                    <p className="text-[13px] text-white/40 font-medium">sung by {dedicationSplash.singerName}</p>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Progress / Scrubber (visible when playing & hovered) */}
           {nowPlaying && (
@@ -822,7 +941,7 @@ export default function HostPage({
           )}
 
           {/* Idle state */}
-          {!nowPlaying && (
+          {!nowPlaying && !dedicationSplash && (
             <div className={`absolute inset-0 z-50 flex flex-col items-center text-white overflow-hidden bg-[#1E1E1E] ${
               isFullscreen && isMobile
                 ? 'justify-end pb-14'
@@ -880,12 +999,24 @@ export default function HostPage({
             </div>
           )}
 
-          {/* Fullscreen notification */}
-          {isFullscreen && localNotif && (
-            <div className="absolute top-28 right-7 z-[60] bg-black/50 backdrop-blur-xl rounded-full px-5 py-3 border border-white/10 text-white text-[13px] font-semibold animate-[slideInRightThenOut_3.5s_ease-in-out_forwards]">
-              {localNotif}
-            </div>
-          )}
+          {/* Fullscreen notification — top-right pill, slides in/out with Framer Motion */}
+          <AnimatePresence>
+            {isFullscreen && localNotif && (
+              <motion.div
+                key={localNotif}
+                initial={{ x: 120, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 120, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute top-28 right-7 z-[60] bg-black/60 backdrop-blur-xl rounded-2xl px-5 py-3 border border-white/10 text-white text-[13px] font-semibold max-w-[280px] truncate"
+              >
+                {localNotif}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Live Reactions Container — Handled via DOM API for performance */}
+          <div ref={reactionsContainerRef} className="absolute bottom-16 right-12 md:right-24 z-[75] pointer-events-none w-16 h-16" />
         </motion.div>
 
         {/* ── Sidebar ── */}
