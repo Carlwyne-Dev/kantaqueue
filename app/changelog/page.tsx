@@ -13,6 +13,7 @@ export default function ChangelogPage() {
       description: 'Massive update to the KanTara experience! You can now send live emoji reactions to the host screen and add personal song dedications. We also added a live global leaderboard, interactive physics cards, and a new feedback system.',
       features: [
         'Minimalist global leaderboard on the homepage',
+        'New "Discover" tab for guests featuring Trending & Popular songs',
         'Interactive, draggable floating cards in the hero section',
         'New in-app Report & Feedback system',
         'Live emoji reactions on the Host screen',
