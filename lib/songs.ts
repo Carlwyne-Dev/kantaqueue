@@ -59,6 +59,32 @@ export async function searchSongsCache(query: string): Promise<Song[]> {
   return (data as Song[]) ?? [];
 }
 
+/**
+ * Searches KanTara's full local library of cached songs.
+ * Used as a fallback when the YouTube API quota is exhausted.
+ * If query is empty, returns the most-played songs (top 50).
+ * If query provided, fuzzy-matches on normalized title.
+ */
+export async function searchLibrary(query: string): Promise<Song[]> {
+  const supabase = getSupabaseClient();
+  const normalized = normalizeTitle(query);
+
+  const { data, error } = await supabase
+    .from('songs')
+    .select('*')
+    .neq('times_played', -1)
+    .gte('times_played', 0)
+    .ilike('normalized_title', query.trim() ? `%${normalized}%` : '%')
+    .order('times_played', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('[songs] Library search error:', error.message);
+    return [];
+  }
+  return (data as Song[]) ?? [];
+}
+
 // ---- Upsert a song from a YouTube result ----
 
 /**
@@ -132,7 +158,7 @@ export async function upsertSong(
  */
 export async function getCachedSearchResults(query: string): Promise<YouTubeSearchResult[]> {
   const cachedSongs = await searchSongsCache(query);
-  return cachedSongs.map((s) => ({
+  const results = cachedSongs.map((s) => ({
     youtube_video_id: s.youtube_video_id,
     title: s.title,
     artist: s.artist,
@@ -141,6 +167,13 @@ export async function getCachedSearchResults(query: string): Promise<YouTubeSear
     from_cache: true,
     times_played: s.times_played,
   }));
+
+  // Fire-and-forget: track cache hit so admin can show hit rate
+  if (results.length > 0 && typeof window !== 'undefined') {
+    fetch('/api/cache-hit', { method: 'POST' }).catch(() => {});
+  }
+
+  return results;
 }
 
 /**

@@ -4,7 +4,8 @@ import { use, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
-import { getCachedSearchResults, getYouTubeSearchResults, upsertSong, getPopularSongs, getTrendingSongs, TrendingResult } from '@/lib/songs';
+import { getCachedSearchResults, getYouTubeSearchResults, upsertSong, getPopularSongs, getTrendingSongs, searchLibrary, TrendingResult } from '@/lib/songs';
+import { getQuotaStatus, DAILY_QUOTA } from '@/lib/quota';
 import { QRCodeSVG } from 'qrcode.react';
 import type { QueueItem, Song, YouTubeSearchResult } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,7 +50,17 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   const [trendingSongs, setTrendingSongs] = useState<TrendingResult[]>([]);
   const [discoverOpen, setDiscoverOpen] = useState(true);
   const [trendingLoading, setTrendingLoading] = useState(true);
+  const [quotaUsed, setQuotaUsed] = useState(0);
+  const [libraryResults, setLibraryResults] = useState<Song[]>([]);
+  const [librarySearching, setLibrarySearching] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [libraryQuery, setLibraryQuery] = useState('');
+  const libraryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ytDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Quota exhausted when we're at or above the daily limit
+  const quotaExhausted = quotaUsed >= DAILY_QUOTA;
 
   const [editingDedicationId, setEditingDedicationId] = useState<string | null>(null);
   const [dedicationInput, setDedicationInput] = useState('');
@@ -83,6 +94,8 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
         setTrendingSongs(songs);
         setTrendingLoading(false);
       });
+      // Fetch quota to dynamically adjust YT search debounce
+      getQuotaStatus().then(({ used }) => setQuotaUsed(used));
     }
     init();
   }, [code, router]);
@@ -162,24 +175,92 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   // ── Search ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     let isActive = true;
-    setHasSearchedYoutube(false);
+
+    // Cancel any pending YT auto-search (user is still typing)
+    if (ytDebounceRef.current) clearTimeout(ytDebounceRef.current);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (searchQuery.trim().length < 3) { setSearchResults([]); setSearchDone(false); return; }
-    debounceRef.current = setTimeout(async () => {
-      if (!isActive) return;
-      setSearching(true); setSearchDone(false);
-      try { 
-        const res = await getCachedSearchResults(searchQuery);
-        if (isActive) setSearchResults(res);
+
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearchDone(false);
+      setHasSearchedYoutube(false);
+      setSearching(false);
+      return;
+    }
+
+    // Phase 1: Query cache immediately (no delay, no min chars)
+    (async () => {
+      try {
+        setSearching(true);
+        const cached = await getCachedSearchResults(searchQuery);
+        if (!isActive) return;
+
+        if (cached.length > 0) {
+          // Cache hit — show results and stop. No YT needed.
+          setSearchResults(cached);
+          setSearchDone(true);
+          setSearching(false);
+          setHasSearchedYoutube(false);
+        } else {
+          // Cache miss — show empty state, then schedule auto-YT after 1s idle
+          setSearchResults([]);
+          setSearchDone(false);
+          setSearching(false);
+
+          if (searchQuery.trim().length >= 3) {
+            // Adaptive debounce: slower when API quota is running low
+            const ytDelay = quotaUsed >= DAILY_QUOTA * 0.5 ? 1500 : 1000;
+            ytDebounceRef.current = setTimeout(async () => {
+              if (!isActive) return;
+              setSearching(true);
+              try {
+                const youtubeRes = await getYouTubeSearchResults(searchQuery, []);
+                if (isActive) {
+                  setSearchResults(youtubeRes);
+                  setHasSearchedYoutube(true);
+                  setSearchDone(true);
+                }
+              } catch (err: any) {
+                if (!isActive) return;
+                if (err.message === 'QUOTA_EXCEEDED') {
+                  if (isActive) setQuotaUsed(DAILY_QUOTA); // Trigger library mode silently
+                } else {
+                  toast.error('YouTube search failed. Please try again.');
+                }
+              } finally {
+                if (isActive) { setSearching(false); setSearchDone(true); }
+              }
+            }, ytDelay);
+          }
+        }
+      } catch {
+        if (isActive) { toast.error('Search failed. Try again.'); setSearching(false); }
       }
-      catch { if (isActive) toast.error('Search failed. Try again.'); }
-      finally { 
-        if (isActive) { setSearching(false); setSearchDone(true); }
-      }
-    }, 500);
-    
+    })();
+
     return () => { isActive = false; };
   }, [searchQuery]);
+
+  // ── Library Search (manual, quota-exhausted fallback) ────────────────────────
+  async function handleOpenLibrary() {
+    setShowLibrary(true);
+    setLibrarySearching(true);
+    const results = await searchLibrary('');
+    setLibraryResults(results);
+    setLibrarySearching(false);
+  }
+
+  useEffect(() => {
+    if (!showLibrary) return;
+    let isActive = true;
+    if (libraryDebounceRef.current) clearTimeout(libraryDebounceRef.current);
+    libraryDebounceRef.current = setTimeout(async () => {
+      setLibrarySearching(true);
+      const results = await searchLibrary(libraryQuery);
+      if (isActive) { setLibraryResults(results); setLibrarySearching(false); }
+    }, 300);
+    return () => { isActive = false; };
+  }, [libraryQuery, showLibrary]);
 
   async function handleSearchYoutube() {
     if (searchQuery.trim().length < 3) return;
@@ -190,7 +271,8 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       setHasSearchedYoutube(true);
     } catch (err: any) {
       if (err.message === 'QUOTA_EXCEEDED') {
-        toast.error("We've hit our daily YouTube search limit! Thank you so much for trying out our MVP. ❤️ The limit resets at midnight PT.", { duration: 6000 });
+        setQuotaUsed(DAILY_QUOTA); // Trigger library mode
+        toast.error("KanTara's daily search limit has been reached. Browse our local library instead! 🎵", { duration: 5000 });
       } else {
         toast.error('YouTube search failed. Please try again.');
       }
@@ -205,7 +287,18 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
     setAdding(result.youtube_video_id);
     try {
       const song = await upsertSong(result);
-      if (!song) { toast.error('Could not add song. Try again.'); return; }
+      if (!song) {
+        // song is null when blocked — check if it's in DB as blocked
+        const { data: blocked } = await supabase.from('songs').select('times_played').eq('youtube_video_id', result.youtube_video_id).maybeSingle();
+        if (blocked?.times_played === -1) {
+          toast.error('🚫 This video is blocked or unavailable. Try a different karaoke version!', { duration: 4000 });
+          // Also remove it from current search results so it disappears immediately
+          setSearchResults(prev => prev.filter(r => r.youtube_video_id !== result.youtube_video_id));
+        } else {
+          toast.error('Could not add song. Try again.');
+        }
+        return;
+      }
       const { count } = await supabase.from('queue_items').select('id', { count: 'exact', head: true }).eq('room_id', roomId).eq('requested_by', userId).eq('status', 'queued');
       if ((count ?? 0) >= 3) { toast.error("You've got 3 songs queued already!"); return; }
       const { data: lastItem } = await supabase.from('queue_items').select('position').eq('room_id', roomId).eq('status', 'queued').order('position', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
@@ -561,7 +654,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
               </motion.div>
             )}
             
-            {!hasSearchedYoutube && searchQuery.trim().length >= 3 && searchDone && (
+            {!hasSearchedYoutube && !quotaExhausted && searchQuery.trim().length >= 3 && searchDone && (
               <div className="mt-4 flex justify-center">
                 <button
                   onClick={handleSearchYoutube}
@@ -576,6 +669,133 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                 </button>
               </div>
             )}
+
+            {/* ── Library Fallback UI ── */}
+            <AnimatePresence mode="wait">
+              {quotaExhausted && !showLibrary ? (
+                <motion.div 
+                  key="library-button"
+                  initial={{ opacity: 0, y: -10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="mt-4 flex flex-col items-center gap-3"
+                >
+                  <p className="text-[11.5px] text-secondary/60 text-center font-medium leading-relaxed px-2 max-w-[320px]">
+                    YouTube's daily search limit has been reached. Instead, browse the growing library of songs discovered by the community!
+                  </p>
+                  <button
+                    onClick={handleOpenLibrary}
+                    disabled={librarySearching}
+                    className="flex items-center gap-2 px-6 py-3 bg-surface-container-high hover:bg-surface-dim text-on-surface rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="material-symbols-outlined text-[20px] text-primary">library_music</span>
+                    Browse KanTara Library
+                  </button>
+                </motion.div>
+              ) : quotaExhausted && showLibrary ? (
+                <motion.div
+                  key="library-panel"
+                  className="mt-4 space-y-3"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 15 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                >
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary">library_music</span>
+                    <p className="text-[12px] font-bold text-secondary/70 uppercase tracking-widest">KanTara Library</p>
+                  </div>
+                  <button
+                    onClick={() => { setShowLibrary(false); setLibraryQuery(''); }}
+                    className="text-xs text-secondary/60 hover:text-on-surface transition-colors font-medium cursor-pointer bg-transparent border-none"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {/* Library search bar */}
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-outline/60">search</span>
+                  <input
+                    type="text"
+                    value={libraryQuery}
+                    onChange={(e) => setLibraryQuery(e.target.value)}
+                    placeholder="Search library..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-white/70 border border-outline-variant/30 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all"
+                  />
+                </div>
+
+                {/* Results */}
+                {librarySearching ? (
+                  <div className="flex justify-center py-8">
+                    <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                  </div>
+                ) : libraryResults.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto pr-1 pb-2">
+                    {libraryResults.map((song) => {
+                      const result = {
+                        youtube_video_id: song.youtube_video_id,
+                        title: song.title,
+                        artist: song.artist,
+                        thumbnail_url: song.thumbnail_url,
+                        duration_seconds: song.duration_seconds,
+                        from_cache: true,
+                        times_played: song.times_played,
+                      };
+                      return (
+                        <motion.div
+                          key={song.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex flex-col gap-2 p-2.5 bg-white/80 backdrop-blur-sm border border-outline-variant/20 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-surface-container flex-shrink-0">
+                            {song.thumbnail_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={song.thumbnail_url} alt={song.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="material-symbols-outlined text-outline/40 text-[24px]">music_note</span>
+                              </div>
+                            )}
+                            {song.duration_seconds && (
+                              <div className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-md">
+                                {formatDuration(song.duration_seconds)}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex flex-col flex-1 px-1">
+                            <h4 className="text-[12px] leading-snug font-bold text-on-surface line-clamp-2" title={song.title}>{song.title}</h4>
+                            <p className="text-[10px] text-outline font-medium mt-0.5 truncate">
+                              {song.artist ?? 'Unknown'}{song.times_played > 0 ? ` · ♪ ${song.times_played}x` : ''}
+                            </p>
+                          </div>
+                          
+                          <button
+                            onClick={() => handleAdd(result)}
+                            disabled={adding === song.youtube_video_id}
+                            className="mt-1 w-full bg-primary/10 hover:bg-primary text-primary hover:text-on-primary py-2 rounded-[10px] font-bold text-[11px] tracking-wide uppercase transition-all shadow-none border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                          >
+                            {adding === song.youtube_video_id ? (
+                              <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                            ) : 'Add to Queue'}
+                          </button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-secondary/60 text-center py-8 font-medium">
+                    {libraryQuery.trim() ? `No songs found for "${libraryQuery}"` : 'No community songs found yet.'}
+                  </p>
+                )}
+              </motion.div>
+              ) : null}
+            </AnimatePresence>
           </motion.section>
         ) : (
           <>
@@ -820,8 +1040,13 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
       </motion.main>
 
       {/* ── Footer ── */}
-      <footer className="mt-auto py-8 text-center bg-surface-dim/10">
-        <p className="text-[10px] font-bold text-outline/50 uppercase tracking-[0.2em] font-headline">Powered by KanTara • Premium Karaoke Experience</p>
+      <footer className="mt-auto py-10 flex flex-col items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity duration-300">
+        <p className="text-[9px] font-bold text-secondary uppercase tracking-[0.2em] font-headline">Powered by KanTara</p>
+        <div className="flex items-center gap-2 text-[10px] font-bold text-secondary">
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Privacy</a>
+          <span>&middot;</span>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Terms</a>
+        </div>
       </footer>
 
       {/* ── Quit Modal ── */}

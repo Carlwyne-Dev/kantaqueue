@@ -1025,7 +1025,7 @@ export default function HostPage({
           {!isFullscreen && (
             <motion.aside 
               layout
-              className="max-md:w-full md:w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0"
+              className="max-md:w-full md:w-72 lg:w-80 xl:w-96 2xl:w-[400px] relative flex flex-col gap-3 h-full overflow-hidden min-h-0 shrink-0"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0, transition: { staggerChildren: 0.15, delayChildren: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
               exit={{ opacity: 0, x: 30, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}

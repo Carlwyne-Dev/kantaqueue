@@ -6,22 +6,63 @@ import { DocLayout } from '@/app/components/DocLayout';
 export default function ChangelogPage() {
   const updates = [
     {
-      version: 'v1.1.0',
+      version: 'v1.2.0',
       date: 'July 2026',
       badge: 'New Features',
+      title: 'Community Chat & Smarter Search',
+      description: 'KanTara gets more social! We\'ve added a live community chat on the landing page so you can connect with other music lovers anytime. We also made search smarter with better error handling and a fallback library when the daily search limit is reached.',
+      changes: [
+        {
+          type: 'New',
+          items: [
+            'Live Community Chat — say hi, share thoughts, and connect with other KanTara users directly from the homepage',
+            'KanTara Community Library — when the daily YouTube search limit is reached, browse songs the community has already discovered',
+          ]
+        },
+        {
+          type: 'Improvements',
+          items: [
+            'Lightning fast search — KanTara now instantly remembers songs you and the community have searched for before, making future searches completely instant',
+            'Smarter song filtering — blocked and unavailable songs are now automatically filtered out before they can reach your queue',
+            'Improved host layout — the host sidebar now scales perfectly for smaller laptop and tablet screens',
+            'Smoother animations — the library panel now slides in and out with polished, buttery transitions',
+          ]
+        },
+        {
+          type: 'Fixes',
+          items: [
+            'Fixed a visual glitch where the search loading spinner would occasionally get stuck after clearing the search box',
+          ]
+        }
+      ]
+    },
+    {
+      version: 'v1.1.0',
+      date: 'July 2026',
+      badge: 'Update',
       title: 'Dedications, Reactions & Leaderboards',
       description: 'Massive update to the KanTara experience! You can now send live emoji reactions to the host screen and add personal song dedications. We also added a live global leaderboard, interactive physics cards, and a new feedback system.',
-      features: [
-        'Minimalist global leaderboard on the homepage',
-        'New "Discover" tab for guests featuring Trending & Popular songs',
-        'Interactive, draggable floating cards in the hero section',
-        'New in-app Report & Feedback system',
-        'Live emoji reactions on the Host screen',
-        'Song Dedications: dedicate a song to someone special',
-        'Framer Motion layout animations for the active queue',
-        'Redesigned "Scan to join" QR modal',
-        'Persistent guest nicknames across all rooms',
-        'Refined Host TV UI with new cast icon badges'
+      changes: [
+        {
+          type: 'New',
+          items: [
+            'Live emoji reactions — guests can now send real-time emoji reactions directly to the Host screen',
+            'Song Dedications — easily dedicate your requested song to someone special in the room',
+            'Discover tab — guests can now quickly browse and add Trending and Popular songs',
+            'In-app feedback — easily share your thoughts, report issues, and request features directly in the app',
+            'Global leaderboard — see the most requested songs across all KanTara rooms right on the homepage',
+          ]
+        },
+        {
+          type: 'Improvements',
+          items: [
+            'Playful landing page — interact with draggable, physics-based floating cards in the hero section',
+            'Fluid queue animations — the active song queue now animates smoothly as songs are added, moved, and played',
+            'Beautiful QR scanner — completely redesigned the "Scan to join" modal for a sleeker, more modern look',
+            'Remembered nicknames — your guest nickname is now automatically saved across all rooms you join',
+            'Polished Host UI — the Host screen now looks even better on large TVs with refined styling and new cast icons'
+          ]
+        }
       ]
     },
     {
@@ -30,11 +71,16 @@ export default function ChangelogPage() {
       badge: 'Launch',
       title: 'KanTara Officially Launched!',
       description: 'The modern way to run karaoke sessions with your friends. Say goodbye to passing the phone around, fighting over the queue, and accidentally tapping the wrong YouTube video.',
-      features: [
-        'Real-time guest synchronization',
-        'Built-in YouTube Data API search (karaoke-filtered)',
-        'Host dashboard with full video controls',
-        'Sleek earthy aesthetic & WebGL animated backgrounds'
+      changes: [
+        {
+          type: 'Launch Features',
+          items: [
+            'Real-time guest synchronization',
+            'Built-in YouTube Data API search (karaoke-filtered)',
+            'Host dashboard with full video controls',
+            'Sleek earthy aesthetic & WebGL animated backgrounds'
+          ]
+        }
       ]
     }
   ];
@@ -78,14 +124,23 @@ export default function ChangelogPage() {
                   {update.description}
                 </p>
                 
-                <ul className="space-y-3">
-                  {update.features.map(feat => (
-                    <li key={feat} className="flex items-start gap-3 text-on-surface/90 text-[15px] font-medium">
-                      <span className="material-symbols-outlined text-[20px] text-primary shrink-0">check_circle</span>
-                      {feat}
-                    </li>
+                <div className="space-y-6">
+                  {update.changes.map((section) => (
+                    <div key={section.type}>
+                      <h3 className="text-[13px] font-bold text-secondary uppercase tracking-widest mb-3">{section.type}</h3>
+                      <ul className="space-y-3">
+                        {section.items.map(item => (
+                          <li key={item} className="flex items-start gap-3 text-on-surface/90 text-[15px] font-medium">
+                            <span className="material-symbols-outlined text-[20px] text-primary shrink-0">
+                              {section.type === 'Fixes' ? 'build' : section.type === 'Improvements' ? 'upgrade' : 'check_circle'}
+                            </span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           </motion.section>

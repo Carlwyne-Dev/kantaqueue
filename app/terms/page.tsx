@@ -13,7 +13,7 @@ const sections = [
   },
   {
     heading: 'YouTube Content',
-    body: 'All song search results and video playback are powered by the YouTube Data API and YouTube IFrame Player. Your use of YouTube content is subject to the YouTube Terms of Service (youtube.com/t/terms). KanTara does not host, store, or redistribute any audio or video content.',
+    body: 'All song search results and video playback are powered by the YouTube Data API and YouTube IFrame Player. By using KanTara, you also agree to be bound by the YouTube Terms of Service (youtube.com/t/terms). KanTara does not host, store, or redistribute any audio or video content.',
   },
   {
     heading: 'Service Availability',

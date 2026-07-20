@@ -50,6 +50,7 @@ interface Stats {
   apiQuota: { used: number, remaining: number };
   totalUsers: number;
   recurringUsers: number;
+  cacheHitRate: number | null; // 0-100, null if no data yet
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -122,7 +123,9 @@ export default function AdminPage() {
         { count: activeRooms },
         { data: quotaData },
         { count: totalUsers },
-        { count: recurringUsers }
+        { count: recurringUsers },
+        { count: totalSongsCount },
+        { count: totalBlockedCount }
       ] = await Promise.all([
         supabase.from('rooms').select('*').not('started_at', 'is', null).order('created_at', { ascending: false }).limit(50),
         supabase.from('songs').select('*').gt('times_played', 0).order('times_played', { ascending: false }).limit(20),
@@ -130,9 +133,11 @@ export default function AdminPage() {
         supabase.from('trending_cache').select('*').eq('id', 1).maybeSingle(),
         supabase.from('global_stats').select('total_rooms, total_songs').eq('id', 1).single(),
         supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('api_quota').select('units_used').eq('date', new Date().toISOString().slice(0, 10)).maybeSingle(),
+        supabase.from('api_quota').select('units_used, cache_hits_today').eq('date', new Date().toISOString().slice(0, 10)).maybeSingle(),
         supabase.from('users').select('id', { count: 'exact', head: true }),
         supabase.from('users').select('id', { count: 'exact', head: true }).gt('rooms_joined', 1),
+        supabase.from('songs').select('id', { count: 'exact', head: true }).gt('times_played', 0),
+        supabase.from('songs').select('id', { count: 'exact', head: true }).eq('times_played', -1),
       ]);
 
       // Fetch feedback separately
@@ -162,7 +167,7 @@ export default function AdminPage() {
       setStats({
         totalRooms: globalStats?.total_rooms ?? 0,
         activeRooms: completedRooms,
-        totalSongs: (songsData?.length ?? 0) + (blockedData?.length ?? 0),
+        totalSongs: (totalSongsCount ?? 0) + (totalBlockedCount ?? 0),
         totalPlays: globalStats?.total_songs ?? 0,
         blockedSongs: blockedData?.length ?? 0,
         trendingCache: trendingData as TrendingCache | null,
@@ -172,6 +177,12 @@ export default function AdminPage() {
         },
         totalUsers: totalUsers ?? 0,
         recurringUsers: recurringUsers ?? 0,
+        cacheHitRate: (() => {
+          const hits = quotaData?.cache_hits_today ?? 0;
+          const misses = Math.round((quotaData?.units_used ?? 0) / 100);
+          const total = hits + misses;
+          return total > 0 ? Math.round((hits / total) * 100) : null;
+        })(),
       });
     } finally {
       setLoading(false);
@@ -275,6 +286,15 @@ export default function AdminPage() {
     { label: 'Songs in DB', value: String(stats?.totalSongs ?? '—'), accent: '#6b7f62' },
     { label: 'Total Plays', value: String(stats?.totalPlays ?? '—'), accent: C.primaryContainer },
     { label: 'Blocked Songs', value: String(stats?.blockedSongs ?? '—'), accent: C.error },
+    {
+      label: 'Cache Hit Rate',
+      value: stats?.cacheHitRate != null ? `${stats.cacheHitRate}%` : '—',
+      accent: stats?.cacheHitRate != null
+        ? stats.cacheHitRate >= 70 ? '#4a7c59'
+        : stats.cacheHitRate >= 40 ? '#8c9c7f'
+        : '#a0785a'
+        : '#8c9c7f',
+    },
     {
       label: 'Trending Cache',
       value: stats?.trendingCache ? `${stats.trendingCache.items.length} songs` : 'Empty',

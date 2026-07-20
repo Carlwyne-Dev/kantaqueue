@@ -9,6 +9,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView, useAnimation, useMotionValueEvent } from 'framer-motion';
 import { FeedbackModal } from '@/app/components/FeedbackModal';
+import CommunityChat from '@/components/CommunityChat';
 
 // ── Rolling Number ────────────────────────────────────────────────────────────
 function RollingNumber({ value }: { value: number }) {
@@ -101,14 +102,24 @@ export default function HomePage() {
   useEffect(() => {
     let mounted = true;
     fetch('/api/stats')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to fetch stats');
+        return r.json();
+      })
       .then(data => {
         if (mounted && data && typeof data.rooms === 'number') setStats(data);
       })
+      .catch(err => console.error('Stats fetch error:', err));
     function fetchLeaderboard() {
-      fetch('/api/leaderboard').then(r => r.json()).then(data => {
-        if (mounted && data?.songs) setLeaderboard(data.songs);
-      }).catch(console.error);
+      fetch('/api/leaderboard')
+        .then(r => {
+          if (!r.ok) throw new Error('Failed to fetch leaderboard');
+          return r.json();
+        })
+        .then(data => {
+          if (mounted && data?.songs) setLeaderboard(data.songs);
+        })
+        .catch(console.error);
     }
     fetchLeaderboard();
 
@@ -566,6 +577,7 @@ export default function HomePage() {
         </div>
       </footer>
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
+      <CommunityChat />
     </div>
   );
 }

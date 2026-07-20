@@ -17,7 +17,7 @@ const sections = [
   },
   {
     heading: 'Third-party services',
-    body: 'We use Supabase (supabase.com) for our database, authentication, and real-time features, and the YouTube Data API for song search and playback. Data processed by those services is subject to their respective privacy policies.',
+    body: "We use Supabase (supabase.com) for our database, authentication, and real-time features, and the YouTube Data API for song search and playback. Data processed by those services is subject to their respective privacy policies, including Google's Privacy Policy at https://policies.google.com/privacy.",
   },
   {
     heading: 'Cookies and local storage',

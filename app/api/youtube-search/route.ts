@@ -32,6 +32,11 @@ interface YouTubeVideoItem {
   contentDetails: {
     duration: string; // ISO 8601 duration, e.g. "PT3M45S"
   };
+  status: {
+    embeddable: boolean;
+    privacyStatus: string; // 'public' | 'unlisted' | 'private'
+    uploadStatus: string;  // 'processed' | 'uploaded' | 'failed' | 'rejected'
+  };
 }
 
 /**
@@ -172,35 +177,43 @@ export async function GET(request: NextRequest) {
       return Response.json([]);
     }
 
-    // Step 3: videos.list to get duration — costs 1 unit per call
+    // Step 3: videos.list to get duration AND check embeddability — costs 1 unit per call
     const videoIds = karaokeItems.map((item) => item.id.videoId).join(',');
     const videosUrl = new URL('https://www.googleapis.com/youtube/v3/videos');
-    videosUrl.searchParams.set('part', 'contentDetails');
+    videosUrl.searchParams.set('part', 'contentDetails,status'); // status lets us filter unembeddable videos
     videosUrl.searchParams.set('id', videoIds);
     videosUrl.searchParams.set('key', apiKey);
 
     const videosRes = await fetch(videosUrl.toString(), { next: { revalidate: 604800 } });
     const videosData = await videosRes.json();
-    const videoDetails: Map<string, number> = new Map(
-      (videosData.items as YouTubeVideoItem[]).map((v) => [
-        v.id,
-        parseDuration(v.contentDetails.duration),
-      ])
-    );
 
-    // Step 4: Shape into YouTubeSearchResult
-    const results = karaokeItems.map((item) => ({
-      youtube_video_id: item.id.videoId,
-      title: item.snippet.title,
-      artist: item.snippet.channelTitle,
-      thumbnail_url:
-        item.snippet.thumbnails.medium?.url ??
-        item.snippet.thumbnails.default?.url ??
-        null,
-      duration_seconds: videoDetails.get(item.id.videoId) ?? null,
-      from_cache: false,
-      times_played: 0,
-    }));
+    // Build a map of only embeddable, public, fully-processed videos
+    const videoDetails: Map<string, number> = new Map();
+    for (const v of (videosData.items as YouTubeVideoItem[])) {
+      const isPlayable =
+        v.status?.embeddable === true &&
+        v.status?.privacyStatus === 'public' &&
+        v.status?.uploadStatus === 'processed';
+      if (isPlayable) {
+        videoDetails.set(v.id, parseDuration(v.contentDetails.duration));
+      }
+    }
+
+    // Step 4: Shape into YouTubeSearchResult — only include videos that passed the status check
+    const results = karaokeItems
+      .filter((item) => videoDetails.has(item.id.videoId)) // only embeddable + public + processed
+      .map((item) => ({
+        youtube_video_id: item.id.videoId,
+        title: item.snippet.title,
+        artist: item.snippet.channelTitle,
+        thumbnail_url:
+          item.snippet.thumbnails.medium?.url ??
+          item.snippet.thumbnails.default?.url ??
+          null,
+        duration_seconds: videoDetails.get(item.id.videoId) ?? null,
+        from_cache: false,
+        times_played: 0,
+      }));
 
     await logQuotaUsage(101); // 100 for search.list + 1 for videos.list
 
