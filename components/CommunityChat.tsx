@@ -168,15 +168,9 @@ export default function CommunityChat() {
           >
             {/* Header */}
             <div className="bg-primary px-5 py-4 flex items-center justify-between shadow-sm">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-on-primary text-[20px]">forum</span>
-                  <h3 className="text-on-primary font-bold tracking-wide text-sm">Community Chat</h3>
-                </div>
-                <div className="flex items-center gap-1.5 mt-1 ml-7">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                  <span className="text-[10px] font-bold text-on-primary/90 uppercase tracking-widest">{activeUsers} {activeUsers === 1 ? 'Person' : 'People'} Online</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-white text-[20px]">forum</span>
+                <h3 className="text-white font-bold tracking-wide text-sm">Community Chat</h3>
               </div>
               <div className="flex items-center gap-2">
                 {isAdmin && (
@@ -324,7 +318,7 @@ export default function CommunityChat() {
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -left-1 w-6 h-6 bg-error text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm"
+            className="absolute -top-1 -left-1 w-6 h-6 bg-white text-primary text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-primary/10 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </motion.div>
