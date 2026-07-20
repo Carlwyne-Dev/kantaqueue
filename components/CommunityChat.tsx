@@ -14,6 +14,7 @@ interface ChatMessage {
 export default function CommunityChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activeUsers, setActiveUsers] = useState(1);
   const [nickname, setNickname] = useState(() => {
     if (typeof window === 'undefined') return '';
     return localStorage.getItem('kq_global_nickname') ?? '';
@@ -49,6 +50,12 @@ export default function CommunityChat() {
 
     const channel = supabase
       .channel('public:community_chat')
+      .on('presence', { event: 'sync' }, () => {
+        if (mounted) {
+          const state = channel.presenceState();
+          setActiveUsers(Object.keys(state).length);
+        }
+      })
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'community_chat' },
@@ -84,7 +91,11 @@ export default function CommunityChat() {
           }
         }
       )
-      .subscribe();
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ online_at: new Date().toISOString() });
+        }
+      });
 
     return () => {
       mounted = false;
@@ -157,9 +168,15 @@ export default function CommunityChat() {
           >
             {/* Header */}
             <div className="bg-primary px-5 py-4 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-primary">forum</span>
-                <h3 className="text-on-primary font-bold tracking-wide">Community Chat</h3>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-on-primary text-[20px]">forum</span>
+                  <h3 className="text-on-primary font-bold tracking-wide text-sm">Community Chat</h3>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1 ml-7">
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                  <span className="text-[10px] font-bold text-on-primary/90 uppercase tracking-widest">{activeUsers} {activeUsers === 1 ? 'Person' : 'People'} Online</span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {isAdmin && (

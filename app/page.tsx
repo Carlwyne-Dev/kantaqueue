@@ -304,7 +304,7 @@ export default function HomePage() {
                 animate={dragControls}
                 className="w-full h-full rounded-3xl overflow-hidden shadow-2xl ring-8 ring-white/50 cursor-grab active:cursor-grabbing"
               >
-                <Image className="object-cover" src="/assets/landing.png" alt="Karaoke Night" fill sizes="(max-width: 768px) 100vw, 340px" priority />
+                <Image className="object-cover rounded-3xl" src="/assets/landing.png" alt="Karaoke Night" fill sizes="(max-width: 768px) 100vw, 340px" priority />
               </motion.div>
             </motion.div>
 
