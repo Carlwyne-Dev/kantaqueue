@@ -496,7 +496,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                       <div>
                         <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Popular on KanTara</p>
                         <div className="relative">
-                          <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+                          <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(128,128,128,0.25) transparent' }}>
                             {popularSongs.map((song) => (
                               <div
                                 key={song.id}
@@ -527,8 +527,6 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                               </div>
                             ))}
                           </div>
-                          {/* Scroll hint fade */}
-                          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface to-transparent" />
                         </div>
                       </div>
                     )}
@@ -537,7 +535,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                     <div>
                       <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Trending in Philippines</p>
                       <div className="relative">
-                        <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+                        <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(128,128,128,0.25) transparent' }}>
                           {trendingLoading ? (
                             // Skeleton cards while loading
                             Array.from({ length: 5 }).map((_, i) => (
@@ -582,8 +580,6 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                             ))
                           )}
                         </div>
-                        {/* Scroll hint fade */}
-                        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface to-transparent" />
                       </div>
                     </div>
                   </motion.div>
