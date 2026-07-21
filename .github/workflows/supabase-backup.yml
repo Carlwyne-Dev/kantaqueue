@@ -1,0 +1,51 @@
+name: Supabase Daily Backup
+
+# Runs automatically every day at 2 AM UTC (10 AM Manila time).
+# Also runnable manually from the GitHub Actions tab (workflow_dispatch).
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Dump the database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backups
+          TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+          pg_dump "$SUPABASE_DB_URL" --no-owner --no-acl -F c -f "backups/kantara-backup-$TIMESTAMP.dump"
+          echo "BACKUP_FILE=backups/kantara-backup-$TIMESTAMP.dump" >> $GITHUB_ENV
+
+      - name: Upload backup as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kantara-db-backup-${{ github.run_id }}
+          path: backups/*.dump
+          retention-days: 30
+
+      # Optional second layer: also commit the dump into a separate
+      # private backups repo, for longer-than-30-day retention.
+      # Uncomment and configure BACKUP_REPO_TOKEN as a secret if wanted.
+      #
+      # - name: Push to private backups repo
+      #   env:
+      #     BACKUP_REPO_TOKEN: ${{ secrets.BACKUP_REPO_TOKEN }}
+      #   run: |
+      #     git clone https://x-access-token:${BACKUP_REPO_TOKEN}@github.com/yourusername/kantara-backups.git repo
+      #     cp backups/*.dump repo/
+      #     cd repo
+      #     git config user.email "backup-bot@kantara.app"
+      #     git config user.name "KanTara Backup Bot"
+      #     git add .
+      #     git commit -m "Backup $(date +%Y-%m-%d)"
+      #     git push
