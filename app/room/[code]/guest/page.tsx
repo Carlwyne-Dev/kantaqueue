@@ -496,7 +496,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                       <div>
                         <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Popular on KanTara</p>
                         <div className="relative">
-                          <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(128,128,128,0.25) transparent' }}>
+                          <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
                             {popularSongs.map((song) => (
                               <div
                                 key={song.id}
@@ -534,52 +534,50 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                     {/* Trending in Philippines */}
                     <div>
                       <p className="text-[11px] font-bold text-outline uppercase tracking-widest mb-2.5">Trending in Philippines</p>
-                      <div className="relative">
-                        <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(128,128,128,0.25) transparent' }}>
-                          {trendingLoading ? (
-                            // Skeleton cards while loading
-                            Array.from({ length: 5 }).map((_, i) => (
-                              <div key={i} className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm animate-pulse">
-                                <div className="w-full h-24 bg-surface-container" />
-                                <div className="p-2.5 flex flex-col gap-2">
-                                  <div className="h-3 bg-surface-container rounded-full w-full" />
-                                  <div className="h-3 bg-surface-container rounded-full w-3/4" />
-                                  <div className="h-6 bg-surface-container rounded-xl w-full mt-1" />
-                                </div>
+                      <div className="flex gap-3 overflow-x-auto pb-2 snap-x scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+                        {trendingLoading ? (
+                          // Skeleton cards while loading
+                          Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm animate-pulse">
+                              <div className="w-full h-24 bg-surface-container" />
+                              <div className="p-2.5 flex flex-col gap-2">
+                                <div className="h-3 bg-surface-container rounded-full w-full" />
+                                <div className="h-3 bg-surface-container rounded-full w-3/4" />
+                                <div className="h-6 bg-surface-container rounded-xl w-full mt-1" />
                               </div>
-                            ))
-                          ) : (
-                            trendingSongs.map((song) => (
-                              <div
-                                key={song.youtube_video_id}
-                                className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm"
-                              >
-                                {song.thumbnail_url ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={song.thumbnail_url} alt={song.title} className="w-full h-24 object-cover" />
-                                ) : (
-                                  <div className="w-full h-24 bg-surface-container flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-outline/40 text-[32px]">music_note</span>
-                                  </div>
-                                )}
-                                <div className="p-2.5">
-                                  <p className="text-[11px] font-bold text-on-surface line-clamp-2 leading-tight mb-2">{song.title}</p>
-                                  <button
-                                    onClick={() => handleAdd({ ...song, from_cache: false, times_played: 0 })}
-                                    disabled={adding === song.youtube_video_id}
-                                    className="w-full py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold uppercase tracking-wide border-none cursor-pointer hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
-                                  >
-                                    {adding === song.youtube_video_id ? (
-                                      <div className="flex items-center justify-center h-4"><svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>
-                                    ) : (
-                                      'Add'
-                                    )}
-                                  </button>
+                            </div>
+                          ))
+                        ) : (
+                          trendingSongs.map((song) => (
+                            <div
+                              key={song.youtube_video_id}
+                              className="flex-shrink-0 snap-start w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-surface-dim/20 shadow-sm"
+                            >
+                              {song.thumbnail_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={song.thumbnail_url} alt={song.title} className="w-full h-24 object-cover" />
+                              ) : (
+                                <div className="w-full h-24 bg-surface-container flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-outline/40 text-[32px]">music_note</span>
                                 </div>
+                              )}
+                              <div className="p-2.5">
+                                <p className="text-[11px] font-bold text-on-surface line-clamp-2 leading-tight mb-2">{song.title}</p>
+                                <button
+                                  onClick={() => handleAdd({ ...song, from_cache: false, times_played: 0 })}
+                                  disabled={adding === song.youtube_video_id}
+                                  className="w-full py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold uppercase tracking-wide border-none cursor-pointer hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                  {adding === song.youtube_video_id ? (
+                                    <div className="flex items-center justify-center h-4"><svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>
+                                  ) : (
+                                    'Add'
+                                  )}
+                                </button>
                               </div>
-                            ))
-                          )}
-                        </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -602,7 +600,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             {searchResults.length === 0 ? (
               // If we haven't searched YouTube yet, show a compact hint so the YT button stays high on mobile
               !hasSearchedYoutube && searchDone ? (
-                <p className="py-4 text-center text-sm text-on-surface font-bold">Not in our library yet.</p>
+                <p className="py-4 text-center text-sm text-outline font-medium">Not in our library yet.</p>
               ) : (
               <div className="py-20 flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 bg-surface-container-low rounded-full flex items-center justify-center mb-4 text-outline/40">
