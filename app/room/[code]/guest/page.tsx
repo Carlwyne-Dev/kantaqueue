@@ -229,37 +229,11 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
           setSearchDone(true);
           setSearching(false);
           setHasSearchedYoutube(false);
-        } else {
-          // Cache miss — show empty state, then schedule auto-YT after 1s idle
+          // Cache miss — show empty state. The "Search YouTube" button will appear manually.
           setSearchResults([]);
-          setSearchDone(false);
+          setSearchDone(true);
           setSearching(false);
-
-          if (searchQuery.trim().length >= 3) {
-            // Adaptive debounce: slower when API quota is running low
-            const ytDelay = quotaUsed >= DAILY_QUOTA * 0.5 ? 1500 : 1000;
-            ytDebounceRef.current = setTimeout(async () => {
-              if (!isActive) return;
-              setSearching(true);
-              try {
-                const youtubeRes = await getYouTubeSearchResults(searchQuery, []);
-                if (isActive) {
-                  setSearchResults(youtubeRes);
-                  setHasSearchedYoutube(true);
-                  setSearchDone(true);
-                }
-              } catch (err: any) {
-                if (!isActive) return;
-                if (err.message === 'QUOTA_EXCEEDED') {
-                  if (isActive) setQuotaUsed(DAILY_QUOTA); // Trigger library mode silently
-                } else {
-                  toast.error('YouTube search failed. Please try again.');
-                }
-              } finally {
-                if (isActive) { setSearching(false); setSearchDone(true); }
-              }
-            }, ytDelay);
-          }
+          setHasSearchedYoutube(false);
         }
       } catch {
         if (isActive) { toast.error('Search failed. Try again.'); setSearching(false); }
@@ -685,7 +659,22 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             {!hasSearchedYoutube && !quotaExhausted && searchQuery.trim().length >= 3 && searchDone && (
               <div className="mt-4 flex justify-center">
                 <button
-                  onClick={handleSearchYoutube}
+                  onClick={async () => {
+                    setSearching(true);
+                    try {
+                      const youtubeRes = await getYouTubeSearchResults(searchQuery, []);
+                      setSearchResults(youtubeRes);
+                      setHasSearchedYoutube(true);
+                    } catch (err: any) {
+                      if (err.message === 'QUOTA_EXCEEDED') {
+                        setQuotaUsed(DAILY_QUOTA);
+                      } else {
+                        toast.error('YouTube search failed.');
+                      }
+                    } finally {
+                      setSearching(false);
+                    }
+                  }}
                   disabled={searching}
                   className="flex items-center gap-2 px-6 py-3 bg-surface-container-high hover:bg-surface-dim text-on-surface rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >

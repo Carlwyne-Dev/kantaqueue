@@ -11,7 +11,7 @@ import { normalizeTitle } from '@/lib/songs';
 
 export const dynamic = 'force-dynamic';
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const KARAOKE_KEYWORDS = ['karaoke', 'videoke', 'instrumental', 'minus one', 'no vocals', 'backing track'];
 
@@ -94,6 +94,8 @@ export async function GET() {
 
     // Step 2: For each trending song, search for a karaoke version
     const items: TrendingItem[] = [];
+    let searchCount = 0;
+    const MAX_SEARCHES = 10;
 
     for (const video of videosData.items ?? []) {
       const snippet = video.snippet;
@@ -115,8 +117,12 @@ export async function GET() {
         continue;
       }
 
+      // Hard limit on how many times we ping the search API
+      if (searchCount >= MAX_SEARCHES) continue;
+
       // Extract song/artist and search for karaoke version
       const searchTerm = `${title} karaoke`;
+      searchCount++;
       const searchRes = await fetch(
         `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchTerm)}&type=video&maxResults=3&key=${apiKey}`
       );
