@@ -677,13 +677,13 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                     }
                   }}
                   disabled={searching}
-                  className="flex items-center gap-2 px-6 py-3 bg-surface-container-high hover:bg-surface-dim text-on-surface rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="flex items-center gap-2 px-6 py-3 bg-surface-container-high hover:bg-surface-dim text-on-surface rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
                   </svg>
-                  {searching ? 'Searching YouTube...' : `Deep Search YouTube`}
+                  {searching ? 'Searching...' : `Search YouTube for "${searchQuery}"`}
                 </button>
               </div>
             )}
