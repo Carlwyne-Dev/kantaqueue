@@ -16,6 +16,17 @@ interface ChatMessage {
   created_at: string;
 }
 
+const MAX_CHARS = 150;
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 10) return 'just now';
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(dateStr).toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 export default function CommunityChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -238,7 +249,7 @@ export default function CommunityChat() {
                         <p className="text-sm">{msg.message}</p>
                       </div>
                       <span className="text-[9px] text-secondary/40 mt-1 px-1">
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                        {formatRelativeTime(msg.created_at)}
                       </span>
                     </motion.div>
                   );
@@ -280,31 +291,42 @@ export default function CommunityChat() {
                       Change
                     </button>
                   </div>
-                  <form onSubmit={handleSend} className="flex gap-2 items-end">
-                    <textarea
-                      value={inputMsg}
-                      onChange={(e) => setInputMsg(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSend(e);
-                        }
-                      }}
-                      placeholder="Type a message..."
-                      rows={1}
-                      className="flex-1 resize-none bg-surface-container px-4 py-3 rounded-xl text-sm outline-none border border-transparent focus:border-primary/30 transition-all max-h-[100px]"
-                    />
-                    <button 
-                      type="submit"
-                      disabled={!inputMsg.trim() || isLoading}
-                      className="bg-primary text-on-primary w-11 h-11 flex-shrink-0 rounded-xl flex items-center justify-center hover:brightness-95 transition-all disabled:opacity-50 border-none cursor-pointer"
-                    >
-                      {isLoading ? (
-                         <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
-                      ) : (
-                        <span className="material-symbols-outlined text-[20px]">send</span>
-                      )}
-                    </button>
+                  <form onSubmit={handleSend} className="flex flex-col gap-1.5">
+                    <div className="flex gap-2 items-end">
+                      <textarea
+                        value={inputMsg}
+                        onChange={(e) => setInputMsg(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSend(e);
+                          }
+                        }}
+                        placeholder="Type a message..."
+                        rows={1}
+                        maxLength={MAX_CHARS}
+                        className="flex-1 resize-none bg-surface-container px-4 py-3 rounded-xl text-sm outline-none border border-transparent focus:border-primary/30 transition-all max-h-[100px]"
+                      />
+                      <button 
+                        type="submit"
+                        disabled={!inputMsg.trim() || isLoading}
+                        className="bg-primary text-on-primary w-11 h-11 flex-shrink-0 rounded-xl flex items-center justify-center hover:brightness-95 transition-all disabled:opacity-50 border-none cursor-pointer"
+                      >
+                        {isLoading ? (
+                           <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                        ) : (
+                          <span className="material-symbols-outlined text-[20px]">send</span>
+                        )}
+                      </button>
+                    </div>
+                    {/* Character counter — only visible when approaching limit */}
+                    {inputMsg.length > MAX_CHARS * 0.7 && (
+                      <p className={`text-[10px] font-bold text-right pr-1 transition-colors ${
+                        inputMsg.length >= MAX_CHARS ? 'text-error' : 'text-secondary/50'
+                      }`}>
+                        {inputMsg.length}/{MAX_CHARS}
+                      </p>
+                    )}
                   </form>
                 </div>
               )}

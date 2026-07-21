@@ -68,6 +68,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
 
   const hostChannelRef = useRef<any>(null);
   const [showReactions, setShowReactions] = useState(false);
+  const [upNextSong, setUpNextSong] = useState<string | null>(null);
 
   const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/join?code=${code}` : '';
 
@@ -124,6 +125,33 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
   }, [roomId, supabase]);
 
   useEffect(() => { fetchQueue(); }, [fetchQueue]);
+
+  // ── "Your song is up next!" notification ──────────────────────────
+  const prevQueueRef = useRef<(QueueItem & { song: Song })[]>([]);
+  useEffect(() => {
+    if (!userId || queue.length === 0) {
+      prevQueueRef.current = queue;
+      return;
+    }
+    const mySongs = queue.filter(i => i.requested_by === userId);
+    const prevMySongs = prevQueueRef.current.filter(i => i.requested_by === userId);
+    if (mySongs.length > 0 && prevMySongs.length > 0) {
+      const isNowFirst = queue[0].requested_by === userId;
+      const wasFirst = prevQueueRef.current[0]?.requested_by === userId;
+      if (isNowFirst && !wasFirst) {
+        setUpNextSong(queue[0].song.title);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      }
+    }
+    prevQueueRef.current = queue;
+  }, [queue, userId]);
+
+  // Auto-dismiss the up-next banner after 5s
+  useEffect(() => {
+    if (!upNextSong) return;
+    const t = setTimeout(() => setUpNextSong(null), 5000);
+    return () => clearTimeout(t);
+  }, [upNextSong]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -1038,6 +1066,29 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
           </>
         )}
       </motion.main>
+
+      {/* ── "Up Next" animated banner ── */}
+      <AnimatePresence>
+        {upNextSong && (
+          <motion.div
+            key="up-next-banner"
+            initial={{ opacity: 0, y: -80, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 320, damping: 26 } }}
+            exit={{ opacity: 0, y: -60, scale: 0.94, transition: { duration: 0.35, ease: [0.4, 0, 1, 1] } }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] w-[min(340px,90vw)] pointer-events-none"
+          >
+            <div className="bg-primary text-on-primary rounded-[20px] px-5 py-4 shadow-[0_16px_48px_rgba(84,99,74,0.45)] flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-white text-[22px]">music_note</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/70 mb-0.5">You&apos;re up next!</p>
+                <p className="text-[14px] font-bold text-white truncate">&ldquo;{upNextSong}&rdquo;</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Footer ── */}
       <footer className="mt-auto py-10 flex flex-col items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity duration-300">
