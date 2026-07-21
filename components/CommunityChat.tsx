@@ -16,7 +16,7 @@ interface ChatMessage {
   created_at: string;
 }
 
-const MAX_CHARS = 150;
+const MAX_CHARS = 300;
 
 function formatRelativeTime(dateStr: string): string {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);

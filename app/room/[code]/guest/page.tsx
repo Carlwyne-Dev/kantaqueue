@@ -1150,7 +1150,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                 { icon: 'favorite', color: '#f43f5e' },
                 { icon: 'celebration', color: '#eab308' },
                 { icon: 'thumb_up', color: '#3b82f6' },
-                { icon: 'mic', color: '#a855f7' },
+                { icon: 'star', color: '#eab308' },
               ].map(({ icon, color }) => (
                 <button
                   key={icon}
