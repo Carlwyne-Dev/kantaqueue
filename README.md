@@ -2,7 +2,7 @@
 
 **Group karaoke, zero friction.** One screen, everyone's phone, one shared queue.
 
-KanTara ("kanta" + queue) is a real-time shared queue layer on top of YouTube. One device is the **host screen** (TV or laptop). Everyone else joins from their phone via QR code or a 5-character room code — no app install, no account, no passing one phone around.
+KanTara (*"kanta"* — to sing, + *"tara"* — let's go) is a real-time shared queue layer on top of YouTube. One device is the **host screen** (TV or laptop). Everyone else joins from their phone via QR code or a 5-character room code — no app install, no account, no passing one phone around.
 
 ---
 
