@@ -598,6 +598,10 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
             }}
           >
             {searchResults.length === 0 ? (
+              // If we haven't searched YouTube yet, show a compact hint so the YT button stays high on mobile
+              !hasSearchedYoutube && searchDone ? (
+                <p className="py-4 text-center text-sm text-outline font-medium">Not in our library yet.</p>
+              ) : (
               <div className="py-20 flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 bg-surface-container-low rounded-full flex items-center justify-center mb-4 text-outline/40">
                   <svg fill="none" height="32" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="32">
@@ -608,6 +612,7 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
                 <h3 className="text-xl font-bold text-on-surface mb-2 font-headline">No results found</h3>
                 <p className="text-outline font-medium text-sm">Try a different song title or artist</p>
               </div>
+              )
             ) : (
               <motion.div 
                 className="flex flex-col gap-2"
