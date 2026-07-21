@@ -349,7 +349,7 @@ export default function CommunityChat() {
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -left-1 w-6 h-6 bg-white text-primary text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-primary/10 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+            className="absolute -top-1 -left-1 w-6 h-6 bg-white text-black text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-primary/10 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </motion.div>
