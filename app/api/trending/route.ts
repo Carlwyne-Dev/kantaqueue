@@ -11,7 +11,7 @@ import { normalizeTitle } from '@/lib/songs';
 
 export const dynamic = 'force-dynamic';
 
-const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const KARAOKE_KEYWORDS = ['karaoke', 'videoke', 'instrumental', 'minus one', 'no vocals', 'backing track'];
 

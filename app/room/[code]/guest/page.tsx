@@ -226,14 +226,37 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
         if (cached.length > 0) {
           // Cache hit — show results and stop. No YT needed.
           setSearchResults(cached);
-          setSearchDone(true);
-          setSearching(false);
-          setHasSearchedYoutube(false);
-          // Cache miss — show empty state. The "Search YouTube" button will appear manually.
+        } else {
+          // Cache miss — wait a full 2 seconds of idle time before pinging YouTube
           setSearchResults([]);
-          setSearchDone(true);
+          setSearchDone(false);
           setSearching(false);
           setHasSearchedYoutube(false);
+
+          if (searchQuery.trim().length >= 3) {
+            // Strict 2-second debounce to prevent typo-based quota burn
+            ytDebounceRef.current = setTimeout(async () => {
+              if (!isActive) return;
+              setSearching(true);
+              try {
+                const youtubeRes = await getYouTubeSearchResults(searchQuery, []);
+                if (isActive) {
+                  setSearchResults(youtubeRes);
+                  setHasSearchedYoutube(true);
+                  setSearchDone(true);
+                }
+              } catch (err: any) {
+                if (!isActive) return;
+                if (err.message === 'QUOTA_EXCEEDED') {
+                  if (isActive) setQuotaUsed(DAILY_QUOTA); // Trigger library mode silently
+                } else {
+                  toast.error('YouTube search failed. Please try again.');
+                }
+              } finally {
+                if (isActive) { setSearching(false); setSearchDone(true); }
+              }
+            }, 2000);
+          }
         }
       } catch {
         if (isActive) { toast.error('Search failed. Try again.'); setSearching(false); }
@@ -656,37 +679,6 @@ export default function GuestPage({ params }: { params: Promise<{ code: string }
               </motion.div>
             )}
             
-            {!hasSearchedYoutube && !quotaExhausted && searchQuery.trim().length >= 3 && searchDone && (
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={async () => {
-                    setSearching(true);
-                    try {
-                      const youtubeRes = await getYouTubeSearchResults(searchQuery, []);
-                      setSearchResults(youtubeRes);
-                      setHasSearchedYoutube(true);
-                    } catch (err: any) {
-                      if (err.message === 'QUOTA_EXCEEDED') {
-                        setQuotaUsed(DAILY_QUOTA);
-                      } else {
-                        toast.error('YouTube search failed.');
-                      }
-                    } finally {
-                      setSearching(false);
-                    }
-                  }}
-                  disabled={searching}
-                  className="flex items-center gap-2 px-6 py-3 bg-surface-container-high hover:bg-surface-dim text-on-surface rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
-                  </svg>
-                  {searching ? 'Searching...' : `Search YouTube for "${searchQuery}"`}
-                </button>
-              </div>
-            )}
-
             {/* ── Library Fallback UI ── */}
             <AnimatePresence mode="wait">
               {quotaExhausted && !showLibrary ? (
