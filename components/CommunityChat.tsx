@@ -3,6 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSupabaseClient } from '@/lib/supabase';
+import leoProfanity from 'leo-profanity';
+
+// Load the full English dictionary + extend with common Filipino slurs/profanity
+leoProfanity.loadDictionary('en');
+leoProfanity.add(['putangina', 'puta', 'gago', 'gaga', 'bobo', 'boba', 'tangina', 'tarantado', 'tanga', 'ulol', 'inutil', 'hayop', 'leche', 'punyeta', 'hudas', 'pakyu', 'pakyo', 'bwisit', 'siraulo', 'lintik', 'bwiset']);
 
 interface ChatMessage {
   id: string;
@@ -132,8 +137,12 @@ export default function CommunityChat() {
     if (!inputMsg.trim() || !hasNickname) return;
     
     setIsLoading(true);
-    const msg = inputMsg.trim();
+    const raw = inputMsg.trim();
     setInputMsg('');
+
+    // Profanity check — silently replace bad messages before they hit the DB
+    const isBad = leoProfanity.check(raw);
+    const msg = isBad ? 'I LOVE KANTARA ✨' : raw;
     
     await supabase.from('community_chat').insert({
       nickname: displayNickname,
