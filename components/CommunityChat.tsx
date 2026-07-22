@@ -42,6 +42,7 @@ export default function CommunityChat() {
   const [inputMsg, setInputMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [deleteConfirmMsg, setDeleteConfirmMsg] = useState<ChatMessage | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = getSupabaseClient();
@@ -167,6 +168,15 @@ export default function CommunityChat() {
   const isAdmin = nickname === 'xyuuki18';
   const displayNickname = isAdmin ? 'Admin' : nickname;
 
+  // Delete single message (admin only)
+  async function handleDeleteSingleMessage() {
+    if (!deleteConfirmMsg || !isAdmin) return;
+    const targetId = deleteConfirmMsg.id;
+    setDeleteConfirmMsg(null);
+    await supabase.from('community_chat').delete().eq('id', targetId);
+    setMessages((prev) => prev.filter((m) => m.id !== targetId));
+  }
+
   // Clear chat (admin only)
   async function handleClearChat() {
     if (!isAdmin) return;
@@ -184,8 +194,49 @@ export default function CommunityChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="mb-4 w-[320px] h-[450px] sm:w-[350px] bg-white/90 backdrop-blur-xl border border-outline-variant/30 rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden"
+            className="mb-4 w-[320px] h-[450px] sm:w-[350px] bg-white/90 backdrop-blur-xl border border-outline-variant/30 rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden relative"
           >
+            {/* Single Message Delete Confirmation Modal */}
+            <AnimatePresence>
+              {deleteConfirmMsg && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="bg-white rounded-2xl p-5 shadow-2xl max-w-[280px] w-full text-center flex flex-col items-center gap-3 border border-outline-variant/30"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[20px]">delete</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-on-surface text-sm">Delete Message?</h4>
+                      <p className="text-xs text-secondary/70 mt-1 line-clamp-2 italic">&quot;{deleteConfirmMsg.message}&quot;</p>
+                    </div>
+                    <div className="flex gap-2 w-full mt-1">
+                      <button
+                        onClick={() => setDeleteConfirmMsg(null)}
+                        className="flex-1 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl text-xs font-bold transition-colors cursor-pointer border-none"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleDeleteSingleMessage}
+                        className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border-none shadow-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Header */}
             <div className="bg-primary px-5 py-4 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-2">
@@ -239,14 +290,25 @@ export default function CommunityChat() {
                           {isMsgAdmin ? 'Admin' : msg.nickname}
                         </span>
                       )}
-                      <div className={`px-4 py-2.5 max-w-[85%] break-words shadow-sm ${
-                        isMsgAdmin
-                          ? 'bg-amber-50 text-amber-900 border border-amber-200 rounded-2xl rounded-tl-sm'
-                          : isMe 
-                          ? 'bg-primary text-on-primary rounded-2xl rounded-tr-sm' 
-                          : 'bg-white text-on-surface border border-outline-variant/20 rounded-2xl rounded-tl-sm'
-                      }`}>
-                        <p className="text-sm">{msg.message}</p>
+                      <div className={`group relative flex items-center gap-1 max-w-[85%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <div className={`px-4 py-2.5 break-words shadow-sm ${
+                          isMsgAdmin
+                            ? 'bg-amber-50 text-amber-900 border border-amber-200 rounded-2xl rounded-tl-sm'
+                            : isMe 
+                            ? 'bg-primary text-on-primary rounded-2xl rounded-tr-sm' 
+                            : 'bg-white text-on-surface border border-outline-variant/20 rounded-2xl rounded-tl-sm'
+                        }`}>
+                          <p className="text-sm">{msg.message}</p>
+                        </div>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setDeleteConfirmMsg(msg)}
+                            title="Delete message"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-secondary/40 hover:text-red-500 bg-transparent border-none cursor-pointer flex items-center justify-center rounded-full hover:bg-black/5"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                          </button>
+                        )}
                       </div>
                       <span className="text-[9px] text-secondary/40 mt-1 px-1">
                         {formatRelativeTime(msg.created_at)}
