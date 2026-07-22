@@ -27,7 +27,7 @@ jobs:
         run: |
           mkdir -p backups
           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
-          pg_dump "$SUPABASE_DB_URL" --no-owner --no-acl -F c -f "backups/kantara-backup-$TIMESTAMP.dump"
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" --no-owner --no-acl -F c -f "backups/kantara-backup-$TIMESTAMP.dump"
           echo "BACKUP_FILE=backups/kantara-backup-$TIMESTAMP.dump" >> $GITHUB_ENV
 
       - name: Upload backup as a workflow artifact
