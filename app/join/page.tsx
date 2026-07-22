@@ -19,62 +19,66 @@ export default function JoinPage({
   const [code, setCode] = useState(initialCode?.toUpperCase() ?? '');
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
-  const [generatingNick, setGeneratingNick] = useState(true);
+  const [generatingNick, setGeneratingNick] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const codeInputRef = useRef<HTMLInputElement>(null);
   const autoJoinedRef = useRef(false);
 
   useEffect(() => {
-    async function assignNickname() {
-      setGeneratingNick(true);
+    async function initNickname() {
       try {
         const savedGlobal = typeof window !== 'undefined' ? localStorage.getItem('kq_global_nickname') : null;
         if (savedGlobal) {
           setNickname(savedGlobal);
-          setGeneratingNick(false);
-          return;
-        }
-
-        await ensureAnonSession();
-        if (!initialCode) {
-          setNickname(generateUniqueNickname(new Set()));
-          return;
-        }
-        const supabase = getSupabaseClient();
-        const { data: room } = await supabase
-          .from('rooms').select('id').eq('code', initialCode.toUpperCase()).in('status', ['active', 'paused']).maybeSingle();
-        if (room) {
-          const { data: guests } = await supabase.from('guests').select('display_name').eq('room_id', room.id);
-          const taken = new Set((guests ?? []).map((g: { display_name: string }) => g.display_name));
-          setNickname(generateUniqueNickname(taken));
-        } else {
-          setNickname(generateUniqueNickname(new Set()));
         }
       } catch (err) {
         console.error(err);
-        setNickname(generateUniqueNickname(new Set()));
-      } finally {
-        setGeneratingNick(false);
       }
     }
-    assignNickname();
-  }, [initialCode]);
+    initNickname();
+  }, []);
+
+  async function handleRandomizeNickname() {
+    setGeneratingNick(true);
+    try {
+      await ensureAnonSession();
+      if (!code) {
+        setNickname(generateUniqueNickname(new Set()));
+        return;
+      }
+      const supabase = getSupabaseClient();
+      const { data: room } = await supabase
+        .from('rooms').select('id').eq('code', code.toUpperCase()).in('status', ['active', 'paused']).maybeSingle();
+      if (room) {
+        const { data: guests } = await supabase.from('guests').select('display_name').eq('room_id', room.id);
+        const taken = new Set((guests ?? []).map((g: { display_name: string }) => g.display_name));
+        setNickname(generateUniqueNickname(taken));
+      } else {
+        setNickname(generateUniqueNickname(new Set()));
+      }
+    } catch (err) {
+      console.error(err);
+      setNickname(generateUniqueNickname(new Set()));
+    } finally {
+      setGeneratingNick(false);
+    }
+  }
 
   useEffect(() => {
-    if (initialCode && initialCode.length === 5 && !generatingNick && nickname && !autoJoinedRef.current) {
+    if (initialCode && initialCode.length === 5 && nickname.trim() && !autoJoinedRef.current) {
       autoJoinedRef.current = true;
       handleJoin();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCode, generatingNick, nickname]);
+  }, [initialCode, nickname]);
 
   async function handleJoin(e?: React.FormEvent) {
     if (e) e.preventDefault();
     const trimCode = code.trim().toUpperCase();
     const trimName = nickname.trim();
     if (trimCode.length !== 5) { toast.error('Room codes are 5 characters long.'); return; }
-    if (!trimName) { toast.error('Please enter a nickname.'); return; }
+    if (!trimName) { toast.error('Please enter your Display Name / Singer Name to join!'); return; }
 
     setLoading(true);
     try {
@@ -237,30 +241,35 @@ export default function JoinPage({
               {/* Name Input Group */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
-                  <label className="block text-[12px] font-bold tracking-[0.15em] text-secondary/60 uppercase font-headline-sm">Your Name</label>
-                  <span className="text-[10px] text-secondary/60 font-semibold">auto-assigned, feel free to change</span>
+                  <label className="block text-[12px] font-bold tracking-[0.15em] text-secondary/60 uppercase font-headline-sm">Display Name / Singer Name</label>
+                  <span className="text-[10px] text-error font-bold tracking-wide uppercase">Required</span>
                 </div>
-                <div className="relative">
-                  {generatingNick ? (
-                    <div className="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl flex items-center gap-3">
-                       <span className="w-4 h-4 border-2 border-[#A7B79A] border-t-transparent rounded-full animate-spin"></span>
-                       <span className="text-secondary/60 text-lg font-bold">Picking a name...</span>
-                    </div>
-                  ) : (
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
                     <input 
                       type="text" 
                       value={nickname}
+                      placeholder="Enter your name (e.g. Maria, Juan)"
                       onChange={(e) => {
                         setNickname(e.target.value);
                         if (e.target.value.trim()) {
                           localStorage.setItem('kq_global_nickname', e.target.value.trim());
                         }
                       }}
-                      className="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl text-lg font-bold shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-[#A7B79A] focus:border-[#A7B79A] focus:bg-white transition-all outline-none text-on-background"
+                      className="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl text-lg font-bold shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-[#A7B79A] focus:border-[#A7B79A] focus:bg-white transition-all outline-none text-on-background placeholder:font-medium placeholder:text-secondary/40"
                     />
-                  )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRandomizeNickname}
+                    disabled={generatingNick}
+                    title="Generate Random Name"
+                    className="px-4 py-5 border border-outline-variant/30 bg-white/80 hover:bg-white rounded-2xl text-secondary hover:text-on-background transition-all shadow-[0_4px_12px_rgba(0,0,0,0.03)] cursor-pointer flex items-center justify-center disabled:opacity-50"
+                  >
+                    <span className={`material-symbols-outlined text-[22px] ${generatingNick ? 'animate-spin' : ''}`}>casino</span>
+                  </button>
                 </div>
-                <p className="text-[12px] text-secondary/70 italic font-medium">You&apos;ll appear in the queue with this name.</p>
+                <p className="text-[12px] text-secondary/80 font-medium">This name will appear on the TV screen when it&apos;s your turn to sing!</p>
               </div>
 
               {/* CTA Button */}

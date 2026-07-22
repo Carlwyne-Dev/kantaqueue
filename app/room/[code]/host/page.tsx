@@ -341,7 +341,7 @@ export default function HostPage({
           favorite: '#f43f5e',
           celebration: '#eab308',
           thumb_up: '#3b82f6',
-          mic: '#a855f7'
+          star: '#f59e0b'
         };
         const emoji = payload.payload.emoji;
         const color = reactionColors[emoji] || '#ffffff';
@@ -1047,7 +1047,7 @@ export default function HostPage({
                   <div className="overflow-hidden">
                     <p className="text-[13px] font-semibold text-on-background truncate">{nowPlaying.song.title}</p>
                     <p className="text-[12px] text-secondary truncate mt-0.5">
-                      {nowPlaying.singer_name}
+                      Singer: <span className="font-bold text-on-background">{nowPlaying.singer_name}</span>
                       {nowPlaying.dedication && <span className="italic text-secondary/80 ml-1"> • For: {nowPlaying.dedication}</span>}
                     </p>
                   </div>
@@ -1102,7 +1102,7 @@ export default function HostPage({
                           <div className="flex-1 overflow-hidden">
                             <p className="text-[12px] font-semibold text-on-background truncate">{item.song.title}</p>
                             <p className="text-[11px] text-secondary truncate mt-0.5">
-                              {item.singer_name}{item.song.duration_seconds ? ` · ${formatDuration(item.song.duration_seconds)}` : ''}
+                              Singer: <span className="font-semibold text-on-background">{item.singer_name}</span>{item.song.duration_seconds ? ` · ${formatDuration(item.song.duration_seconds)}` : ''}
                               {item.dedication && <span className="italic text-secondary/80 ml-1"> • For: {item.dedication}</span>}
                             </p>
                           </div>
