@@ -705,8 +705,8 @@ export default function HostPage({
     // ── Session Recap threshold check ──────────────────────────────────────
     // Show recap only if ≥20 minutes have passed AND ≥5 songs were played.
     const sessionMins = (Date.now() - new Date(room.created_at).getTime()) / 60000;
-    const RECAP_MIN_DURATION = 20;  // minutes
-    const RECAP_MIN_SONGS = 5;    // songs
+    const RECAP_MIN_DURATION = 0;  // DEV TEST: 0 (restore to 20)
+    const RECAP_MIN_SONGS = 0;     // DEV TEST: 0 (restore to 5)
 
     if (sessionMins >= RECAP_MIN_DURATION) {
       const { data: played } = await supabase
