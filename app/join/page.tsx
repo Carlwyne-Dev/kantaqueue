@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { getSupabaseClient, ensureAnonSession } from '@/lib/supabase';
 import { generateUniqueNickname } from '@/lib/nickname';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function JoinPage({
   searchParams,
@@ -242,32 +242,44 @@ export default function JoinPage({
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
                   <label className="block text-[12px] font-bold tracking-[0.15em] text-secondary/60 uppercase font-headline-sm">Display Name / Singer Name</label>
-                  <span className="text-[10px] text-error font-bold tracking-wide uppercase">Required</span>
+                  <span className="text-[10px] text-secondary/60 font-semibold tracking-wide uppercase">Required</span>
                 </div>
-                <div className="relative flex gap-2">
-                  <div className="relative flex-1">
-                    <input 
-                      type="text" 
-                      value={nickname}
-                      placeholder="Enter your name (e.g. Maria, Juan)"
-                      onChange={(e) => {
-                        setNickname(e.target.value);
-                        if (e.target.value.trim()) {
-                          localStorage.setItem('kq_global_nickname', e.target.value.trim());
-                        }
-                      }}
-                      className="w-full px-7 py-5 border border-outline-variant/30 bg-white/80 rounded-2xl text-lg font-bold shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-[#A7B79A] focus:border-[#A7B79A] focus:bg-white transition-all outline-none text-on-background placeholder:font-medium placeholder:text-secondary/40"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRandomizeNickname}
-                    disabled={generatingNick}
-                    title="Generate Random Name"
-                    className="px-4 py-5 border border-outline-variant/30 bg-white/80 hover:bg-white rounded-2xl text-secondary hover:text-on-background transition-all shadow-[0_4px_12px_rgba(0,0,0,0.03)] cursor-pointer flex items-center justify-center disabled:opacity-50"
-                  >
-                    <span className={`material-symbols-outlined text-[22px] ${generatingNick ? 'animate-spin' : ''}`}>casino</span>
-                  </button>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={nickname}
+                    placeholder="Enter your name (e.g. Maria, Juan)"
+                    onChange={(e) => {
+                      setNickname(e.target.value);
+                      if (e.target.value.trim()) {
+                        localStorage.setItem('kq_global_nickname', e.target.value.trim());
+                      }
+                    }}
+                    className={`w-full px-7 ${!nickname.trim() ? 'pr-16' : 'pr-7'} py-5 border border-outline-variant/30 bg-white/80 rounded-2xl text-lg font-bold shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-[#A7B79A] focus:border-[#A7B79A] focus:bg-white transition-all outline-none text-on-background placeholder:font-medium placeholder:text-secondary/40`}
+                  />
+                  <AnimatePresence>
+                    {!nickname.trim() && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.7, y: "-50%" }}
+                        animate={{ opacity: 1, scale: 1, y: "-50%" }}
+                        exit={{ opacity: 0, scale: 0.7, y: "-50%" }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                        className="absolute right-3.5 top-1/2 group"
+                      >
+                        <button
+                          type="button"
+                          onClick={handleRandomizeNickname}
+                          disabled={generatingNick}
+                          className="p-2 bg-[#A7B79A]/20 hover:bg-[#A7B79A]/35 text-[#3d4b34] border border-[#A7B79A]/40 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95 disabled:opacity-50 shadow-sm"
+                        >
+                          <span className={`material-symbols-outlined text-[20px] ${generatingNick ? 'animate-spin' : ''}`}>casino</span>
+                        </button>
+                        <div className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-on-background text-surface text-[11px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap shadow-md">
+                          Randomize name
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <p className="text-[12px] text-secondary/80 font-medium">This name will appear on the TV screen when it&apos;s your turn to sing!</p>
               </div>
