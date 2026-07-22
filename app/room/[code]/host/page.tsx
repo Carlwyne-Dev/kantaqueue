@@ -702,31 +702,7 @@ export default function HostPage({
     const endedAt = new Date().toISOString();
     await supabase.from('rooms').update({ status: 'ended' }).eq('id', room.id);
 
-    // ── Session Recap threshold check ──────────────────────────────────────
-    // Show recap only if ≥20 minutes have passed AND ≥5 songs were played.
-    const sessionMins = (Date.now() - new Date(room.created_at).getTime()) / 60000;
-    const RECAP_MIN_DURATION = 0;  // DEV TEST: 0 (restore to 20)
-    const RECAP_MIN_SONGS = 0;     // DEV TEST: 0 (restore to 5)
-
-    if (sessionMins >= RECAP_MIN_DURATION) {
-      const { data: played } = await supabase
-        .from('queue_items')
-        .select('*, song:songs(*)')
-        .eq('room_id', room.id)
-        .eq('status', 'played')
-        .order('requested_at', { ascending: true });
-
-      if (played && played.length >= RECAP_MIN_SONGS) {
-        setShowQuitModal(false);
-        setRecapData({
-          roomCode: room.code,
-          createdAt: room.created_at,
-          endedAt,
-          playedItems: played as (QueueItem & { song: Song })[],
-        });
-        return; // don't navigate yet — let the user close the recap
-      }
-    }
+    // (Recap logic temporarily disabled)
 
     router.push('/');
   }
