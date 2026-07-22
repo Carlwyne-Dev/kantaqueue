@@ -8,6 +8,7 @@ import { getSupabaseClient } from '@/lib/supabase';
 import type { Room, QueueItem, Song } from '@/types';
 import { AnimatedGradient } from '@/components/ui/animated-gradient';
 import { motion, AnimatePresence } from 'framer-motion';
+import SessionRecapModal, { type RecapData } from '@/components/SessionRecapModal';
 
 // ── YouTube IFrame API types ──────────────────────────────────────────────────
 declare global {
@@ -80,6 +81,7 @@ export default function HostPage({
   const [loadingRoom, setLoadingRoom] = useState(true);
   const [localNotif, setLocalNotif] = useState<string | null>(null);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [recapData, setRecapData] = useState<RecapData | null>(null);
   const [showBigQR, setShowBigQR] = useState(false);
   const [ambientColor, setAmbientColor] = useState<string>('#F2F1EC');
   
@@ -695,9 +697,37 @@ export default function HostPage({
   async function handleQuitRoom() {
     playerRef.current?.stopVideo();
     loadedVideoIdRef.current = null;
-    if (room) {
-      await supabase.from('rooms').update({ status: 'ended' }).eq('id', room.id);
+    if (!room) { router.push('/'); return; }
+
+    const endedAt = new Date().toISOString();
+    await supabase.from('rooms').update({ status: 'ended' }).eq('id', room.id);
+
+    // ── Session Recap threshold check ──────────────────────────────────────
+    // Show recap only if ≥20 minutes have passed AND ≥5 songs were played.
+    const sessionMins = (Date.now() - new Date(room.created_at).getTime()) / 60000;
+    const RECAP_MIN_DURATION = 20;  // minutes
+    const RECAP_MIN_SONGS = 5;    // songs
+
+    if (sessionMins >= RECAP_MIN_DURATION) {
+      const { data: played } = await supabase
+        .from('queue_items')
+        .select('*, song:songs(*)')
+        .eq('room_id', room.id)
+        .eq('status', 'played')
+        .order('requested_at', { ascending: true });
+
+      if (played && played.length >= RECAP_MIN_SONGS) {
+        setShowQuitModal(false);
+        setRecapData({
+          roomCode: room.code,
+          createdAt: room.created_at,
+          endedAt,
+          playedItems: played as (QueueItem & { song: Song })[],
+        });
+        return; // don't navigate yet — let the user close the recap
+      }
     }
+
     router.push('/');
   }
 
@@ -1256,6 +1286,14 @@ export default function HostPage({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Session Recap Modal ───────────────────────────────────────────── */}
+      {recapData && (
+        <SessionRecapModal
+          data={recapData}
+          onClose={() => { setRecapData(null); router.push('/'); }}
+        />
       )}
     </div>
   );

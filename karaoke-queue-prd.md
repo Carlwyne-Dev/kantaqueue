@@ -471,6 +471,18 @@ Host device can be a phone acting as both screen and speaker — no casting, no 
 
 ---
 
+## 11d. Landing Page Stats Counter
+
+A live counter on the landing page showing cumulative totals (e.g. "17 rooms created, 31 songs queued") — social proof, especially useful once Public Rooms (Section 14b) starts bringing in people who've never used the app before.
+
+**Important: don't count live rows.** `count(*)` against `rooms` or `queue_items` directly will work today, but breaks once rooms start hitting the 6-hour auto-expiry and cascade-delete (Section 6a) — the counter would shrink as old rooms get cleaned up, defeating the "always grows" intent.
+
+**Fix:** a separate, permanent `stats` table (single row, or one row per stat) — e.g. `total_rooms_created`, `total_songs_queued` — incremented once on insert (via a DB trigger or an explicit increment call), fully decoupled from whether the original `rooms`/`queue_items` row still exists. This guarantees the number only ever goes up, regardless of cleanup.
+
+**Status: implemented** — already built as a separate table, decoupled from room/queue deletion.
+
+---
+
 ## 12. Success Metrics (post-launch)
 
 - % of searches served from cache vs YouTube API (target: growing over time)
@@ -484,9 +496,11 @@ Host device can be a phone acting as both screen and speaker — no casting, no 
 
 | Risk | Mitigation |
 |---|---|
-| YouTube API quota exhaustion during a live party | Pre-seeded cache, debounced search, quota monitoring |
-| No auth means anyone with the room code can spam the queue | v1 accepts this risk (parties are trusted groups); consider queue item caps per guest if it becomes a problem |
-| YouTube IFrame API embedding restrictions on some videos | Show a clear "unavailable" state and let host skip |
+| YouTube API quota exhaustion during a live party | Organic cache growth from real usage (no manual pre-seeding, per Section 8/9a), debounced search, quota monitoring |
+| No auth means anyone with the room code can spam the queue | v1 accepts this risk (parties are trusted groups); 3-song pending cap already enforced via RLS (Section 7) |
+| YouTube IFrame API embedding restrictions on some videos | Show a clear "unavailable" state and let host skip (Section 9a) |
+| Supabase free tier auto-pauses projects after 7 days of no API requests | Not a storage concern — the `songs` cache is lightweight metadata and won't approach the 500 MB free-tier limit for a very long time. The real risk is the app going fully offline after a quiet week with zero warning. Mitigate with a lightweight scheduled ping (e.g. a daily cron hitting the Supabase URL) if usage could realistically go quiet. |
+| Supabase free tier has no automatic backups | **Resolved.** A GitHub Actions workflow runs daily, dumping the full database via `pg_dump` and storing it as a downloadable artifact (30-day retention). No paid service needed — same free-infra spirit as the rest of the project. Restore process documented and should be test-run once before it's ever actually needed in a real emergency. |
 
 ---
 
@@ -594,10 +608,6 @@ Guests can tap a quick reaction (🔥, 👏) while a song is playing; it appears
 
 **Mechanics:** this should NOT be a `queue_items`-adjacent DB table — that would mean a write to Postgres per tap, which doesn't scale well and isn't data worth persisting. Instead, use **Supabase Realtime Broadcast** (channel-based, ephemeral pub/sub, not tied to a table) scoped to the room's `id` as the channel name. Guests broadcast `{ emoji }` events; the host client (and other guests, optionally) subscribe and render a transient animation — nothing touches the database, so there's no RLS or storage concern at all. Purely in-the-moment fun — not tracked, counted, or fed into the Session Recap.
 
-- Song voting
-- Favorites / playlists
-- Session history
-- Password-protected rooms
 ### Discover: Popular + Trending (v2, replaces earlier vague "AI recommendations" idea)
 
 A "Discover" section on the guest search screen, surfacing songs before anyone has to type anything. Two data sources, both scoped to avoid the per-singer personalization problem (Section 14b intro — that data cascade-deletes with the room):
@@ -608,6 +618,101 @@ A "Discover" section on the guest search screen, surfacing songs before anyone h
 **Mechanics:** don't call the trending endpoint per-user — that burns quota fast for something that only changes daily. Refresh it once a day via a scheduled job (Supabase cron/edge function), store results in a small `trending_suggestions` table, and serve that cached list to every guest. This keeps the feature essentially free on quota, same spirit as the cache-first search architecture in Section 8.
 
 No per-singer personalization, no AI model needed — just two well-sourced "what's popular" lists, one from your own usage data and one from what's actually charting in PH right now.
+
+**Real user feedback (informal testing):** a user commented that when they don't know what to search for, they'd rather browse a full list of available karaoke songs than only see Trending/Popular highlights. This is a genuine gap — Trending and Popular are curated highlights (a handful of songs), not a way to browse broadly, so someone whose taste doesn't match either list still hits a dead end.
+
+**Fix — additive, not a replacement.** Keep Trending PH + Popular on KanTara as-is (both are working correctly), and add underneath them:
+- **Browse by category** — bring back the original genre groupings from the first rough concept (Section 1's original brainstorm): OPM, Classics, Recently Played, Most Requested. Each pulls from the same `songs` cache, just filtered/sorted differently (e.g. `times_played` descending for Most Requested, `last_played_at` descending for Recently Played).
+- **"See all cached songs"** as a final fallback — a simple browsable/searchable list of the entire `songs` cache, not specially curated. This is the literal "show everything" the commenter wanted, but positioned as a fallback underneath the curated sections rather than the default view, so it doesn't turn into an unsorted wall of songs as the cache grows over time.
+
+This keeps the default screen scannable (a few curated highlights first) while still giving an escape hatch for "I just want to see what's available" — without the long-term mess of dumping the whole cache as the primary view.
+
+**API cost check:** Browse by category and "See all cached songs" are pure database reads against the existing `songs` table (sorted/filtered differently) — zero YouTube API calls, same cost as any other page load. Trending PH is the only piece that calls YouTube, using the cheap `videos.list` chart endpoint (1 unit vs. `search.list`'s 100), refreshed once a day total rather than per-guest. Net effect: this whole feature adds negligible quota cost on top of what's already planned.
+
+Genre tagging (for OPM/Classics filters) happens once, at the moment a song is first cached — using genre/category metadata YouTube already returns, or a simple keyword/artist match — not a new API call every time someone browses.
+
+**Status: on hold, not dropped.** With the cache at ~31 songs (as of first real usage), splitting into 4+ categories would leave most of them nearly empty — worse than not having categories at all. Revisit once the cache is meaningfully larger (a few hundred songs) or Public Rooms brings in more varied usage, whichever comes first.
+
+**Build order note:** Public/Private Rooms is planned before Browse — not just prioritization, but a real dependency. Opening Public Rooms brings in more varied usage, which grows the `songs` cache faster than family-only usage alone, directly moving Browse toward its "revisit" trigger above.
+
+**Decision: no manual pre-seeding for Browse.** The cache starts thin and grows organically through real usage, same as the rest of the app. Fine for family/small-group scale — worth revisiting only if/when Public Rooms opens this up to strangers, since an empty or sparse Browse tab reads worse to someone who's never used the app before than to your own family.
+
+### Public Voice Rooms (v2)
+
+Public rooms (Section 14b intro) need live voice, since guests are remote and can't share a physical speaker/mic like private rooms do. Scope: audio-only, max 8 guests per room, one active mic at a time (rotates with the singer), everyone else listen-only.
+
+**Architecture: LiveKit Cloud's free "Build" tier**, not self-hosted. Self-hosting on Oracle Cloud was the original plan, but Oracle's identity verification step became a real, hard blocker (no traditional credit card, prepaid/e-wallet cards like GCash/Maya explicitly rejected, and even a legitimate bank debit card ran into account-creation errors). LiveKit Cloud's Build tier requires **no credit card at all** and includes 5,000 WebRTC minutes/month + 50GB data transfer for free — more than enough runway to build, test, and soft-launch this feature before ever needing to think about billing.
+
+**Rough capacity math:** these platforms bill in participant-minutes (everyone connected counts, not just room duration) — LiveKit Cloud doesn't cap the *number* of rooms, only cumulative monthly minutes (5,000 free) and data transfer (50GB free). Room size itself is capped at up to 50 participants on the free tier, well above the 8-person design here.
+
+| Room size | Session length | Minutes used | Sessions/month on 5,000 free minutes |
+|---|---|---|---|
+| 8 people (max) | 1 hour | 480 | ~10 |
+| 8 people | 2 hours | 960 | ~5 |
+| 4 people | 1 hour | 240 | ~20 |
+
+Mapped against the original capacity targets (Section 14b intro): 3 simultaneous 8-person rooms running for 1 hour ≈ 1,440 minutes in that single hour — meaning that exact scenario could run about 3-4 times total per month before hitting the free ceiling. This isn't built for always-on, all-day public voice rooms at scale — but for validating the feature and running it during actual planned sessions, it's comfortable headroom for now. Revisit self-hosting only once real usage data shows this ceiling actually becoming a constraint.
+
+**What this removes entirely:** Oracle VM provisioning, Docker/Compose setup, OS + cloud-level firewall configuration, TURN server setup, and the identity-verification blocker altogether. What's still needed: an API key/secret from the LiveKit Cloud dashboard, and the same mic-rotation logic described below — that part doesn't change based on where the server runs.
+
+**Mic rotation mechanics.** Ties directly into the existing queue system rather than needing new state:
+
+1. Guests join the room's voice channel once and stay connected for the whole session — no rejoining between songs.
+2. When a `queue_items` row's `status` flips to `'playing'` (already the exact trigger point used for `times_played`/`last_played_at` updates, per Section 9a), the backend grants that singer's connection publish permission (mic live) and revokes everyone else's in that room.
+3. When the song ends and the next item flips to `'playing'`, the previous singer's mic permission is revoked and the new singer's is granted — same continuous voice room, just a permission handoff.
+4. This is enforced server-side via LiveKit's participant permission API, not just a muted button in the guest's UI — consistent with the "don't trust the client" principle already used for the 3-song pending cap (Section 7 RLS).
+
+**Status: infra done.** LiveKit Cloud account created, project set up, API Key/Secret/WebSocket URL obtained — no code written yet.
+
+**Build plan, step by step:**
+
+1. **Store credentials.** Add `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, and `LIVEKIT_URL` (the `wss://` project URL) to `.env.local`, matching the pattern already used for Supabase/YouTube keys (Section 14a). The secret is server-side only, never exposed to the client.
+
+2. **Install SDKs.** Server-side: `livekit-server-sdk` (Node), used to generate access tokens and manage participant permissions. Client-side: `livekit-client`, used by the browser to actually connect, publish, and subscribe to audio.
+
+3. **Token generation endpoint.** A new API route (e.g. `app/api/voice/token/route.ts`) that, given a room code and the guest's identity (their `auth.uid()` from Supabase anon auth, Section 14a), generates a LiveKit access token scoped to that specific voice room. Every guest gets `canPublish: false` by default when they first join — listen-only until the rotation logic (step 5) explicitly grants them the mic.
+
+4. **Guest joins the voice channel.** On the client, once a guest has a token from step 3, connect to the LiveKit room using `livekit-client` and stay connected for the whole session — matches the "join once, stay connected" mechanic already specced above. This should happen automatically when a guest enters a Public Room, not require a separate manual "join voice" step.
+
+5. **Mic rotation listener.** A small server-side listener — reacting to the same `queue_items.status` → `'playing'` transition already used for `times_played` updates (Section 9a) — calls LiveKit's Server SDK to update participant permissions: revoke the previous singer's `canPublish`, grant it to the new singer. This is the one new piece of backend logic this whole feature actually needs; everything else is wiring.
+
+6. **Singer-side mic publish.** When a guest's permission flips to `canPublish: true`, their client requests browser mic access (`getUserMedia`) and publishes their local audio track to the room. If mic permission is denied by the browser, fail gracefully — they can still listen, they just won't be heard (worth a small UI note, not a blocker).
+
+7. **Listener-side "who's live" UI.** Guests who aren't currently singing need a simple visual cue for who is — driven by LiveKit's track-subscribed/active-speaker events, not by re-deriving it from the queue state separately (avoids two sources of truth going out of sync).
+
+8. **Host-side integration.** The host screen (Section 11c) also connects to the same voice room as a listen-only participant, so the "audio system" is fully virtual — no separate physical speaker setup assumed, consistent with the original problem statement for Public Rooms (guests are remote, can't share a physical mic/speaker).
+
+9. **Test with 2 real devices first**, not just one browser tab — confirm the rotation actually happens automatically when a queue item's status changes, before testing at full 8-person capacity.
+
+10. **Gate behind Public Rooms only.** Private Rooms keep working exactly as they do today (Section 5.1/5.2) — voice is additive, not a change to the existing private-room experience.
+
+### Song Challenge & Karaoke Roulette (v2)
+
+A guest can challenge another guest to sing a specific song. The challenged guest gets a real-time popup with **Accept** or **Pass**. If they pass, the same challenge gets re-offered to a different random guest, and a pass counter increments. After **5 passes** on that specific challenge (not room-wide — each challenge tracks its own count), **Karaoke Roulette** triggers: a random guest is selected and the song is queued under their name with no accept/pass option at all.
+
+**Genuinely separate system from normal song requests.** A Challenge (or a Roulette-forced song) does not count against a guest's 3-song pending cap (Section 9a/7) — that cap exists to stop self-serve spam, not to limit songs someone else assigned to you. This needs a real schema distinction, not just a UI one, or the RLS insert policy would incorrectly block a challenge-accepted song for a guest who's already at their normal cap.
+
+**Schema:**
+- New `source` column on `queue_items` (`'self' | 'challenge' | 'roulette'`, default `'self'`) — the existing RLS pending-cap check (Section 7) only counts `source = 'self'` rows, so challenge/roulette-originated songs never get blocked by or count toward that cap.
+- New `song_challenges` table: `id`, `room_id`, `initiator_guest_id`, `song_id`, `current_target_guest_id`, `status` (`pending | accepted | roulette_resolved`), `pass_count`, `passed_guest_ids` (array, so the same challenge isn't re-offered to someone who already declined it), `created_at`.
+
+**Flow:**
+1. Guest A picks a song and a target guest → inserts a `song_challenges` row.
+2. Target guest gets a real-time popup (Supabase Realtime subscription on `song_challenges` filtered to their `auth.uid()`, not an ephemeral broadcast like Reactions — this needs actual resolvable state, not fire-and-forget).
+3. **Accept** → inserts a `queue_items` row with `source = 'challenge'`, `requested_by` = the target guest, challenge marked `accepted`.
+4. **Pass** → `pass_count += 1`, target guest's ID added to `passed_guest_ids`, challenge re-offered to a different random guest (excluding whoever's already passed and whoever's currently singing).
+5. At `pass_count = 5` → **Karaoke Roulette**: a guest is randomly selected from the whole room (this pool intentionally *includes* guests who already passed on the direct challenge — Roulette is meant to be inescapable, unlike a direct challenge). Song is auto-queued with `source = 'roulette'`, no accept/pass shown, just a notification.
+
+**Real consent consideration, not just a technical one.** The app can't literally force anyone to sing — "cannot decline" just means no opt-out button, not physical enforcement. For a genuinely shy guest or someone not feeling it that round, being auto-queued with zero say could turn a fun mechanic into a bad moment for that specific person. Worth adding a one-time **"Include me in Challenges & Roulette"** toggle guests can set when they join (defaulting on, to keep the party energy), so people who genuinely don't want to play this particular game can opt out without it feeling like refusing to participate in the karaoke session itself.
+
+### Other Future Ideas (v2, not yet detailed)
+
+Lighter items on the radar that haven't been fleshed out into full specs yet:
+
+- Song voting
+- Favorites / playlists
+- Session history
+- Password-protected rooms
 - Multiple concurrent rooms per host
 - Remote playback controls
 - PWA + offline metadata cache
